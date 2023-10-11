@@ -1,4 +1,4 @@
-import pygame
+from pygame import draw, Rect
 
 BOARD_ROWS = 20
 BOARD_COLUMNS = 10
@@ -7,7 +7,7 @@ GRID_SIZE = 32
 GRID_ALPHA = 50
 GRID_OUTLINE_WIDTH = 3
 
-DROP_HEIGHT = 2 * GRID_SIZE
+DROP_HEIGHT = 1 * GRID_SIZE
 
 BOARD_RIGHT_BUFFER = 6 * GRID_SIZE
 BOARD_LEFT_BUFFER = 6 * GRID_SIZE
@@ -46,22 +46,28 @@ def grid_to_pixel_length(x: int) -> int:
     Returns:
         int: That length multiplied by the grid size
     """
+    return x * GRID_SIZE
 
 def draw_grid(canvas):
     # VERTICAL LINES
     for x in range(0, BOARD_WIDTH, GRID_SIZE):
-        pygame.draw.line(canvas, (255, 255, 255, GRID_ALPHA), (x + BOARD_LEFT_BUFFER, BOARD_TOP_BUFFER), (x + BOARD_LEFT_BUFFER, BOARD_HEIGHT + BOARD_TOP_BUFFER))
+        draw.line(canvas, (255, 255, 255, GRID_ALPHA), (x + BOARD_LEFT_BUFFER, BOARD_TOP_BUFFER), (x + BOARD_LEFT_BUFFER, BOARD_HEIGHT + BOARD_TOP_BUFFER))
     
     # HORIZONTAL LINES    
     for y in range(0, BOARD_HEIGHT, GRID_SIZE):
-        pygame.draw.line(canvas, (255, 255, 255, GRID_ALPHA), (BOARD_LEFT_BUFFER, y + BOARD_TOP_BUFFER), (BOARD_WIDTH + BOARD_LEFT_BUFFER, y + BOARD_TOP_BUFFER))
+        draw.line(canvas, (255, 255, 255, GRID_ALPHA), (BOARD_LEFT_BUFFER, y + BOARD_TOP_BUFFER), (BOARD_WIDTH + BOARD_LEFT_BUFFER, y + BOARD_TOP_BUFFER))
         
     # Solid Board Outlines
     # BOTTOM
-    pygame.draw.line(canvas, (255, 255, 255, 255), BOTTOM_LEFT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(canvas, (255, 255, 255, 255), BOTTOM_LEFT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
     
     # LEFT
-    pygame.draw.line(canvas, (255, 255, 255, 255), TOP_LEFT_BOARD_CORNER, BOTTOM_LEFT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(canvas, (255, 255, 255, 255), TOP_LEFT_BOARD_CORNER, BOTTOM_LEFT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
     
     # RIGHT
-    pygame.draw.line(canvas, (255, 255, 255, 255), TOP_RIGHT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(canvas, (255, 255, 255, 255), TOP_RIGHT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    
+def draw_rect(x, y, colour, board_surface):
+    x = x + (BOARD_LEFT_BUFFER / GRID_SIZE)
+    y = y + (BOARD_TOP_BUFFER / GRID_SIZE) - 1
+    draw.rect(board_surface, colour, Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE))
