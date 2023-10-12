@@ -31,6 +31,7 @@ previous_time = time.time()
 total_time = 0
 frames = 0
 fps_update_delay = 0
+register_input_delay = 0
 
 running = True
 
@@ -39,6 +40,17 @@ while running:
     previous_time = time.time()
 
     total_time += delta_time
+    
+    register_input_delay -= 1
+    key = pygame.key.get_pressed()
+    
+    if (key[pygame.K_RIGHT] == True) and (register_input_delay < 0):
+        controller.shift_piece_by_amount(1)
+        register_input_delay = 60
+        
+    if key[pygame.K_LEFT] == True and (register_input_delay < 0):
+        controller.shift_piece_by_amount(-1)
+        register_input_delay = 60
     
     for event in pygame.event.get():
         # Check if user has quit the window

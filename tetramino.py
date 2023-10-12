@@ -1,4 +1,3 @@
-from pygame import Surface
 import board_utils as bu
 
 class Tetramino:

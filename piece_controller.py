@@ -5,7 +5,7 @@ from tetramino import Tetramino
 
 class PieceController():
 
-    drop_speed = 2
+    drop_speed = 4
     drop_time = 1 / drop_speed
     
     def __init__(self) -> None:
@@ -20,13 +20,17 @@ class PieceController():
                     bu.draw_rect(x, y, self.current_piece.colour, board_surface)
                     
     def drop_piece(self) -> None:
-        if ((self.current_piece.y_pos < bu.BOARD_ROWS) and (not self.__piece_is_blocked(self.board_state, self.current_piece))):
+        if ((self.current_piece.y_pos < bu.BOARD_ROWS) and (not self.__piece_is_vertically_blocked(self.board_state, self.current_piece))):
             self.current_piece.set_y_pos(self.current_piece.y_pos + 1)
         else:
             self.__deactivate_piece()
             
     def draw_piece(self, board_surface):
         self.current_piece.draw(board_surface)
+        
+    def shift_piece_by_amount(self, x):
+        if (not self.__piece_is_horizontally_blocked(self.board_state, self.current_piece, x)):
+            self.current_piece.set_x_pos(self.current_piece.x_pos + x)
             
     def __deactivate_piece(self) -> None:
         self.current_piece.active = False
@@ -44,14 +48,39 @@ class PieceController():
             board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = 1
             
     @staticmethod
-    def __piece_is_blocked(board_state, piece) -> bool:
+    def __piece_is_vertically_blocked(board_state, piece) -> bool:
         blocked = False
 
         for i in range(len(piece.occupying_squares)):
+            # Check if piece is in the board
             if (piece.occupying_squares[i][1] + 1 >= 0):
-                piece_pos = board_state[piece.occupying_squares[i][1] + 1][piece.occupying_squares[i][0]]
+                pos_state = board_state[piece.occupying_squares[i][1] + 1][piece.occupying_squares[i][0]]
                 
-                if (piece_pos > 0):  
+                # If there is a piece there then the position is blocked
+                if (pos_state > 0):  
                     blocked = True
                     
+        return blocked
+    
+    @staticmethod
+    def __piece_is_horizontally_blocked(board_state, piece, x) -> bool:
+        blocked = False
+
+        for i in range(len(piece.occupying_squares)):
+            piece_pos = piece.occupying_squares[i][0] + x
+            
+            if (x > 0):
+                if (piece_pos + x <= bu.BOARD_COLUMNS):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] > 0):
+                        blocked = True
+                else:
+                    blocked = True
+            
+            if (x < 0):
+                if (piece_pos + x >= -1):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] > 0):
+                        blocked = True
+                else:
+                    blocked = True          
+            
         return blocked

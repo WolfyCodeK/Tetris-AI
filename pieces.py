@@ -1,5 +1,4 @@
 import numpy as np
-import board_utils as bu
 from tetramino import Tetramino
 import tetramino_features as tf
 
