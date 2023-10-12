@@ -1,15 +1,14 @@
 import numpy as np
 import board_utils as bu
 from tetramino import Tetramino
-import tretramino_features as tf
+import tetramino_features as tf
 
 class ZPiece(Tetramino):
-    def __init__(self, board_surface) -> None:
+    def __init__(self) -> None:
         super().__init__(
             tf.Z_PIECE_START_X, 
             tf.Z_PIECE_START_Y, 
-            tf.Z_PIECE_COLOUR, 
-            board_surface
+            tf.Z_PIECE_COLOUR
         )
         
         self.__update_occupying_squares(self.x_pos, self.y_pos)
