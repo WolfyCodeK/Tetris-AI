@@ -1,40 +1,47 @@
+import time
 import pygame
 
 import board_utils as bu
-import pieces
 import piece_controller
-
-# Load images from resources
-tetris_icon = pygame.image.load('res/tetris-icon.png')
-background_image = pygame.image.load('res/gradient_background_blue.jpg')
 
 # Pygame intial setup
 pygame.init()
-pygame.display.set_caption('Tetris - Pygame')
-pygame.display.set_icon(tetris_icon)
-
-# Create fonts
-font = pygame.font.Font('freesansbold.ttf', 32)
+pygame.display.set_caption("Tetris - Pygame")
 
 # Set window and surface sizes
 window = pygame.display.set_mode((bu.SCR_WIDTH, bu.SCR_HEIGHT))
 board_surface = pygame.Surface((bu.SCR_WIDTH, bu.SCR_HEIGHT), pygame.SRCALPHA)
 
+# Load images from resources
+tetris_icon = pygame.image.load("res/tetris-icon.png").convert()
+background_image = pygame.image.load("res/gradient_background_blue.jpg").convert()
+
+pygame.display.set_icon(tetris_icon)
+
+# Create fonts
+font = pygame.font.Font("freesansbold.ttf", 32)
+
 # Set in-game fps
-timer = pygame.time.Clock()
-fps = 60
-counter = 0
-
-fps_string = font.render(str(fps), True, (0, 0, 0))
-
-# Check if current piece is still in motion, or has locked in place
+fps_string = font.render(str("- - -"), True, (0, 255, 0))
 
 controller = piece_controller.PieceController()
+vertical_movements = 0
+
+previous_time = time.time()
+total_time = 0
+frames = 0
+fps_update_delay = 0
 
 running = True
 
 while running:
+    delta_time = time.time() - previous_time
+    previous_time = time.time()
+
+    total_time += delta_time
+    
     for event in pygame.event.get():
+        # Check if user has quit the window
         if event.type == pygame.QUIT:
             running = False
     
@@ -52,21 +59,30 @@ while running:
     # Draw current piece
     controller.draw_piece(board_surface)
 
-    # Everying second update the fps counter and drop the tetris piece further
-    if (counter > 15):
-        fps_string = font.render(str(int(timer.get_fps())), True, (0, 0, 0))
-        controller.drop_piece()
-        counter = 0
+    # Drop current piece and update fps counter
+    if (total_time > controller.drop_time):
+        if (fps_update_delay >= controller.drop_speed):
+            fps_string = font.render(
+                str(int(frames * controller.drop_speed)),
+                True, 
+                (0, 255, 0)
+            )
+            
+            fps_update_delay = 0
+
+        controller.drop_piece() 
+
+        total_time = total_time - controller.drop_time
+        frames = 0
+        fps_update_delay += 1
         
     bu.draw_grid(board_surface)
+    
+    board_surface.blit(fps_string, (bu.SCR_WIDTH - 70, bu.GRID_SIZE - 20))
 
     # Update window
     pygame.display.flip()
     
-    counter += 1
-    
-    timer.tick(fps)
-
-    board_surface.blit(fps_string, (bu.SCR_WIDTH - 50, bu.GRID_SIZE - 20))
+    frames += 1
 
 pygame.quit()

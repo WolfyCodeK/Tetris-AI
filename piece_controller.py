@@ -4,6 +4,9 @@ import board_utils as bu
 from tetramino import Tetramino
 
 class PieceController():
+
+    drop_speed = 2
+    drop_time = 1 / drop_speed
     
     def __init__(self) -> None:
         # Initialise board state to be empty
