@@ -12,11 +12,11 @@ pygame.display.set_caption("Tetris - Pygame")
 window = pygame.display.set_mode((bu.SCR_WIDTH, bu.SCR_HEIGHT))
 board_surface = pygame.Surface((bu.SCR_WIDTH, bu.SCR_HEIGHT), pygame.SRCALPHA)
 
-# Load images from resources
-tetris_icon = pygame.image.load("res/tetris-icon.png").convert()
-background_image = pygame.image.load("res/gradient_background_blue.jpg").convert()
-
+tetris_icon = pygame.image.load("res/tetris-icon.png")
 pygame.display.set_icon(tetris_icon)
+
+# Load images from resources
+background_image = pygame.image.load("res/gradient_background_blue.jpg").convert()
 
 # Create fonts
 font = pygame.font.Font("freesansbold.ttf", 32)
