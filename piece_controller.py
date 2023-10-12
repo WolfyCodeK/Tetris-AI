@@ -7,7 +7,8 @@ import random
 
 class PieceController():
 
-    NUM_OF_PIECES = 4
+    NUM_OF_PIECES = 5
+    PIECE_DEACTIVATE_DELAY = 4
 
     drop_speed = 4
     drop_time = 1 / drop_speed
@@ -31,12 +32,20 @@ class PieceController():
                     bu.draw_rect(x, y, tf.S_PIECE_COLOUR, board_surface)
                 if (self.board_state[y][x] == tf.J_PIECE_PID):
                     bu.draw_rect(x, y, tf.J_PIECE_COLOUR, board_surface)
+                if (self.board_state[y][x] == tf.T_PIECE_PID):
+                    bu.draw_rect(x, y, tf.T_PIECE_COLOUR, board_surface)
                     
-    def drop_piece(self) -> None:
+    def drop_piece(self) -> bool:
+        """Attempts to drop a tetramino piece down by 1 or more rows.
+
+        Returns:
+            bool: True if the piece was successfully dropped down 1 or more rows
+        """
         if ((self.current_piece.y_pos < bu.BOARD_ROWS) and (not self.__piece_is_vertically_blocked(self.board_state, self.current_piece))):
             self.current_piece.set_y_pos(self.current_piece.y_pos + 1)
+            return True
         else:
-            self.__deactivate_piece()
+            return False
             
     def draw_piece(self, board_surface):
         self.current_piece.draw(board_surface)
@@ -45,7 +54,7 @@ class PieceController():
         if (not self.__piece_is_horizontally_blocked(self.board_state, self.current_piece, x)):
             self.current_piece.set_x_pos(self.current_piece.x_pos + x)
             
-    def __deactivate_piece(self) -> None:
+    def deactivate_piece(self) -> None:
         self.current_piece.active = False
         self.__place_piece(self.board_state, self.current_piece)
         self.current_piece = self.__create_new_piece()
@@ -67,8 +76,8 @@ class PieceController():
             return pieces.SPiece()
         if (piece_num == tf.J_PIECE_PID):
             return pieces.JPiece()
-        if (piece_num == 5):
-            return pieces.ZPiece()
+        if (piece_num == tf.T_PIECE_PID):
+            return pieces.TPiece()
         if (piece_num == 6):
             return pieces.LPiece()
         if (piece_num == 7):

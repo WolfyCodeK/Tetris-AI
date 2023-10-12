@@ -33,6 +33,9 @@ frames = 0
 fps_update_delay = 0
 register_input_delay = 0
 
+piece_deactive_delay_started = False
+piece_deactive_delay = controller.PIECE_DEACTIVATE_DELAY
+
 running = True
 
 while running:
@@ -81,9 +84,24 @@ while running:
             )
             
             fps_update_delay = 0
-
-        controller.drop_piece() 
-
+        
+        # Deactive piece after short delay if piece cannot be dropped
+        if (not controller.drop_piece()):
+            piece_deactive_delay_started = True
+        
+        # Start delay
+        if (piece_deactive_delay_started):
+            piece_deactive_delay -= 1
+            
+        # Deactivate piece once delay is done
+        if (piece_deactive_delay < 0):
+            controller.deactivate_piece()
+            
+            piece_deactive_delay_started = False
+            piece_deactive_delay = controller.PIECE_DEACTIVATE_DELAY
+        
+        print(piece_deactive_delay)
+        
         total_time = total_time - controller.drop_time
         frames = 0
         fps_update_delay += 1

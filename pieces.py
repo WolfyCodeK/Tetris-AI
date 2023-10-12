@@ -57,3 +57,17 @@ class JPiece(Tetramino):
     
     def update_occupying_squares(self, x, y):    
         self.occupying_squares = np.array([[x, y], [x - 1, y], [x + 1, y], [x -1, y - 1]])
+        
+class TPiece(Tetramino):
+    def __init__(self) -> None:
+        super().__init__(
+            tf.T_PIECE_PID,
+            tf.T_PIECE_START_X, 
+            tf.T_PIECE_START_Y, 
+            tf.T_PIECE_COLOUR
+        )
+        
+        self.update_occupying_squares(self.x_pos, self.y_pos)
+    
+    def update_occupying_squares(self, x, y):    
+        self.occupying_squares = np.array([[x, y], [x - 1, y], [x + 1, y], [x, y - 1]])

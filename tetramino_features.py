@@ -19,3 +19,8 @@ J_PIECE_PID = 4
 J_PIECE_COLOUR = (0,0,255)
 J_PIECE_START_X = 4
 J_PIECE_START_Y = int(-(bu.pixel_to_grid_size(bu.DROP_HEIGHT)))
+
+T_PIECE_PID = 5
+T_PIECE_COLOUR = (255,20,147)
+T_PIECE_START_X = 4
+T_PIECE_START_Y = int(-(bu.pixel_to_grid_size(bu.DROP_HEIGHT)))
