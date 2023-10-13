@@ -7,33 +7,26 @@ import random
 
 class PieceController():
 
-    NUM_OF_PIECES = 5
-    PIECE_DEACTIVATE_DELAY = 4
-
-    drop_speed = 4
+    drop_speed = 30
     drop_time = 1 / drop_speed
-    
-    piece_numbers = list(range(1, NUM_OF_PIECES + 1))
+
+    NUM_OF_PIECES = 5
+    PIECE_DEACTIVATE_DELAY = drop_speed
+
+    piece_numbers = list(range(0, NUM_OF_PIECES))
     bag_counter = 0
     
     def __init__(self) -> None:
         # Initialise board state to be empty
-        self.board_state = np.zeros(shape=(int(bu.BOARD_ROWS + bu.pixel_to_grid_size(bu.DROP_HEIGHT)), bu.BOARD_COLUMNS), dtype=int)
+        self.board_state = np.full(shape=(int(bu.BOARD_ROWS + bu.pixel_to_grid_size(bu.DROP_HEIGHT)), bu.BOARD_COLUMNS), fill_value=tf.EMPTY_PIECE_PID)
         self.current_piece = self.__create_new_piece()
         
     def draw_board_state(self, board_surface):
         for y in range(len(self.board_state)):
             for x in range(len(self.board_state[0])):
-                if (self.board_state[y][x] == tf.Z_PIECE_PID):
-                    bu.draw_rect(x, y, tf.Z_PIECE_COLOUR, board_surface)
-                if (self.board_state[y][x] == tf.L_PIECE_PID):
-                    bu.draw_rect(x, y, tf.L_PIECE_COLOUR, board_surface)
-                if (self.board_state[y][x] == tf.S_PIECE_PID):
-                    bu.draw_rect(x, y, tf.S_PIECE_COLOUR, board_surface)
-                if (self.board_state[y][x] == tf.J_PIECE_PID):
-                    bu.draw_rect(x, y, tf.J_PIECE_COLOUR, board_surface)
-                if (self.board_state[y][x] == tf.T_PIECE_PID):
-                    bu.draw_rect(x, y, tf.T_PIECE_COLOUR, board_surface)
+                for i in range(len(tf.COLOUR_PID_LIST)):
+                    if (self.board_state[y][x] == tf.COLOUR_PID_LIST[i][0]):
+                        bu.draw_rect(x, y, tf.COLOUR_PID_LIST[i][1], board_surface)
                     
     def drop_piece(self) -> bool:
         """Attempts to drop a tetramino piece down by 1 or more rows.
@@ -68,20 +61,9 @@ class PieceController():
         
         piece_num = self.piece_numbers[self.bag_counter]
         
-        if (piece_num == tf.Z_PIECE_PID):
-            return pieces.ZPiece()
-        if (piece_num == tf.L_PIECE_PID):
-            return pieces.LPiece()
-        if (piece_num == tf.S_PIECE_PID):
-            return pieces.SPiece()
-        if (piece_num == tf.J_PIECE_PID):
-            return pieces.JPiece()
-        if (piece_num == tf.T_PIECE_PID):
-            return pieces.TPiece()
-        if (piece_num == 6):
-            return pieces.LPiece()
-        if (piece_num == 7):
-            return pieces.ZPiece()
+        random_piece = tf.PIECE_CLASS_LIST[piece_num]
+        
+        return random_piece()
     
     @staticmethod        
     def __place_piece(board_state, piece):
@@ -98,7 +80,7 @@ class PieceController():
                 pos_state = board_state[piece.occupying_squares[i][1] + 1][piece.occupying_squares[i][0]]
                 
                 # If there is a piece there then the position is blocked
-                if (pos_state > 0):  
+                if (pos_state != tf.EMPTY_PIECE_PID):  
                     blocked = True
                     
         return blocked
@@ -112,14 +94,14 @@ class PieceController():
             
             if (x > 0):
                 if (piece_pos + x <= bu.BOARD_COLUMNS):
-                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] > 0):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != tf.EMPTY_PIECE_PID):
                         blocked = True
                 else:
                     blocked = True
             
             if (x < 0):
                 if (piece_pos + x >= -1):
-                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] > 0):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != tf.EMPTY_PIECE_PID):
                         blocked = True
                 else:
                     blocked = True          

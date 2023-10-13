@@ -1,10 +1,10 @@
 import board_utils as bu
 
 class Tetramino:
-    def __init__(self, pid: int, x: int, y: int, colour: tuple) -> None:
+    def __init__(self, pid: chr, x: int, colour: tuple) -> None:
         self.pid = pid
         self.x_pos = x
-        self.y_pos = y
+        self.y_pos = bu.PIECE_START_HEIGHT
         self.colour = colour
         
         self.active = True

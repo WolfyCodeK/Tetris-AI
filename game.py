@@ -63,16 +63,18 @@ while running:
     # Clear window and draw window background       
     window.fill(0)     
     window.blit(board_surface, (0, 0))        
-    board_surface.blit(background_image, (0, 0)) 
-    
+
     # Draw board background
-    pygame.draw.rect(board_surface, (0, 0, 0), pygame.Rect(bu.BOARD_LEFT_BUFFER, bu.BOARD_TOP_BUFFER, bu.BOARD_WIDTH, bu.BOARD_HEIGHT))
+    board_surface.fill((0, 0, 0, bu.BACKGROUND_ALPHA), pygame.Rect(bu.BOARD_LEFT_BUFFER, bu.BOARD_TOP_BUFFER, bu.BOARD_WIDTH, bu.BOARD_HEIGHT))
     
     # Draw finished pieces
     controller.draw_board_state(board_surface)
     
     # Draw current piece
     controller.draw_piece(board_surface)
+    
+    window.blit(board_surface, (0, 0))
+    board_surface.blit(background_image, (0, 0))
 
     # Drop current piece and update fps counter
     if (total_time > controller.drop_time):
@@ -88,6 +90,9 @@ while running:
         # Deactive piece after short delay if piece cannot be dropped
         if (not controller.drop_piece()):
             piece_deactive_delay_started = True
+        else:
+            piece_deactive_delay_started = False
+            piece_deactive_delay = controller.PIECE_DEACTIVATE_DELAY
         
         # Start delay
         if (piece_deactive_delay_started):
@@ -100,13 +105,11 @@ while running:
             piece_deactive_delay_started = False
             piece_deactive_delay = controller.PIECE_DEACTIVATE_DELAY
         
-        print(piece_deactive_delay)
-        
         total_time = total_time - controller.drop_time
         frames = 0
         fps_update_delay += 1
         
-    bu.draw_grid(board_surface)
+    bu.draw_grids(board_surface)
     
     board_surface.blit(fps_string, (bu.SCR_WIDTH - 70, bu.GRID_SIZE - 20))
 
