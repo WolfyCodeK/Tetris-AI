@@ -1,24 +1,34 @@
 import numpy as np
 import board_utils as bu
-import tetramino_features as tf
+import pieces
 import random
 
 class PieceController():
+    EMPTY_PIECE_PID = 'E'
 
     NUM_OF_PIECES = 5
     PIECE_NUMBERS = list(range(0, NUM_OF_PIECES))
+    
+    PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece]
+    
+    COLOUR_PID_DICT = {}
+    for i in range(len(PIECE_CLASS_LIST)):
+        COLOUR_PID_DICT[PIECE_CLASS_LIST[i].PID] = PIECE_CLASS_LIST[i].COLOUR
+    
     bag_counter = 0
     
     def __init__(self) -> None:
+        self.current_piece = None
+        
         # Initialise board state to be empty
-        self.board_state = np.full(shape=(int(bu.BOARD_ROWS + bu.pixel_to_grid_size(bu.DROP_HEIGHT)), bu.BOARD_COLUMNS), fill_value=tf.EMPTY_PIECE_PID)
+        self.board_state = np.full(shape=(int(bu.BOARD_ROWS + bu.pixel_to_grid_size(bu.DROP_HEIGHT)), bu.BOARD_COLUMNS), fill_value=self.EMPTY_PIECE_PID)
         self.new_piece()
         
     def draw_deactivated_pieces(self, board_surface):
         for y in range(len(self.board_state)):
             for x in range(len(self.board_state[0])):
-                if (self.board_state[y][x] != tf.EMPTY_PIECE_PID):
-                    bu.draw_rect(x, y, tf.COLOUR_PID_DICT[self.board_state[y][x]], board_surface)
+                if (self.board_state[y][x] != self.EMPTY_PIECE_PID):
+                    bu.draw_rect(x, y, self.COLOUR_PID_DICT[self.board_state[y][x]], board_surface)
             
     def draw_current_piece(self, board_surface):
         self.current_piece.draw(board_surface)
@@ -40,6 +50,12 @@ class PieceController():
         if (not self.__piece_is_horizontally_blocked(self.board_state, self.current_piece, x)):
             self.current_piece.set_x_pos(self.current_piece.x_pos + x)
             
+    def rotate_piece(self, clockwise: bool = True):
+        if (clockwise):
+            self.current_piece.rotate_clockwise()
+        else:
+            self.current_piece.rotate_anticlockwise()
+            
     def deactivate_piece(self) -> None:
         self.current_piece.active = False
         self.__place_piece(self.board_state, self.current_piece)
@@ -53,15 +69,9 @@ class PieceController():
         
         piece_num = self.PIECE_NUMBERS[self.bag_counter]
 
-        self.current_piece = tf.PIECE_CLASS_LIST[piece_num]() 
-    
-    @staticmethod        
-    def __place_piece(board_state, piece):
-        for i in range(len(piece.occupying_squares)):
-            board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = piece.pid
+        self.current_piece = self.PIECE_CLASS_LIST[piece_num]() 
             
-    @staticmethod
-    def __piece_is_vertically_blocked(board_state, piece) -> bool:
+    def __piece_is_vertically_blocked(self, board_state, piece) -> bool:
         blocked = False
 
         for i in range(len(piece.occupying_squares)):
@@ -70,13 +80,12 @@ class PieceController():
                 pos_state = board_state[piece.occupying_squares[i][1] + 1][piece.occupying_squares[i][0]]
                 
                 # If there is a piece there then the position is blocked
-                if (pos_state != tf.EMPTY_PIECE_PID):  
+                if (pos_state != self.EMPTY_PIECE_PID):  
                     blocked = True
                     
         return blocked
     
-    @staticmethod
-    def __piece_is_horizontally_blocked(board_state, piece, x) -> bool:
+    def __piece_is_horizontally_blocked(self, board_state, piece, x) -> bool:
         blocked = False
 
         for i in range(len(piece.occupying_squares)):
@@ -84,16 +93,21 @@ class PieceController():
             
             if (x > 0):
                 if (piece_pos + x <= bu.BOARD_COLUMNS):
-                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != tf.EMPTY_PIECE_PID):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != self.EMPTY_PIECE_PID):
                         blocked = True
                 else:
                     blocked = True
             
             if (x < 0):
                 if (piece_pos + x >= -1):
-                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != tf.EMPTY_PIECE_PID):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != self.EMPTY_PIECE_PID):
                         blocked = True
                 else:
                     blocked = True          
             
         return blocked
+    
+    @staticmethod        
+    def __place_piece(board_state, piece):
+        for i in range(len(piece.occupying_squares)):
+            board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = piece.pid

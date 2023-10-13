@@ -41,6 +41,10 @@ while running:
     if key[pygame.K_LEFT] == True and (register_input_delay < 0):
         p_controller.shift_piece_horizontally(-1)
         register_input_delay = 60
+        
+    if key[pygame.K_x] == True and (register_input_delay < 0):
+        p_controller.rotate_piece(clockwise=True)
+        register_input_delay = 60
     
     # Check pygame events
     for event in pygame.event.get():
