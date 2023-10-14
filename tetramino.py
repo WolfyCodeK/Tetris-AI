@@ -5,7 +5,7 @@ class Tetramino:
     def __init__(self, pid: chr, x: int, colour: tuple, shape: np.ndarray, large_rotation: bool = False) -> None:
         self.pid = pid
         self.x_pos = x
-        self.y_pos = bu.PIECE_START_HEIGHT
+        self.y_pos = 0
         self.colour = colour
         self.shape = shape
         self.occupying_squares = shape.copy()
@@ -14,9 +14,9 @@ class Tetramino:
         
         # The rotational space for 3x3 Tetraminos
         self.rotational_space = np.array([
-            [[0,0], [1,0], [2,0]],
-            [[0,1], [1,1], [2,1]],
-            [[0,2], [1,2], [2,2]]
+            [[-1,-1], [0,-1], [1,-1]],
+            [[-1,0], [0,0], [1,0]],
+            [[-1,1], [0,1], [1,1]]
         ])
         
         # The rotational space for 4x4 Tetraminos
@@ -33,6 +33,10 @@ class Tetramino:
     def draw(self, surface):
         for i in range(len(self.occupying_squares)):
             bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1], self.colour, surface)
+            
+    def draw_ghost_pieces(self, surface, max_height):
+        for i in range(len(self.occupying_squares)):
+            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1] + max_height, (50, 50, 50, 50), surface)
     
     def update_occupying_squares(self):      
         for i in range(len(self.shape)):
@@ -48,7 +52,58 @@ class Tetramino:
         self.update_occupying_squares()
     
     def rotate_anticlockwise(self):
-        pass
+        for i in range(len(self.shape)):
+            if (self.is_side_square(self.shape[i][0], self.shape[i][1])):
+                if (self.shape[i][1] == -1):
+                    self.shape[i][0] = self.shape[i][0] - 1
+                    self.shape[i][1] = self.shape[i][1] + 1
+                elif (self.shape[i][1] == 1):
+                    self.shape[i][0] = self.shape[i][0] + 1
+                    self.shape[i][1] = self.shape[i][1] - 1  
+                elif (self.shape[i][0] == -1):
+                    self.shape[i][0] = self.shape[i][0] + 1
+                    self.shape[i][1] = self.shape[i][1] + 1 
+                elif (self.shape[i][0] == 1):
+                    self.shape[i][0] = self.shape[i][0] - 1
+                    self.shape[i][1] = self.shape[i][1] - 1
+            else:
+                if (self.shape[i][0] == -1) and ((self.shape[i][1] == -1)):
+                    self.shape[i][1] = self.shape[i][1] + 2
+                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == -1)):
+                    self.shape[i][0] = self.shape[i][0] - 2
+                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == 1)):
+                    self.shape[i][1] = self.shape[i][1] - 2
+                elif (self.shape[i][0] == -1) and ((self.shape[i][1] == 1)):
+                    self.shape[i][0] = self.shape[i][0] + 2
+                    
+        self.update_occupying_squares()
     
     def rotate_clockwise(self):
-        print(self.rotational_space)
+        for i in range(len(self.shape)):
+            if (self.is_side_square(self.shape[i][0], self.shape[i][1])):
+                if (self.shape[i][1] == -1):
+                    self.shape[i][0] = self.shape[i][0] + 1
+                    self.shape[i][1] = self.shape[i][1] + 1
+                elif (self.shape[i][1] == 1):
+                    self.shape[i][0] = self.shape[i][0] - 1
+                    self.shape[i][1] = self.shape[i][1] - 1  
+                elif (self.shape[i][0] == -1):
+                    self.shape[i][0] = self.shape[i][0] + 1
+                    self.shape[i][1] = self.shape[i][1] - 1 
+                elif (self.shape[i][0] == 1):
+                    self.shape[i][0] = self.shape[i][0] - 1
+                    self.shape[i][1] = self.shape[i][1] + 1
+            else:
+                if (self.shape[i][0] == -1) and ((self.shape[i][1] == -1)):
+                    self.shape[i][0] = self.shape[i][0] + 2
+                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == -1)):
+                    self.shape[i][1] = self.shape[i][1] + 2
+                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == 1)):
+                    self.shape[i][0] = self.shape[i][0] - 2
+                elif (self.shape[i][0] == -1) and ((self.shape[i][1] == 1)):
+                    self.shape[i][1] = self.shape[i][1] - 2
+                    
+        self.update_occupying_squares()
+        
+    def is_side_square(self, x, y) -> bool:
+        return (not x) ^ (not y)

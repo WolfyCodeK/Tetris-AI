@@ -9,8 +9,10 @@ BACKGROUND_ALPHA = 175
 GRID_OUTLINE_WIDTH = 3
 INNER_GRID_SUBTRACT_BUFFER = GRID_OUTLINE_WIDTH - 1
 
-DROP_HEIGHT = 1 * GRID_SIZE
-PIECE_START_HEIGHT = int(-(DROP_HEIGHT / GRID_SIZE))
+DROP_HEIGHT = 2
+FLOOR_SIZE = 2
+
+BOARD_STATE_HEIGHT = BOARD_ROWS + DROP_HEIGHT
 
 BOARD_RIGHT_BUFFER = 6 * GRID_SIZE
 BOARD_LEFT_BUFFER = 6 * GRID_SIZE
@@ -88,6 +90,6 @@ def draw_grids(surface, outer: bool = True, inner: bool = True) -> None:
         __draw_inner_grid(surface)
     
 def draw_rect(x, y, colour, surface):
-    x = x + (BOARD_LEFT_BUFFER / GRID_SIZE)
-    y = y + (BOARD_TOP_BUFFER / GRID_SIZE) - 1
+    x = x + pixel_to_grid_size(BOARD_LEFT_BUFFER)
+    y = y + pixel_to_grid_size(BOARD_TOP_BUFFER) - DROP_HEIGHT
     draw.rect(surface, colour, Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE))

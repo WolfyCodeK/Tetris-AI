@@ -4,7 +4,7 @@ from tetramino import Tetramino
 class ZPiece(Tetramino):
     PID = 'Z'
     START_BOARD_X = 4
-    COLOUR = (255, 0, 0)
+    COLOUR = (255,115,122)
     
     def __init__(self) -> None:
         super().__init__(
@@ -17,7 +17,7 @@ class ZPiece(Tetramino):
 class LPiece(Tetramino):
     PID = 'L'
     START_BOARD_X = 4
-    COLOUR = (255,120,0)
+    COLOUR = (255,159,122)
     
     def __init__(self) -> None:
         super().__init__(
@@ -30,7 +30,7 @@ class LPiece(Tetramino):
 class SPiece(Tetramino):
     PID = 'S'
     START_BOARD_X = 4
-    COLOUR = (0, 255, 0)
+    COLOUR = (122,255,137)
     
     def __init__(self) -> None:
         super().__init__(
@@ -43,7 +43,7 @@ class SPiece(Tetramino):
 class JPiece(Tetramino):
     PID = 'J'
     START_BOARD_X = 4
-    COLOUR = (0,0,255)
+    COLOUR = (122,161,255)
     
     def __init__(self) -> None:
         super().__init__(
@@ -56,7 +56,7 @@ class JPiece(Tetramino):
 class TPiece(Tetramino):
     PID = 'T'
     START_BOARD_X = 4
-    COLOUR = (255,20,147)
+    COLOUR = (255,100,167)
     
     def __init__(self) -> None:
         super().__init__(

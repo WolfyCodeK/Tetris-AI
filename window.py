@@ -23,7 +23,8 @@ p_controller = piece_controller.PieceController()
 g_controller = game_controller.GameController(p_controller)
 
 # Restrict how often player can input keys (temp solution)
-register_input_delay = 0
+move_delay = 0
+rotate_delay = 0
 
 running = True
 
@@ -33,25 +34,45 @@ while running:
     
     # Take player input
     key = pygame.key.get_pressed()
-    register_input_delay -= 1
+    move_delay -= 1
+    rotate_delay -= 1
     
-    if (key[pygame.K_RIGHT] == True) and (register_input_delay < 0):
+    if (key[pygame.K_RIGHT] == True) and (move_delay < 0):
         p_controller.shift_piece_horizontally(1)
-        register_input_delay = 60
+        move_delay = 120
         
-    if key[pygame.K_LEFT] == True and (register_input_delay < 0):
+    if key[pygame.K_LEFT] == True and (move_delay < 0):
         p_controller.shift_piece_horizontally(-1)
-        register_input_delay = 60
+        move_delay = 120
         
-    if key[pygame.K_x] == True and (register_input_delay < 0):
-        p_controller.rotate_piece(clockwise=True)
-        register_input_delay = 60
+    if key[pygame.K_x] == True and (rotate_delay < 0):
+        p_controller.rotate_piece(1)
+        rotate_delay = 120
+        
+    if key[pygame.K_z] == True and (rotate_delay < 0):
+        p_controller.rotate_piece(-1)
+        rotate_delay = 120
+    
+    # DEBUG EVENTS
+    if key[pygame.K_a] == True:
+        g_controller.set_drop_speed(20)
+    
+    if key[pygame.K_s] == True:
+        g_controller.set_drop_speed(1)
     
     # Check pygame events
     for event in pygame.event.get():
         # Check if user has quit the window
         if event.type == pygame.QUIT:
             running = False
+            
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                p_controller.hard_drop_piece()
+                g_controller.new_piece_and_timer()
+                
+            if event.key == pygame.K_DOWN:
+                p_controller.hard_drop_piece()
     
     ###################################
     ##### GAME LOGIC CALCULATIONS #####

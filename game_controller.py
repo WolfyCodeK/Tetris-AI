@@ -8,20 +8,27 @@ class GameController():
     fps_time = 0
     frames = 0
     
-    # The speed at which the tetramino pieces fall
-    drop_speed = 2
-    drop_time = 1 / drop_speed
-    
-    # How long the tetramino can move around before without dropping before being deativated
-    piece_deactivate_delay = drop_speed
-    piece_deactivate_timer = piece_deactivate_delay
-    
     def __init__(self, p_controller) -> None:
         self.p_controller = p_controller
     
         # Set fps string
         self.font = pygame.font.Font("freesansbold.ttf", 32)
         self.fps_string = self.font.render(str("- - -"), True, (0, 255, 0))
+        
+        # The speed at which the tetramino pieces fall
+        self.drop_speed = 3
+        self.drop_time = 1 / self.drop_speed
+        
+        # How long the tetramino can move around before without dropping before being deativated
+        self.piece_deactivate_delay = self.drop_speed
+        self.piece_deactivate_timer = self.piece_deactivate_delay
+        
+    def set_drop_speed(self, speed):
+        self.drop_speed = speed
+        self.drop_time = 1 / speed
+        
+        self.piece_deactivate_delay = self.drop_speed
+        self.piece_deactivate_timer = self.piece_deactivate_delay
         
     def update_delta_time(self):
         """Calculates the delta time.
@@ -38,8 +45,10 @@ class GameController():
         Args:
             surface (Surface): The surface being drawn to.
         """
+        self.p_controller.draw_ghost_pieces(surface)
         self.p_controller.draw_deactivated_pieces(surface)
         self.p_controller.draw_current_piece(surface)
+        
     
     def run_timed_game_logic(self):
         """Runs the logic for the movement of the pieces over time.
@@ -63,13 +72,16 @@ class GameController():
                     self.piece_deactivate_timer = self.piece_deactivate_delay
             else:
                 self.piece_deactivate_timer -= 1
-            
+                
             # Create new piece and restart timer if piece needs deactivating
             if (self.piece_deactivate_timer < 0):
-                self.p_controller.deactivate_piece()
-                self.p_controller.new_piece()
-                
-                self.piece_deactivate_timer = self.piece_deactivate_delay
+                self.new_piece_and_timer()
 
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
+            
+    def new_piece_and_timer(self):
+        self.p_controller.deactivate_piece()
+        self.p_controller.new_piece()
+        
+        self.piece_deactivate_timer = self.piece_deactivate_delay
