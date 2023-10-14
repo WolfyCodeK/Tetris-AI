@@ -34,24 +34,24 @@ while running:
     
     # Take player input
     key = pygame.key.get_pressed()
-    move_delay -= 1
+    move_delay -= 1 
     rotate_delay -= 1
     
     if (key[pygame.K_RIGHT] == True) and (move_delay < 0):
         p_controller.shift_piece_horizontally(1)
-        move_delay = 120
+        move_delay = 75 * 32 / bu.GRID_SIZE
         
     if key[pygame.K_LEFT] == True and (move_delay < 0):
         p_controller.shift_piece_horizontally(-1)
-        move_delay = 120
+        move_delay = 75 * 32 / bu.GRID_SIZE
         
     if key[pygame.K_x] == True and (rotate_delay < 0):
         p_controller.rotate_piece(1)
-        rotate_delay = 120
+        rotate_delay = 120 * 32 / bu.GRID_SIZE
         
     if key[pygame.K_z] == True and (rotate_delay < 0):
         p_controller.rotate_piece(-1)
-        rotate_delay = 120
+        rotate_delay = 120 * 32 / bu.GRID_SIZE
     
     # DEBUG EVENTS
     if key[pygame.K_a] == True:
@@ -73,31 +73,33 @@ while running:
                 
             if event.key == pygame.K_DOWN:
                 p_controller.hard_drop_piece()
+                
+            if event.key == pygame.K_r:
+                p_controller.restart_board()
     
-    ###################################
     ##### GAME LOGIC CALCULATIONS #####
     g_controller.run_timed_game_logic()
-    ###################################
     
     # Clear window and draw window background       
-    window.fill(0)     
-    window.blit(board_surface, (0, 0))        
-
-    # Create board background
-    board_surface.fill((0, 0, 0, bu.BACKGROUND_ALPHA), pygame.Rect(bu.BOARD_LEFT_BUFFER, bu.BOARD_TOP_BUFFER, bu.BOARD_WIDTH, bu.BOARD_HEIGHT))
+    window.fill(0)
     
-    # Draw all pieces
-    g_controller.draw_pieces(board_surface)
-    
-    # Draw board background and window background
+    # Draw board background
     window.blit(board_surface, (0, 0))
-    board_surface.blit(background_image, (0, 0))
-    
-    # Draw board grids     
+    board_surface.fill(0)
+    board_surface.fill((0, 0, 0, bu.BACKGROUND_ALPHA), pygame.Rect(bu.BOARD_LEFT_BUFFER, bu.BOARD_TOP_BUFFER, bu.BOARD_WIDTH, bu.BOARD_HEIGHT))
+
+    # Draw board grids 
+    #window.blit(grid_surface, (0, 0))   
+    #grid_surface.fill(0) 
     bu.draw_grids(board_surface)
     
+    # Draw all pieces
+    #window.blit(piece_surface, (0, 0))
+    #piece_surface.fill(0)
+    g_controller.draw_pieces(board_surface)
+    
     # Draw fps counter
-    board_surface.blit(g_controller.fps_string, (bu.SCR_WIDTH - 70, bu.GRID_SIZE - 20))
+    board_surface.blit(g_controller.fps_string, (bu.SCR_WIDTH - (bu.GRID_SIZE * 3), bu.GRID_SIZE - bu.GRID_SIZE / 2))
 
     # Update window
     pygame.display.flip()

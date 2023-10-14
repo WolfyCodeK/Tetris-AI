@@ -36,7 +36,7 @@ class Tetramino:
             
     def draw_ghost_pieces(self, surface, max_height):
         for i in range(len(self.occupying_squares)):
-            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1] + max_height, (50, 50, 50, 50), surface)
+            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1] + max_height, (50, 50, 50, 200), surface)
     
     def update_occupying_squares(self):      
         for i in range(len(self.shape)):

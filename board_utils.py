@@ -3,11 +3,11 @@ from pygame import draw, Rect
 BOARD_ROWS = 20
 BOARD_COLUMNS = 10
 
-GRID_SIZE = 32
-GRID_ALPHA = 150
-BACKGROUND_ALPHA = 175
+GRID_SIZE = 24
+INNER_GRID_ALPHA = 30
+OUTER_GRID_ALPHA = 200
+BACKGROUND_ALPHA = 150
 GRID_OUTLINE_WIDTH = 3
-INNER_GRID_SUBTRACT_BUFFER = GRID_OUTLINE_WIDTH - 1
 
 DROP_HEIGHT = 2
 FLOOR_SIZE = 2
@@ -53,33 +53,33 @@ def grid_to_pixel_length(x: int) -> int:
     """
     return x * GRID_SIZE
 
-def __draw_outer_grid(surface):
+def __draw_outer_grid(surface):  
     # BOTTOM
-    draw.line(surface, (255, 255, 255, 255), BOTTOM_LEFT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(surface, (255, 255, 255, OUTER_GRID_ALPHA), BOTTOM_LEFT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
     
     # LEFT
-    draw.line(surface, (255, 255, 255, 255), TOP_LEFT_BOARD_CORNER, BOTTOM_LEFT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(surface, (255, 255, 255, OUTER_GRID_ALPHA), TOP_LEFT_BOARD_CORNER, BOTTOM_LEFT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
     
     # RIGHT
-    draw.line(surface, (255, 255, 255, 255), TOP_RIGHT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(surface, (255, 255, 255, OUTER_GRID_ALPHA), TOP_RIGHT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
     
 def __draw_inner_grid(surface):
     # VERTICAL LINES
     for x in range(1 * GRID_SIZE, BOARD_WIDTH, GRID_SIZE):
         draw.line(
             surface, 
-            (255, 255, 255, GRID_ALPHA), 
-            (x + BOARD_LEFT_BUFFER, BOARD_TOP_BUFFER), 
-            (x + BOARD_LEFT_BUFFER, BOARD_HEIGHT + BOARD_TOP_BUFFER - INNER_GRID_SUBTRACT_BUFFER)
+            (255, 255, 255, INNER_GRID_ALPHA), 
+            (x + BOARD_LEFT_BUFFER, BOARD_TOP_BUFFER + 2), 
+            (x + BOARD_LEFT_BUFFER, BOARD_HEIGHT + BOARD_TOP_BUFFER - 1)
         )
     
     # HORIZONTAL LINES    
-    for y in range(0, BOARD_HEIGHT, GRID_SIZE):
+    for y in range(1 * GRID_SIZE, BOARD_HEIGHT, GRID_SIZE):
         draw.line(
             surface, 
-            (255, 255, 255, GRID_ALPHA), 
-            (BOARD_LEFT_BUFFER + INNER_GRID_SUBTRACT_BUFFER, y + BOARD_TOP_BUFFER), 
-            (BOARD_WIDTH + BOARD_LEFT_BUFFER - INNER_GRID_SUBTRACT_BUFFER, y + BOARD_TOP_BUFFER)
+            (255, 255, 255, INNER_GRID_ALPHA), 
+            (BOARD_LEFT_BUFFER, y + BOARD_TOP_BUFFER), 
+            (BOARD_WIDTH + BOARD_LEFT_BUFFER - 1, y + BOARD_TOP_BUFFER)
         )
 
 def draw_grids(surface, outer: bool = True, inner: bool = True) -> None:

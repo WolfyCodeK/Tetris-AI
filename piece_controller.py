@@ -21,15 +21,19 @@ class PieceController():
     bag_counter = 0
     
     def __init__(self) -> None:
-        self.current_piece = None
-        
+        self.init_board_state()
+        self.new_piece()
+    
+    def init_board_state(self):
         # Initialise board state to be empty
         self.board_state = np.full(shape=(bu.BOARD_STATE_HEIGHT + bu.FLOOR_SIZE, bu.BOARD_COLUMNS), fill_value=self.EMPTY_PIECE_PID)
         
         # Set floor pieces
         for i in range(bu.FLOOR_SIZE):
-            self.board_state[bu.BOARD_STATE_HEIGHT + i] = 'F'
-        
+            self.board_state[bu.BOARD_STATE_HEIGHT + i] = self.FLOOR_PIECE_PID
+    
+    def restart_board(self):
+        self.init_board_state()
         self.new_piece()
         
     def draw_deactivated_pieces(self, surface):

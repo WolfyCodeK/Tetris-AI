@@ -1,5 +1,6 @@
 import pygame
 import time
+from board_utils import GRID_SIZE
 
 class GameController():
     #Initialise time recording variables
@@ -12,11 +13,11 @@ class GameController():
         self.p_controller = p_controller
     
         # Set fps string
-        self.font = pygame.font.Font("freesansbold.ttf", 32)
+        self.font = pygame.font.Font("freesansbold.ttf", GRID_SIZE)
         self.fps_string = self.font.render(str("- - -"), True, (0, 255, 0))
         
         # The speed at which the tetramino pieces fall
-        self.drop_speed = 3
+        self.drop_speed = 1
         self.drop_time = 1 / self.drop_speed
         
         # How long the tetramino can move around before without dropping before being deativated
