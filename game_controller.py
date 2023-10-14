@@ -81,6 +81,8 @@ class GameController():
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
             
+        self.p_controller.perform_line_clears()
+            
     def new_piece_and_timer(self):
         self.p_controller.deactivate_piece()
         self.p_controller.new_piece()

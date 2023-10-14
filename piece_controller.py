@@ -99,6 +99,20 @@ class PieceController():
         piece_num = self.PIECE_NUMBERS[self.bag_counter]
 
         self.current_piece = self.PIECE_CLASS_LIST[piece_num]() 
+        
+    def perform_line_clears(self):
+        columns = len(self.board_state[0])
+
+        for y in range(len(self.board_state)):
+            column_count = 0 
+            
+            for x in range(columns):
+                if self.board_state[y][x] not in self.NONE_PIECE_TYPES:
+                    column_count += 1
+                    
+            if column_count >= columns:                    
+                for y2 in range(y, 1, -1):
+                    self.board_state[y2] = self.board_state[y2 - 1]
             
     def __piece_is_vertically_blocked(self, board_state, piece, y_move) -> bool:
         blocked = False
@@ -129,7 +143,6 @@ class PieceController():
             if (x_move > 0):
                 if (piece_pos + x_move <= bu.BOARD_COLUMNS):
                     if (board_state[piece.occupying_squares[i][1]][piece_pos] != self.EMPTY_PIECE_PID):
-                        print(f"x: {piece_pos}, y: {piece.occupying_squares[i][1]}")
                         blocked = True
                 else:
                     blocked = True
