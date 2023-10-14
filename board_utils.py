@@ -87,7 +87,7 @@ def draw_grids(surface, outer: bool = True, inner: bool = True) -> None:
     if (inner):
         __draw_inner_grid(surface)
     
-def draw_rect(x, y, colour, board_surface):
+def draw_rect(x, y, colour, surface):
     x = x + (BOARD_LEFT_BUFFER / GRID_SIZE)
     y = y + (BOARD_TOP_BUFFER / GRID_SIZE) - 1
-    draw.rect(board_surface, colour, Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+    draw.rect(surface, colour, Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE))

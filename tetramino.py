@@ -8,12 +8,14 @@ class Tetramino:
         self.y_pos = bu.PIECE_START_HEIGHT
         self.colour = colour
         
+        # The rotational space for 3x3 Tetraminos
         self.rotational_space = np.array([
             [[0,0], [1,0], [2,0]],
             [[0,1], [1,1], [2,1]],
             [[0,2], [1,2], [2,2]]
         ])
         
+        # The rotational space for 4x4 Tetraminos
         if (large_rotation):
             self.rotational_space = np.array([
                 [[0,0], [1,0], [2,0], [3,0]],
@@ -24,9 +26,9 @@ class Tetramino:
         
         self.active = True
     
-    def draw(self, board_surface):
+    def draw(self, surface):
         for i in range(len(self.occupying_squares)):
-            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1], self.colour, board_surface)
+            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1], self.colour, surface)
     
     def update_occupying_squares(self, x, y):      
         raise NotImplementedError("Child class must override update_occupying_squares")

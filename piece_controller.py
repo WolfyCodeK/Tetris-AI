@@ -9,6 +9,7 @@ class PieceController():
     NUM_OF_PIECES = 5
     PIECE_NUMBERS = list(range(0, NUM_OF_PIECES))
     
+    # All the available pieces to the piece controller
     PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece]
     
     COLOUR_PID_DICT = {}
@@ -22,16 +23,17 @@ class PieceController():
         
         # Initialise board state to be empty
         self.board_state = np.full(shape=(int(bu.BOARD_ROWS + bu.pixel_to_grid_size(bu.DROP_HEIGHT)), bu.BOARD_COLUMNS), fill_value=self.EMPTY_PIECE_PID)
+        
         self.new_piece()
         
-    def draw_deactivated_pieces(self, board_surface):
+    def draw_deactivated_pieces(self, surface):
         for y in range(len(self.board_state)):
             for x in range(len(self.board_state[0])):
                 if (self.board_state[y][x] != self.EMPTY_PIECE_PID):
-                    bu.draw_rect(x, y, self.COLOUR_PID_DICT[self.board_state[y][x]], board_surface)
+                    bu.draw_rect(x, y, self.COLOUR_PID_DICT[self.board_state[y][x]], surface)
             
-    def draw_current_piece(self, board_surface):
-        self.current_piece.draw(board_surface)
+    def draw_current_piece(self, surface):
+        self.current_piece.draw(surface)
         
     def gravity_drop_piece(self) -> bool:
         """Attempts to drop a tetramino piece down by one row.

@@ -28,12 +28,13 @@ register_input_delay = 0
 running = True
 
 while running:
+    # Calculate delta time
     g_controller.update_delta_time()
     
-    register_input_delay -= 1
-    key = pygame.key.get_pressed()
-    
     # Take player input
+    key = pygame.key.get_pressed()
+    register_input_delay -= 1
+    
     if (key[pygame.K_RIGHT] == True) and (register_input_delay < 0):
         p_controller.shift_piece_horizontally(1)
         register_input_delay = 60
@@ -52,8 +53,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     
-    # Run game logic
-    g_controller.run_game_loop()
+    ###################################
+    ##### GAME LOGIC CALCULATIONS #####
+    g_controller.run_timed_game_logic()
+    ###################################
     
     # Clear window and draw window background       
     window.fill(0)     

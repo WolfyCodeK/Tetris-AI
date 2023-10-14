@@ -3,13 +3,13 @@ from tetramino import Tetramino
 
 class ZPiece(Tetramino):
     PID = 'Z'
-    START_X = 4
+    START_BOARD_X = 4
     COLOUR = (255, 0, 0)
     
     def __init__(self) -> None:
         super().__init__(
             self.PID,
-            self.START_X, 
+            self.START_BOARD_X, 
             self.COLOUR
         )
         
@@ -20,13 +20,13 @@ class ZPiece(Tetramino):
         
 class LPiece(Tetramino):
     PID = 'L'
-    START_X = 4
+    START_BOARD_X = 4
     COLOUR = (255,120,0)
     
     def __init__(self) -> None:
         super().__init__(
             self.PID,
-            self.START_X, 
+            self.START_BOARD_X, 
             self.COLOUR
         )
         
@@ -37,13 +37,13 @@ class LPiece(Tetramino):
         
 class SPiece(Tetramino):
     PID = 'S'
-    START_X = 4
+    START_BOARD_X = 4
     COLOUR = (0, 255, 0)
     
     def __init__(self) -> None:
         super().__init__(
             self.PID,
-            self.START_X, 
+            self.START_BOARD_X, 
             self.COLOUR
         )
         
@@ -54,13 +54,13 @@ class SPiece(Tetramino):
         
 class JPiece(Tetramino):
     PID = 'J'
-    START_X = 4
+    START_BOARD_X = 4
     COLOUR = (0,0,255)
     
     def __init__(self) -> None:
         super().__init__(
             self.PID,
-            self.START_X, 
+            self.START_BOARD_X, 
             self.COLOUR
         )
         
@@ -71,13 +71,13 @@ class JPiece(Tetramino):
         
 class TPiece(Tetramino):
     PID = 'T'
-    START_X = 4
+    START_BOARD_X = 4
     COLOUR = (255,20,147)
     
     def __init__(self) -> None:
         super().__init__(
             self.PID,
-            self.START_X, 
+            self.START_BOARD_X, 
             self.COLOUR
         )
         
