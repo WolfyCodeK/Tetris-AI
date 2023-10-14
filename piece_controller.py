@@ -87,29 +87,30 @@ class PieceController():
                     
         return blocked
     
-    def __piece_is_horizontally_blocked(self, board_state, piece, x) -> bool:
+    def __piece_is_horizontally_blocked(self, board_state, piece, x_move) -> bool:
         blocked = False
 
         for i in range(len(piece.occupying_squares)):
-            piece_pos = piece.occupying_squares[i][0] + x
+            piece_pos = piece.occupying_squares[i][0] + x_move
             
-            if (x > 0):
-                if (piece_pos + x <= bu.BOARD_COLUMNS):
-                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != self.EMPTY_PIECE_PID):
+            # Check for right input
+            if (x_move > 0):
+                if (piece_pos + x_move <= bu.BOARD_COLUMNS):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x_move] != self.EMPTY_PIECE_PID):
                         blocked = True
                 else:
                     blocked = True
             
-            if (x < 0):
-                if (piece_pos + x >= -1):
-                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x] != self.EMPTY_PIECE_PID):
+            # Check for left input
+            if (x_move < 0):
+                if (piece_pos + x_move >= -1):
+                    if (board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0] + x_move] != self.EMPTY_PIECE_PID):
                         blocked = True
                 else:
                     blocked = True          
             
         return blocked
-    
-    @staticmethod        
-    def __place_piece(board_state, piece):
+
+    def __place_piece(self, board_state, piece):
         for i in range(len(piece.occupying_squares)):
             board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = piece.pid

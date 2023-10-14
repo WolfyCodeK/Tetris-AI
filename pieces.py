@@ -10,13 +10,9 @@ class ZPiece(Tetramino):
         super().__init__(
             self.PID,
             self.START_BOARD_X, 
-            self.COLOUR
+            self.COLOUR,
+            np.array([[0, 0], [1, 0], [0, -1], [-1, -1]])
         )
-        
-        self.update_occupying_squares(self.x_pos, self.y_pos)
-    
-    def update_occupying_squares(self, x, y):    
-        self.occupying_squares = np.array([[x, y], [x + 1, y], [x, y - 1], [x - 1, y - 1]])
         
 class LPiece(Tetramino):
     PID = 'L'
@@ -27,13 +23,9 @@ class LPiece(Tetramino):
         super().__init__(
             self.PID,
             self.START_BOARD_X, 
-            self.COLOUR
+            self.COLOUR,
+            np.array([[0, 0], [-1, 0], [1, 0], [1, -1]])
         )
-        
-        self.update_occupying_squares(self.x_pos, self.y_pos)
-    
-    def update_occupying_squares(self, x, y):    
-        self.occupying_squares = np.array([[x, y], [x - 1, y], [x + 1, y], [x + 1, y - 1]])
         
 class SPiece(Tetramino):
     PID = 'S'
@@ -44,13 +36,9 @@ class SPiece(Tetramino):
         super().__init__(
             self.PID,
             self.START_BOARD_X, 
-            self.COLOUR
+            self.COLOUR,
+            np.array([[0, 0], [-1, 0], [0, -1], [1, -1]])
         )
-        
-        self.update_occupying_squares(self.x_pos, self.y_pos)
-    
-    def update_occupying_squares(self, x, y):    
-        self.occupying_squares = np.array([[x, y], [x - 1, y], [x, y - 1], [x + 1, y - 1]])
         
 class JPiece(Tetramino):
     PID = 'J'
@@ -61,13 +49,9 @@ class JPiece(Tetramino):
         super().__init__(
             self.PID,
             self.START_BOARD_X, 
-            self.COLOUR
+            self.COLOUR,
+            np.array([[0, 0], [-1, 0], [1, 0], [-1, -1]])
         )
-        
-        self.update_occupying_squares(self.x_pos, self.y_pos)
-    
-    def update_occupying_squares(self, x, y):    
-        self.occupying_squares = np.array([[x, y], [x - 1, y], [x + 1, y], [x -1, y - 1]])
         
 class TPiece(Tetramino):
     PID = 'T'
@@ -78,10 +62,6 @@ class TPiece(Tetramino):
         super().__init__(
             self.PID,
             self.START_BOARD_X, 
-            self.COLOUR
+            self.COLOUR,
+            np.array([[0, 0], [-1, 0], [1, 0], [0, -1]])
         )
-        
-        self.update_occupying_squares(self.x_pos, self.y_pos)
-    
-    def update_occupying_squares(self, x, y):    
-        self.occupying_squares = np.array([[x, y], [x - 1, y], [x + 1, y], [x, y - 1]])

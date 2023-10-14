@@ -9,7 +9,7 @@ class GameController():
     frames = 0
     
     # The speed at which the tetramino pieces fall
-    drop_speed = 20
+    drop_speed = 2
     drop_time = 1 / drop_speed
     
     # How long the tetramino can move around before without dropping before being deativated
@@ -22,8 +22,7 @@ class GameController():
         # Set fps string
         self.font = pygame.font.Font("freesansbold.ttf", 32)
         self.fps_string = self.font.render(str("- - -"), True, (0, 255, 0))
-        pass
-    
+        
     def update_delta_time(self):
         """Calculates the delta time.
         """
