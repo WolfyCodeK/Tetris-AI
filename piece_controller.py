@@ -129,6 +129,7 @@ class PieceController():
             if (x_move > 0):
                 if (piece_pos + x_move <= bu.BOARD_COLUMNS):
                     if (board_state[piece.occupying_squares[i][1]][piece_pos] != self.EMPTY_PIECE_PID):
+                        print(f"x: {piece_pos}, y: {piece.occupying_squares[i][1]}")
                         blocked = True
                 else:
                     blocked = True

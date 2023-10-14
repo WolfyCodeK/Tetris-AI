@@ -9,10 +9,13 @@ OUTER_GRID_ALPHA = 200
 BACKGROUND_ALPHA = 150
 GRID_OUTLINE_WIDTH = 3
 
+MAX_PIECE_LENGTH = 2
 DROP_HEIGHT = 2
 FLOOR_SIZE = 2
 
-BOARD_STATE_HEIGHT = BOARD_ROWS + DROP_HEIGHT
+BOARD_STATE_HEIGHT_BUFFER = DROP_HEIGHT + MAX_PIECE_LENGTH
+
+BOARD_STATE_HEIGHT = BOARD_ROWS + BOARD_STATE_HEIGHT_BUFFER
 
 BOARD_RIGHT_BUFFER = 6 * GRID_SIZE
 BOARD_LEFT_BUFFER = 6 * GRID_SIZE
@@ -91,5 +94,5 @@ def draw_grids(surface, outer: bool = True, inner: bool = True) -> None:
     
 def draw_rect(x, y, colour, surface):
     x = x + pixel_to_grid_size(BOARD_LEFT_BUFFER)
-    y = y + pixel_to_grid_size(BOARD_TOP_BUFFER) - DROP_HEIGHT
+    y = y + pixel_to_grid_size(BOARD_TOP_BUFFER) - BOARD_STATE_HEIGHT_BUFFER
     draw.rect(surface, colour, Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE))

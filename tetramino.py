@@ -5,7 +5,7 @@ class Tetramino:
     def __init__(self, pid: chr, x: int, colour: tuple, shape: np.ndarray, large_rotation: bool = False) -> None:
         self.pid = pid
         self.x_pos = x
-        self.y_pos = 0
+        self.y_pos = bu.MAX_PIECE_LENGTH
         self.colour = colour
         self.shape = shape
         self.occupying_squares = shape.copy()
