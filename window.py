@@ -1,4 +1,3 @@
-import numpy as np
 import pygame
 import board_utils as bu
 import piece_controller

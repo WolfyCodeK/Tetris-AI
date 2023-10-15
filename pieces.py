@@ -43,7 +43,7 @@ class SPiece(Tetramino):
 class JPiece(Tetramino):
     PID = 'J'
     START_BOARD_X = 4
-    COLOUR = (122,161,255)
+    COLOUR = (62,101,255)
     
     def __init__(self) -> None:
         super().__init__(
@@ -64,4 +64,30 @@ class TPiece(Tetramino):
             self.START_BOARD_X, 
             self.COLOUR,
             np.array([[0, 0], [-1, 0], [1, 0], [0, -1]])
+        )
+
+class IPiece(Tetramino):
+    PID = 'I'
+    START_BOARD_X = 4
+    COLOUR = (122,161,255)
+    
+    def __init__(self) -> None:
+        super().__init__(
+            self.PID,
+            self.START_BOARD_X, 
+            self.COLOUR,
+            np.array([[0, 0], [-1, 0], [1, 0], [2, 0]])
+        )
+        
+class OPiece(Tetramino):
+    PID = 'O'
+    START_BOARD_X = 4
+    COLOUR = (255,255,102)
+    
+    def __init__(self) -> None:
+        super().__init__(
+            self.PID,
+            self.START_BOARD_X, 
+            self.COLOUR,
+            np.array([[0, 0], [-1, 0], [-1, -1], [0, -1]])
         )

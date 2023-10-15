@@ -2,19 +2,17 @@ import numpy as np
 import board_utils as bu
 import pieces
 import random
-import time
 
 class PieceController():
     EMPTY_PIECE_PID = 'E'
     FLOOR_PIECE_PID = 'F'
     NONE_PIECE_TYPES = [EMPTY_PIECE_PID, FLOOR_PIECE_PID]
 
-    NUM_OF_PIECES = 5
-    PIECE_NUMBERS = list(range(0, NUM_OF_PIECES))
-    
     # All the available pieces to the piece controller
-    PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece]
-    
+    PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece, pieces.IPiece, pieces.OPiece]
+
+    NUM_OF_PIECES = len(PIECE_CLASS_LIST)
+    PIECE_NUMBERS = list(range(0, NUM_OF_PIECES))
     
     PIECE_PID_LIST  = []
     for i in range(len(PIECE_CLASS_LIST)):
@@ -86,10 +84,18 @@ class PieceController():
             self.current_piece.set_x_pos(self.current_piece.x_pos + x_move)
             
     def rotate_piece(self, clockwise):
+        is_IPiece = not (self.current_piece.pid != 'I' and self.current_piece.pid != 'O')
+        
+        if (not is_IPiece):
+            self.__rotate_direction(clockwise, is_IPiece)
+        elif self.current_piece.pid == 'I':
+            self.__rotate_direction(clockwise, is_IPiece)
+                
+    def __rotate_direction(self, clockwise, is_IPiece):
         if (clockwise == 1):
-            self.current_piece.rotate_clockwise()
+            self.current_piece.rotate_clockwise(is_IPiece)
         else:
-            self.current_piece.rotate_anticlockwise()
+            self.current_piece.rotate_anticlockwise(is_IPiece)
             
     def deactivate_piece(self) -> None:
         self.current_piece.active = False

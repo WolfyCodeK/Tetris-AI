@@ -12,22 +12,6 @@ class Tetramino:
         
         self.update_occupying_squares()
         
-        # The rotational space for 3x3 Tetraminos
-        self.rotational_space = np.array([
-            [[-1,-1], [0,-1], [1,-1]],
-            [[-1,0], [0,0], [1,0]],
-            [[-1,1], [0,1], [1,1]]
-        ])
-        
-        # The rotational space for 4x4 Tetraminos
-        if (large_rotation):
-            self.rotational_space = np.array([
-                [[0,0], [1,0], [2,0], [3,0]],
-                [[0,1], [1,1], [2,1], [3,1]],
-                [[0,2], [1,2], [2,2], [3,2]],
-                [[0,2], [1,2], [2,2], [3,3]]
-            ])
-        
         self.active = True
     
     def draw(self, surface):
@@ -51,57 +35,165 @@ class Tetramino:
         self.y_pos = y
         self.update_occupying_squares()
     
-    def rotate_anticlockwise(self):
-        for i in range(len(self.shape)):
-            if (self.is_side_square(self.shape[i][0], self.shape[i][1])):
-                if (self.shape[i][1] == -1):
-                    self.shape[i][0] = self.shape[i][0] - 1
-                    self.shape[i][1] = self.shape[i][1] + 1
-                elif (self.shape[i][1] == 1):
-                    self.shape[i][0] = self.shape[i][0] + 1
-                    self.shape[i][1] = self.shape[i][1] - 1  
-                elif (self.shape[i][0] == -1):
-                    self.shape[i][0] = self.shape[i][0] + 1
-                    self.shape[i][1] = self.shape[i][1] + 1 
-                elif (self.shape[i][0] == 1):
-                    self.shape[i][0] = self.shape[i][0] - 1
-                    self.shape[i][1] = self.shape[i][1] - 1
-            else:
-                if (self.shape[i][0] == -1) and ((self.shape[i][1] == -1)):
-                    self.shape[i][1] = self.shape[i][1] + 2
-                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == -1)):
-                    self.shape[i][0] = self.shape[i][0] - 2
-                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == 1)):
-                    self.shape[i][1] = self.shape[i][1] - 2
-                elif (self.shape[i][0] == -1) and ((self.shape[i][1] == 1)):
-                    self.shape[i][0] = self.shape[i][0] + 2
+    def rotate_anticlockwise(self, is_IPiece = False):
+        if (not is_IPiece):
+            for i in range(len(self.shape)):
+                if (self.is_side_square(self.shape[i][0], self.shape[i][1])):
+                    if (self.shape[i][1] == -1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][1] == 1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] - 1  
+                    elif (self.shape[i][0] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] + 1 
+                    elif (self.shape[i][0] == 1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] - 1
+                else:
+                    if (self.shape[i][0] == -1) and ((self.shape[i][1] == -1)):
+                        self.shape[i][1] = self.shape[i][1] + 2
+                    elif (self.shape[i][0] == 1) and ((self.shape[i][1] == -1)):
+                        self.shape[i][0] = self.shape[i][0] - 2
+                    elif (self.shape[i][0] == 1) and ((self.shape[i][1] == 1)):
+                        self.shape[i][1] = self.shape[i][1] - 2
+                    elif (self.shape[i][0] == -1) and ((self.shape[i][1] == 1)):
+                        self.shape[i][0] = self.shape[i][0] + 2
+        else:
+            if (self.shape[0][0] == 0 and self.shape[0][1] == 0):
+                # STATE 1
+                for i in range(len(self.shape)):
+                    if (self.shape[i][0] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] + 2
+                    elif (self.shape[i][0] == 0):
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][0] == 1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                    elif (self.shape[i][0] == 2):
+                        self.shape[i][0] = self.shape[i][0] - 2
+                        self.shape[i][1] = self.shape[i][1] - 1
+            elif (self.shape[0][0] == 1 and self.shape[0][1] == 0):
+                # STATE 2
+                for i in range(len(self.shape)):
+                    if (self.shape[i][1] == -1):
+                        self.shape[i][0] = self.shape[i][0] - 2
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][1] == 0):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                    elif (self.shape[i][1] == 1):
+                        self.shape[i][1] = self.shape[i][1] - 1
+                    elif (self.shape[i][1] == 2):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] - 2
+            elif (self.shape[0][0] == 1 and self.shape[0][1] == 1):
+                # STATE 3
+                for i in range(len(self.shape)):
+                    if (self.shape[i][0] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 2
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][0] == 0):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                    elif (self.shape[i][0] == 1):
+                        self.shape[i][1] = self.shape[i][1] - 1
+                    elif (self.shape[i][0] == 2):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] - 2
+            elif (self.shape[0][0] == 0 and self.shape[0][1] == 1):
+                # STATE 4
+                for i in range(len(self.shape)):
+                    if (self.shape[i][1] == -1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] + 2
+                    elif (self.shape[i][1] == 0):
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][1] == 1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                    elif (self.shape[i][1] == 2):
+                        self.shape[i][0] = self.shape[i][0] + 2
+                        self.shape[i][1] = self.shape[i][1] - 1
                     
         self.update_occupying_squares()
     
-    def rotate_clockwise(self):
-        for i in range(len(self.shape)):
-            if (self.is_side_square(self.shape[i][0], self.shape[i][1])):
-                if (self.shape[i][1] == -1):
-                    self.shape[i][0] = self.shape[i][0] + 1
-                    self.shape[i][1] = self.shape[i][1] + 1
-                elif (self.shape[i][1] == 1):
-                    self.shape[i][0] = self.shape[i][0] - 1
-                    self.shape[i][1] = self.shape[i][1] - 1  
-                elif (self.shape[i][0] == -1):
-                    self.shape[i][0] = self.shape[i][0] + 1
-                    self.shape[i][1] = self.shape[i][1] - 1 
-                elif (self.shape[i][0] == 1):
-                    self.shape[i][0] = self.shape[i][0] - 1
-                    self.shape[i][1] = self.shape[i][1] + 1
-            else:
-                if (self.shape[i][0] == -1) and ((self.shape[i][1] == -1)):
-                    self.shape[i][0] = self.shape[i][0] + 2
-                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == -1)):
-                    self.shape[i][1] = self.shape[i][1] + 2
-                elif (self.shape[i][0] == 1) and ((self.shape[i][1] == 1)):
-                    self.shape[i][0] = self.shape[i][0] - 2
-                elif (self.shape[i][0] == -1) and ((self.shape[i][1] == 1)):
-                    self.shape[i][1] = self.shape[i][1] - 2
+    def rotate_clockwise(self, is_IPiece = False):
+        if (not is_IPiece):
+            for i in range(len(self.shape)):
+                if (self.is_side_square(self.shape[i][0], self.shape[i][1])):
+                    if (self.shape[i][1] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][1] == 1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] - 1  
+                    elif (self.shape[i][0] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] - 1 
+                    elif (self.shape[i][0] == 1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] + 1
+                else:
+                    if (self.shape[i][0] == -1) and ((self.shape[i][1] == -1)):
+                        self.shape[i][0] = self.shape[i][0] + 2
+                    elif (self.shape[i][0] == 1) and ((self.shape[i][1] == -1)):
+                        self.shape[i][1] = self.shape[i][1] + 2
+                    elif (self.shape[i][0] == 1) and ((self.shape[i][1] == 1)):
+                        self.shape[i][0] = self.shape[i][0] - 2
+                    elif (self.shape[i][0] == -1) and ((self.shape[i][1] == 1)):
+                        self.shape[i][1] = self.shape[i][1] - 2
+        else:
+            if (self.shape[0][0] == 0 and self.shape[0][1] == 0):
+                # STATE 1
+                for i in range(len(self.shape)):
+                    if (self.shape[i][0] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 2
+                        self.shape[i][1] = self.shape[i][1] - 1
+                    elif (self.shape[i][0] == 0):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                    elif (self.shape[i][0] == 1):
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][0] == 2):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] + 2
+            elif (self.shape[0][0] == 1 and self.shape[0][1] == 0):
+                # STATE 2
+                for i in range(len(self.shape)):
+                    if (self.shape[i][1] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] + 2
+                    elif (self.shape[i][1] == 0):
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][1] == 1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                    elif (self.shape[i][1] == 2):
+                        self.shape[i][0] = self.shape[i][0] - 2
+                        self.shape[i][1] = self.shape[i][1] - 1
+            elif (self.shape[0][0] == 1 and self.shape[0][1] == 1):
+                # STATE 3
+                for i in range(len(self.shape)):
+                    if (self.shape[i][0] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                        self.shape[i][1] = self.shape[i][1] - 2
+                    elif (self.shape[i][0] == 0):
+                        self.shape[i][1] = self.shape[i][1] - 1
+                    elif (self.shape[i][0] == 1):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                    elif (self.shape[i][0] == 2):
+                        self.shape[i][0] = self.shape[i][0] - 2
+                        self.shape[i][1] = self.shape[i][1] + 1
+            elif (self.shape[0][0] == 0 and self.shape[0][1] == 1):
+                # STATE 4
+                for i in range(len(self.shape)):
+                    if (self.shape[i][1] == -1):
+                        self.shape[i][0] = self.shape[i][0] + 2
+                        self.shape[i][1] = self.shape[i][1] + 1
+                    elif (self.shape[i][1] == 0):
+                        self.shape[i][0] = self.shape[i][0] + 1
+                    elif (self.shape[i][1] == 1):
+                        self.shape[i][1] = self.shape[i][1] - 1
+                    elif (self.shape[i][1] == 2):
+                        self.shape[i][0] = self.shape[i][0] - 1
+                        self.shape[i][1] = self.shape[i][1] - 2
                     
         self.update_occupying_squares()
         
