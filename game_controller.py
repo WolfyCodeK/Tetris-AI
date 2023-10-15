@@ -49,6 +49,7 @@ class GameController():
         self.p_controller.draw_ghost_pieces(surface)
         self.p_controller.draw_deactivated_pieces(surface)
         self.p_controller.draw_current_piece(surface)
+        self.p_controller.draw_held_piece(surface)
         
     
     def run_timed_game_logic(self):

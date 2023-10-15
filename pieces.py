@@ -81,7 +81,7 @@ class IPiece(Tetramino):
         
 class OPiece(Tetramino):
     PID = 'O'
-    START_BOARD_X = 4
+    START_BOARD_X = 5
     COLOUR = (255,255,102)
     
     def __init__(self) -> None:

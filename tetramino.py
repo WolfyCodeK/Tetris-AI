@@ -2,12 +2,19 @@ import board_utils as bu
 import numpy as np
 
 class Tetramino:
+    GHOST_PIECE_ALPHA = 225
+    
     def __init__(self, pid: chr, x: int, colour: tuple, shape: np.ndarray, large_rotation: bool = False) -> None:
+        self.START_X_POS = x + bu.BOARD_STATE_WIDTH_BUFFER
+        self.START_Y_POS = bu.MAX_PIECE_LENGTH
+        
         self.pid = pid
-        self.x_pos = x
-        self.y_pos = bu.MAX_PIECE_LENGTH
+        self.x_pos = self.START_X_POS
+        self.y_pos = self.START_Y_POS
         self.colour = colour
         self.shape = shape
+        
+        self.DEFAULT_SHAPE = shape.copy()
         self.occupying_squares = shape.copy()
         
         self.update_occupying_squares()
@@ -20,7 +27,7 @@ class Tetramino:
             
     def draw_ghost_pieces(self, surface, max_height):
         for i in range(len(self.occupying_squares)):
-            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1] + max_height, (50, 50, 50, 200), surface)
+            bu.draw_rect(self.occupying_squares[i][0], self.occupying_squares[i][1] + max_height, (50, 50, 50, self.GHOST_PIECE_ALPHA), surface)
     
     def update_occupying_squares(self):      
         for i in range(len(self.shape)):

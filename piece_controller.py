@@ -6,7 +6,8 @@ import random
 class PieceController():
     EMPTY_PIECE_PID = 'E'
     FLOOR_PIECE_PID = 'F'
-    NONE_PIECE_TYPES = [EMPTY_PIECE_PID, FLOOR_PIECE_PID]
+    WALL_PIECE_PID = 'W'
+    NONE_PIECE_TYPES = [EMPTY_PIECE_PID, FLOOR_PIECE_PID, WALL_PIECE_PID]
 
     # All the available pieces to the piece controller
     PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece, pieces.IPiece, pieces.OPiece]
@@ -21,17 +22,32 @@ class PieceController():
     COLOUR_PID_DICT = {}
     for i in range(len(PIECE_CLASS_LIST)):
         COLOUR_PID_DICT[PIECE_PID_LIST[i]] = PIECE_CLASS_LIST[i].COLOUR
+        
+    BLOCKING_PIECE_TYPES = PIECE_PID_LIST.copy()
+    BLOCKING_PIECE_TYPES.append(FLOOR_PIECE_PID)
+    BLOCKING_PIECE_TYPES.append(WALL_PIECE_PID)
     
     bag_counter = 0
     
-    def __init__(self) -> None:
-        self.init_board_state()
-        self.new_piece()
     
+    def __init__(self) -> None:
+        self.restart_board()
+        
     def init_board_state(self):
         # Initialise board state to be empty
-        self.board_state = np.full(shape=(bu.BOARD_STATE_HEIGHT + bu.FLOOR_SIZE, bu.BOARD_COLUMNS), fill_value=self.EMPTY_PIECE_PID)
-        
+        self.board_state = np.full(shape=(bu.BOARD_STATE_HEIGHT + bu.FLOOR_SIZE, bu.BOARD_STATE_WIDTH), fill_value=self.EMPTY_PIECE_PID)
+            
+        # Set wall pieces
+        # Right wall
+        for x in range(bu.BOARD_RIGHT_WALL, bu.BOARD_STATE_WIDTH):
+            for y in range(len(self.board_state)):
+                self.board_state[y][x] = self.WALL_PIECE_PID
+            
+        # Left wall
+        for x in range(bu.BOARD_LEFT_WALL):
+            for y in range(len(self.board_state)):
+                self.board_state[y][x] = self.WALL_PIECE_PID
+                
         # Set floor pieces
         for i in range(bu.FLOOR_SIZE):
             self.board_state[bu.BOARD_STATE_HEIGHT + i] = self.FLOOR_PIECE_PID
@@ -39,6 +55,9 @@ class PieceController():
     def restart_board(self):
         self.init_board_state()
         self.new_piece()
+        
+        self.held_piece = None
+        self.last_piece_placed = True
         
     def draw_deactivated_pieces(self, surface):
         for y in range(len(self.board_state)):
@@ -51,6 +70,22 @@ class PieceController():
         
     def draw_ghost_pieces(self, surface):
         self.current_piece.draw_ghost_pieces(surface, self.calculate_max_drop_height())
+        
+    def draw_held_piece(self, surface):
+        x_adjust = - 2
+        y_adjust = 6
+        
+        if (self.held_piece != None):
+            self.held_piece.shape = self.held_piece.DEFAULT_SHAPE.copy()
+            for i in range(len(self.held_piece.shape)):
+                if (self.held_piece.pid == 'O'):
+                    x_adjust += 1
+                if (self.held_piece.pid == 'I'):
+                    y_adjust -= 1
+                bu.draw_rect(self.held_piece.shape[i][0] + x_adjust, self.held_piece.shape[i][1] + y_adjust, self.held_piece.colour, surface)
+                
+                x_adjust = -2
+                y_adjust = 6
         
     def gravity_drop_piece(self) -> bool:
         """Attempts to drop a tetramino piece down by one row.
@@ -90,6 +125,8 @@ class PieceController():
             self.__rotate_direction(clockwise, is_IPiece)
         elif self.current_piece.pid == 'I':
             self.__rotate_direction(clockwise, is_IPiece)
+            
+        self.move_occupying_square_if_blocked()
                 
     def __rotate_direction(self, clockwise, is_IPiece):
         if (clockwise == 1):
@@ -113,16 +150,14 @@ class PieceController():
         self.current_piece = self.PIECE_CLASS_LIST[piece_num]() 
         
     def perform_line_clears(self):
-        columns = len(self.board_state[0])
-
         for y in range(len(self.board_state)):
             column_count = 0 
             
-            for x in range(columns):
+            for x in range(bu.BOARD_STATE_WIDTH):
                 if self.board_state[y][x] not in self.NONE_PIECE_TYPES:
                     column_count += 1
                     
-            if column_count >= columns:                    
+            if column_count >= bu.BOARD_COLUMNS:         
                 for y2 in range(y, 1, -1):
                     self.board_state[y2] = self.board_state[y2 - 1]
                     
@@ -130,7 +165,22 @@ class PieceController():
         for y in range(bu.BOARD_STATE_HEIGHT_BUFFER):
             if any(pid in self.PIECE_PID_LIST for pid in self.board_state[y].tolist()):
                 return True
-            
+    
+    def move_occupying_square_if_blocked(self):
+        piece = self.current_piece
+        x_pos = piece.x_pos
+        y_pos = piece.y_pos
+        
+        for i in range(len(piece.occupying_squares)):
+            if (piece.occupying_squares[i][1] == y_pos + 1) and (self.board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] in self.BLOCKING_PIECE_TYPES):
+                self.current_piece.set_y_pos(self.current_piece.y_pos - 1)
+                
+            if (piece.occupying_squares[i][0] == x_pos + 1) and (self.board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] in self.BLOCKING_PIECE_TYPES):
+                self.current_piece.set_x_pos(self.current_piece.x_pos - 1)
+                
+            if (piece.occupying_squares[i][0] == x_pos - 1) and (self.board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] in self.BLOCKING_PIECE_TYPES):
+                self.current_piece.set_x_pos(self.current_piece.x_pos + 1)
+                
     def __piece_is_vertically_blocked(self, board_state, piece, y_move) -> bool:
         blocked = False
 
@@ -158,7 +208,7 @@ class PieceController():
             
             # Check for right input
             if (x_move > 0):
-                if (piece_pos + x_move <= bu.BOARD_COLUMNS):
+                if (piece_pos + x_move <= bu.BOARD_RIGHT_WALL):
                     if (board_state[piece.occupying_squares[i][1]][piece_pos] != self.EMPTY_PIECE_PID):
                         blocked = True
                 else:
@@ -166,7 +216,7 @@ class PieceController():
             
             # Check for left input
             if (x_move < 0):
-                if (piece_pos + x_move >= -1):
+                if (piece_pos + x_move >= bu.BOARD_LEFT_WALL - 1):
                     if (board_state[piece.occupying_squares[i][1]][piece_pos] != self.EMPTY_PIECE_PID):
                         blocked = True
                 else:
@@ -177,3 +227,25 @@ class PieceController():
     def __place_piece(self, board_state, piece):
         for i in range(len(piece.occupying_squares)):
             board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = piece.pid
+            
+        self.last_piece_placed = True
+        
+    def hold_piece(self):
+        if (self.held_piece != None) and (self.last_piece_placed):
+            temp_piece = self.current_piece
+            self.current_piece = self.held_piece
+            self.held_piece = temp_piece
+            
+            self.last_piece_placed = False
+            
+            self.held_piece.set_x_pos(self.held_piece.START_X_POS)
+            self.held_piece.set_y_pos(self.held_piece.START_Y_POS)
+            
+        elif (self.held_piece == None):
+            self.held_piece = self.current_piece
+            self.new_piece()
+            
+            self.last_piece_placed = False
+            
+            self.held_piece.set_x_pos(self.held_piece.START_X_POS)
+            self.held_piece.set_y_pos(self.held_piece.START_Y_POS)

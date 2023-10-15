@@ -76,6 +76,9 @@ while running:
                 
             if event.key == pygame.K_r:
                 p_controller.restart_board()
+                
+            if event.key == pygame.K_LSHIFT:
+                p_controller.hold_piece()
     
     ##### GAME LOGIC CALCULATIONS #####
     g_controller.run_timed_game_logic()
