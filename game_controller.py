@@ -82,6 +82,8 @@ class GameController():
             self.total_time = self.total_time - self.drop_time
             
         self.p_controller.perform_line_clears()
+        if (self.p_controller.check_game_over()):
+            self.p_controller.restart_board()
             
     def new_piece_and_timer(self):
         self.p_controller.deactivate_piece()

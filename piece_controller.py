@@ -2,6 +2,7 @@ import numpy as np
 import board_utils as bu
 import pieces
 import random
+import time
 
 class PieceController():
     EMPTY_PIECE_PID = 'E'
@@ -14,9 +15,14 @@ class PieceController():
     # All the available pieces to the piece controller
     PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece]
     
+    
+    PIECE_PID_LIST  = []
+    for i in range(len(PIECE_CLASS_LIST)):
+                PIECE_PID_LIST.append(PIECE_CLASS_LIST[i].PID)
+    
     COLOUR_PID_DICT = {}
     for i in range(len(PIECE_CLASS_LIST)):
-        COLOUR_PID_DICT[PIECE_CLASS_LIST[i].PID] = PIECE_CLASS_LIST[i].COLOUR
+        COLOUR_PID_DICT[PIECE_PID_LIST[i]] = PIECE_CLASS_LIST[i].COLOUR
     
     bag_counter = 0
     
@@ -113,6 +119,11 @@ class PieceController():
             if column_count >= columns:                    
                 for y2 in range(y, 1, -1):
                     self.board_state[y2] = self.board_state[y2 - 1]
+                    
+    def check_game_over(self):
+        for y in range(bu.BOARD_STATE_HEIGHT_BUFFER):
+            if any(pid in self.PIECE_PID_LIST for pid in self.board_state[y].tolist()):
+                return True
             
     def __piece_is_vertically_blocked(self, board_state, piece, y_move) -> bool:
         blocked = False
