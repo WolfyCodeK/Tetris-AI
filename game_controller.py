@@ -39,6 +39,9 @@ class GameController():
         self.b2b = 0
         self.b2b_string = self.font.render(str(self.b2b), True, (255, 255, 255))
         
+    def increment_frames_passed(self):
+        self.frames += 1
+        
     def set_drop_speed(self, speed):
         self.drop_speed = speed
         self.drop_time = 1 / speed
@@ -65,6 +68,7 @@ class GameController():
         self.p_controller.draw_deactivated_pieces(surface)
         self.p_controller.draw_current_piece(surface)
         self.p_controller.draw_held_piece(surface)
+        self.p_controller.draw_queued_pieces(surface)
         
     def clear_lines_and_add_score(self):
         lines_cleared = self.p_controller.perform_line_clears()
@@ -119,19 +123,19 @@ class GameController():
             self.move_delay = 75 * 32 / bu.GRID_SIZE
             
         if key[pygame.K_x] == True and (self.rotate_delay < 0):
-            self.p_controller.rotate_piece(1)
+            self.p_controller.rotate_piece(clockwise=True)
             self.rotate_delay = 120 * 32 / bu.GRID_SIZE
             
         if key[pygame.K_z] == True and (self.rotate_delay < 0):
-            self.p_controller.rotate_piece(-1)
+            self.p_controller.rotate_piece(clockwise=False)
             self.rotate_delay = 120 * 32 / bu.GRID_SIZE
         
         # DEBUG EVENTS
         if key[pygame.K_a] == True:
-            self.p_controller.set_drop_speed(20)
+            self.set_drop_speed(20)
         
         if key[pygame.K_s] == True:
-            self.p_controller.set_drop_speed(1)
+            self.set_drop_speed(1)
         
         for event in event_list:          
             if event.type == pygame.KEYDOWN:
@@ -182,8 +186,10 @@ class GameController():
             
         self.clear_lines_and_add_score()
         
+        # Reset score and board if game over
         if (self.p_controller.check_game_over()):
             self.p_controller.restart_board()
+            self.reset_score()
             
     def new_piece_and_timer(self):
         self.p_controller.deactivate_piece()

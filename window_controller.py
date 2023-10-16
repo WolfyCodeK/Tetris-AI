@@ -44,6 +44,3 @@ class WindowController():
 
         # Update window
         pygame.display.flip()
-        
-        # Increment frames that have passed
-        self.g_controller.frames += 1

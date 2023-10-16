@@ -27,8 +27,9 @@ while running:
         running = False
     
     match game_state:
-        case GameStates.UPDATE_DELTA_TIME:
+        case GameStates.UPDATE_TIME:
             g_controller.update_delta_time()
+            g_controller.increment_frames_passed()
             g_controller.update_fps_counter()
             game_state = GameStates.TAKE_INPUTS
             
