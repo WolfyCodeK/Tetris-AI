@@ -71,7 +71,7 @@ class PieceController():
         self.current_piece.draw(surface)
         
     def draw_ghost_pieces(self, surface):
-        self.current_piece.draw_ghost_pieces(surface, self.calculate_max_drop_height())
+        self.current_piece.draw_ghost_pieces(surface, self.__calculate_max_drop_height())
         
     def draw_held_piece(self, surface):
         x_adjust = - 2
@@ -102,7 +102,7 @@ class PieceController():
         else:
             return False
         
-    def calculate_max_drop_height(self):
+    def __calculate_max_drop_height(self):
         piece_dropped = False
         drop_amount = 1
         
@@ -114,7 +114,7 @@ class PieceController():
                 return drop_amount - 1
         
     def hard_drop_piece(self):
-        self.current_piece.set_y_pos(self.current_piece.y_pos + self.calculate_max_drop_height())
+        self.current_piece.set_y_pos(self.current_piece.y_pos + self.__calculate_max_drop_height())
         
     def shift_piece_horizontally(self, x_move):
         if (not self.__piece_is_horizontally_blocked(self.board_state, self.current_piece, x_move)):
@@ -128,7 +128,7 @@ class PieceController():
         else:
             self.__basic_rotation(clockwise, is_IPiece)
             
-        self.move_occupying_square_if_blocked()
+        self.__move_occupying_square_if_blocked()
                 
     def __basic_rotation(self, clockwise, is_IPiece):
         if (clockwise == 1):
@@ -174,7 +174,7 @@ class PieceController():
             if any(pid in self.PIECE_PID_LIST for pid in self.board_state[y].tolist()):
                 return True
     
-    def move_occupying_square_if_blocked(self):
+    def __move_occupying_square_if_blocked(self):
         piece = self.current_piece
         x_pos = piece.x_pos
         y_pos = piece.y_pos
