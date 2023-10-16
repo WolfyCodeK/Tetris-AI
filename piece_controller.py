@@ -3,6 +3,8 @@ import board_utils as bu
 import pieces
 import random
 
+from placement_exception import PiecePlacementError
+
 class PieceController():
     EMPTY_PIECE_PID = 'E'
     FLOOR_PIECE_PID = 'F'
@@ -118,17 +120,17 @@ class PieceController():
         if (not self.__piece_is_horizontally_blocked(self.board_state, self.current_piece, x_move)):
             self.current_piece.set_x_pos(self.current_piece.x_pos + x_move)
             
-    def rotate_piece(self, clockwise):
-        is_IPiece = not (self.current_piece.pid != 'I' and self.current_piece.pid != 'O')
+    def rotate_piece(self, clockwise):    
+        is_IPiece = self.current_piece.pid == 'I'
         
-        if (not is_IPiece):
-            self.__rotate_direction(clockwise, is_IPiece)
-        elif self.current_piece.pid == 'I':
-            self.__rotate_direction(clockwise, is_IPiece)
+        if (is_IPiece):
+            self.__basic_rotation(clockwise, is_IPiece)
+        else:
+            self.__basic_rotation(clockwise, is_IPiece)
             
         self.move_occupying_square_if_blocked()
                 
-    def __rotate_direction(self, clockwise, is_IPiece):
+    def __basic_rotation(self, clockwise, is_IPiece):
         if (clockwise == 1):
             self.current_piece.rotate_clockwise(is_IPiece)
         else:
@@ -150,6 +152,8 @@ class PieceController():
         self.current_piece = self.PIECE_CLASS_LIST[piece_num]() 
         
     def perform_line_clears(self):
+        lines_cleared = 0
+        
         for y in range(len(self.board_state)):
             column_count = 0 
             
@@ -157,9 +161,13 @@ class PieceController():
                 if self.board_state[y][x] not in self.NONE_PIECE_TYPES:
                     column_count += 1
                     
-            if column_count >= bu.BOARD_COLUMNS:         
+            if column_count >= bu.BOARD_COLUMNS:    
+                lines_cleared += 1   
+                
                 for y2 in range(y, 1, -1):
                     self.board_state[y2] = self.board_state[y2 - 1]
+                    
+        return lines_cleared
                     
     def check_game_over(self):
         for y in range(bu.BOARD_STATE_HEIGHT_BUFFER):
@@ -171,15 +179,20 @@ class PieceController():
         x_pos = piece.x_pos
         y_pos = piece.y_pos
         
+        shift_amount = 1
+        
+        if (piece.pid == 'I'):
+            shift_amount = 3
+        
         for i in range(len(piece.occupying_squares)):
             if (piece.occupying_squares[i][1] == y_pos + 1) and (self.board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] in self.BLOCKING_PIECE_TYPES):
-                self.current_piece.set_y_pos(self.current_piece.y_pos - 1)
+                self.current_piece.set_y_pos(self.current_piece.y_pos - shift_amount)
                 
             if (piece.occupying_squares[i][0] == x_pos + 1) and (self.board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] in self.BLOCKING_PIECE_TYPES):
-                self.current_piece.set_x_pos(self.current_piece.x_pos - 1)
+                self.current_piece.set_x_pos(self.current_piece.x_pos - shift_amount)
                 
             if (piece.occupying_squares[i][0] == x_pos - 1) and (self.board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] in self.BLOCKING_PIECE_TYPES):
-                self.current_piece.set_x_pos(self.current_piece.x_pos + 1)
+                self.current_piece.set_x_pos(self.current_piece.x_pos + shift_amount)
                 
     def __piece_is_vertically_blocked(self, board_state, piece, y_move) -> bool:
         blocked = False
@@ -226,7 +239,13 @@ class PieceController():
 
     def __place_piece(self, board_state, piece):
         for i in range(len(piece.occupying_squares)):
-            board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = piece.pid
+            y = piece.occupying_squares[i][1]
+            x = piece.occupying_squares[i][0]
+            
+            if (board_state[y][x] not in self.BLOCKING_PIECE_TYPES):
+                board_state[piece.occupying_squares[i][1]][piece.occupying_squares[i][0]] = piece.pid
+            else:
+                raise PiecePlacementError(x, y, piece.pid)
             
         self.last_piece_placed = True
         

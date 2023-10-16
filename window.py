@@ -102,7 +102,13 @@ while running:
     g_controller.draw_pieces(board_surface)
     
     # Draw fps counter
-    board_surface.blit(g_controller.fps_string, (bu.SCR_WIDTH - (bu.GRID_SIZE * 3), bu.GRID_SIZE - bu.GRID_SIZE / 2))
+    board_surface.blit(g_controller.fps_string, (bu.SCR_WIDTH - (bu.GRID_SIZE * 3), bu.GRID_SIZE / 2))
+    
+    # Draw score
+    board_surface.blit(g_controller.score_string, ((bu.GRID_SIZE), bu.GRID_SIZE / 2))
+    
+    # Draw back 2 back counter
+    board_surface.blit(g_controller.b2b_string, ((bu.GRID_SIZE), bu.GRID_SIZE * 2))
 
     # Update window
     pygame.display.flip()
