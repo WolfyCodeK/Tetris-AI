@@ -1,10 +1,10 @@
-def __is_side_square(x, y) -> bool:
+def _is_side_square(x, y) -> bool:
         return (not x) ^ (not y)
     
 def rotate_anticlockwise(shape, is_IPiece = False):
     if (not is_IPiece):
         for i in range(len(shape)):
-            if (__is_side_square(shape[i][0], shape[i][1])):
+            if (_is_side_square(shape[i][0], shape[i][1])):
                 if (shape[i][1] == -1):
                     shape[i][0] = shape[i][0] - 1
                     shape[i][1] = shape[i][1] + 1
@@ -85,7 +85,7 @@ def rotate_anticlockwise(shape, is_IPiece = False):
 def rotate_clockwise(shape, is_IPiece = False):
     if (not is_IPiece):
         for i in range(len(shape)):
-            if (__is_side_square(shape[i][0], shape[i][1])):
+            if (_is_side_square(shape[i][0], shape[i][1])):
                 if (shape[i][1] == -1):
                     shape[i][0] = shape[i][0] + 1
                     shape[i][1] = shape[i][1] + 1

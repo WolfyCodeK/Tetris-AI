@@ -17,7 +17,7 @@ p_controller = PieceController()
 g_controller = GameController(p_controller)
 w_controller = WindowController(g_controller)
 
-game_state = GameStates.UPDATE_DELTA_TIME
+game_state = GameStates.UPDATE_TIME
 
 running = True
 
@@ -43,6 +43,6 @@ while running:
             
         case GameStates.DRAW_GAME:
             w_controller.draw()
-            game_state = GameStates.UPDATE_DELTA_TIME
+            game_state = GameStates.UPDATE_TIME
     
 pygame.quit()

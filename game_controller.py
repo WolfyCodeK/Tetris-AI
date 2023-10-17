@@ -40,9 +40,16 @@ class GameController():
         self.b2b_string = self.font.render(str(self.b2b), True, (255, 255, 255))
         
     def increment_frames_passed(self):
+        """Increase number of frames that have passed by 1.
+        """
         self.frames += 1
         
-    def set_drop_speed(self, speed):
+    def set_drop_speed(self, speed: int):
+        """Set the drop speed of the pieces.
+
+        Args:
+            speed (int): How fast to drop the pieces.
+        """
         self.drop_speed = speed
         self.drop_time = 1 / speed
         

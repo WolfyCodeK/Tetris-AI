@@ -15,6 +15,8 @@ class WindowController():
         self.background_image = pygame.image.load("res/gradient_background_blue.jpg").convert()
 
     def draw(self):
+        """Draw all features to the screen.
+        """
         # Clear window and draw window background       
         self.window.fill(0)
 
