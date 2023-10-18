@@ -1,5 +1,5 @@
 from pygame import Rect, Surface, draw
-import game_settings as gs
+import utils.game_settings as gs
 
 BOARD_ROWS = 20
 BOARD_COLUMNS = 10

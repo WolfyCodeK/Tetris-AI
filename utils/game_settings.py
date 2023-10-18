@@ -13,7 +13,7 @@ NUM_OF_QUEUE_TO_SHOW = 5
 #########################################################
 
 # How large the game window and board are
-GAME_SIZE = 16
+GAME_SIZE = 14
 
 # If the fps counter should be displayed in the top right corner of the window
 SHOW_FPS_COUNTER = True
