@@ -1,6 +1,8 @@
-import board_utils as bu
 import numpy as np
-import rotation_transformations as rt
+
+import tetraminos.rotation_transformations as rt
+import utils.board_utils as bu
+
 
 class Tetramino:
     GHOST_PIECE_ALPHA = 225

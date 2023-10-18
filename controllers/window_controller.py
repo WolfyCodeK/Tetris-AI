@@ -1,6 +1,10 @@
 import pygame
-import board_utils as bu
-from game_controller import GameController
+
+import utils.board_utils as bu
+import utils.game_settings as gs
+
+from .game_controller import GameController
+
 
 class WindowController():
     def __init__(self, g_controller: GameController) -> None:
@@ -36,7 +40,8 @@ class WindowController():
         self.g_controller.draw_pieces(self.board_surface)
 
         # Draw fps counter
-        self.board_surface.blit(self.g_controller.fps_string, (bu.SCR_WIDTH - (bu.GRID_SIZE * 3), bu.GRID_SIZE / 2))
+        if (gs.SHOW_FPS_COUNTER):
+            self.board_surface.blit(self.g_controller.fps_string, (bu.SCR_WIDTH - (bu.GRID_SIZE * 3), bu.GRID_SIZE / 2))
 
         # Draw score
         self.board_surface.blit(self.g_controller.score_string, ((bu.GRID_SIZE), bu.GRID_SIZE / 2))

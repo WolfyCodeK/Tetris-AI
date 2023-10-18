@@ -1,7 +1,13 @@
-import pygame
 import time
-import board_utils as bu 
-from piece_controller import PieceController
+from typing import List
+
+import pygame
+
+import utils.board_utils as bu
+import utils.game_settings as gs
+
+from .piece_controller import PieceController
+
 
 class GameController():
     
@@ -15,12 +21,18 @@ class GameController():
         self.fps_time = 0
         self.frames = 0
     
+        # Colour values
+        self.fps_colour = (0, 255, 0)
+        self.score_colour = (255, 255, 255)
+        self.b2b_colour = (255, 0, 0)
+    
         # Set fps string
         self.font = pygame.font.Font("freesansbold.ttf", bu.GRID_SIZE)
-        self.fps_string = self.font.render(str("- - -"), True, (0, 255, 0))
+        self.fps_string = self.font.render(str("- - -"), True, self.fps_colour)
+        
         
         # The speed at which the tetramino pieces fall
-        self.drop_speed = 1
+        self.drop_speed = gs.DROP_SPEED
         self.drop_time = 1 / self.drop_speed
         
         # Restrict how often player can input keys (temp solution)
@@ -57,7 +69,7 @@ class GameController():
         self.piece_deactivate_timer = self.piece_deactivate_delay
         
     def update_delta_time(self):
-        """Calculates the delta time.
+        """Updates to the latest delta time value.
         """
         self.delta_time = time.time() - self.previous_time
         self.previous_time = time.time()
@@ -101,21 +113,21 @@ class GameController():
         self.score_string = self.font.render(
             str(f"score:  {self.score}"),
             True, 
-            (255, 255, 255)
+            self.score_colour
         )
         
         # Update back 2 back counter
         self.b2b_string = self.font.render(
             str(f"B2B:  {self.b2b}"),
             True, 
-            (255, 0, 0)
+            self.b2b_colour
         )
     
     def reset_score(self):
         self.score = 0
         self.b2b = 0
         
-    def take_player_inputs(self, event_list):
+    def take_player_inputs(self, event_list: List[pygame.event.Event]):
         # Take player input
         key = pygame.key.get_pressed()
         self.move_delay -= 1 
@@ -142,7 +154,7 @@ class GameController():
             self.set_drop_speed(20)
         
         if key[pygame.K_s] == True:
-            self.set_drop_speed(1)
+            self.set_drop_speed(gs.DROP_SPEED)
         
         for event in event_list:          
             if event.type == pygame.KEYDOWN:
@@ -161,15 +173,16 @@ class GameController():
                     self.p_controller.hold_piece()
     
     def update_fps_counter(self):
-        # Update fps counter every second
+        """Update the fps counter with the current number of frames.
+        """
         if (self.fps_time >= 1):
             self.fps_string = self.font.render(
                 str(int(self.frames)),
                 True, 
-                (0, 255, 0)
+                self.fps_colour
             )
             
-            self.fps_time = self.fps_time - 1
+            self.fps_time -= 1
             self.frames = 0
     
     def run_timed_game_logic(self):

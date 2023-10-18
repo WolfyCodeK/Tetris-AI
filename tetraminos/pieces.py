@@ -1,5 +1,7 @@
 import numpy as np
-from tetramino import Tetramino
+
+from .tetramino import Tetramino
+
 
 class ZPiece(Tetramino):
     PID = 'Z'

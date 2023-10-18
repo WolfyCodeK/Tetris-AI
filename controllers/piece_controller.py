@@ -1,9 +1,13 @@
-import numpy as np
-import board_utils as bu
-import pieces
-from tetramino import Tetramino
 import random
-from custom_game_exceptions import PiecePlacementError
+
+import numpy as np
+
+import tetraminos.pieces as pieces
+import utils.board_utils as bu
+import utils.game_settings as gs
+from tetraminos.tetramino import Tetramino
+from utils.custom_game_exceptions import PiecePlacementError
+
 
 class PieceController():
     EMPTY_PIECE_PID = 'E'
@@ -13,16 +17,13 @@ class PieceController():
 
     # All the available pieces to the piece controller
     PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece, pieces.IPiece, pieces.OPiece]
-
-    NUM_OF_PIECES = len(PIECE_CLASS_LIST)
-
-    piece_queue = []
-    
-    NUM_OF_QUEUE_TO_DRAW = 5
     
     PIECE_PID_LIST  = []
     for i in range(len(PIECE_CLASS_LIST)):
                 PIECE_PID_LIST.append(PIECE_CLASS_LIST[i].PID)
+
+    NUM_OF_PIECES = len(PIECE_CLASS_LIST)
+    LIST_OF_PIECE_NUMBERS = list(range(0, NUM_OF_PIECES))
     
     BLOCKING_PIECE_TYPES = PIECE_PID_LIST.copy()
     BLOCKING_PIECE_TYPES.append(FLOOR_PIECE_PID)
@@ -34,6 +35,14 @@ class PieceController():
     
     def __init__(self) -> None:
         self.restart_board()
+        
+    def restart_board(self):
+        self._init_board_state()
+        self._init_piece_queue()
+        self.new_piece()
+        
+        self.held_piece = None
+        self.new_hold_available = True    
         
     def _init_board_state(self):
         # Initialise board state to be empty
@@ -53,14 +62,35 @@ class PieceController():
         # Set floor pieces
         for i in range(bu.FLOOR_SIZE):
             self.board_state[bu.BOARD_STATE_HEIGHT + i] = self.FLOOR_PIECE_PID
-    
-    def restart_board(self):
-        self._init_board_state()
-        self._init_piece_queue()
-        self.new_piece()
+            
+    def _init_piece_queue(self):
+        self.create_random_piece_bags()
+        self.piece_queue = []
         
-        self.held_piece = None
-        self.new_hold_available = True
+        for i in range(self.NUM_OF_PIECES):
+            piece_num = self.first_bag_numbers[i]
+            self.piece_queue.append(self.PIECE_CLASS_LIST[piece_num]())
+        
+    def new_piece(self) -> None:
+        self.current_piece = self.piece_queue.pop(0)
+        self.add_piece_to_queue()    
+        
+    def create_random_piece_bags(self) -> None:
+        self.first_bag_numbers = self.LIST_OF_PIECE_NUMBERS.copy()
+        self.second_bag_numbers = self.LIST_OF_PIECE_NUMBERS.copy()
+        
+        random.shuffle(self.first_bag_numbers)
+        random.shuffle(self.second_bag_numbers)
+        
+    def add_piece_to_queue(self) -> None:
+        if (len(self.second_bag_numbers) <= 0):
+            self.second_bag_numbers = self.LIST_OF_PIECE_NUMBERS.copy()
+            random.shuffle(self.second_bag_numbers)
+            
+        piece_num = self.first_bag_numbers.pop(0)
+        self.first_bag_numbers.append(self.second_bag_numbers.pop(0))
+
+        self.piece_queue.append(self.PIECE_CLASS_LIST[piece_num]())
         
     def draw_deactivated_pieces(self, surface):
         for y in range(len(self.board_state)):
@@ -75,41 +105,36 @@ class PieceController():
         self.current_piece.draw_ghost_pieces(surface, self._calculate_max_drop_height())
         
     def draw_held_piece(self, surface):
-        x_adjust = - 2
-        y_adjust = 6
-        
         if (self.held_piece != None):
             self.held_piece.reset_shape()
             
             for i in range(len(self.held_piece.shape)):
-                if (self.held_piece.pid == 'O'):
+                x_adjust = bu.HELD_PIECE_X_POS
+                y_adjust = bu.HELD_PIECE_Y_POS
+                
+                if (self.held_piece.pid == pieces.OPiece.PID):
                     x_adjust += 1
-                if (self.held_piece.pid == 'I'):
+                if (self.held_piece.pid == pieces.IPiece.PID):
                     y_adjust -= 1
+                    
                 bu.draw_rect(self.held_piece.shape[i][0] + x_adjust, self.held_piece.shape[i][1] + y_adjust, self.held_piece.colour, surface)
                 
-                x_adjust = -2
-                y_adjust = 6
-                
     def draw_queued_pieces(self, surface):
-        x_adjust = 15
-        y_adjust = 6
-
-        for i in range(self.NUM_OF_QUEUE_TO_DRAW):
+        for i in range(gs.NUM_OF_QUEUE_TO_SHOW):
             # Get piece in queue
             piece = self.piece_queue[i]
             piece.reset_shape()
             
             for j in range(len(piece.shape)):
-                if (piece.pid == 'O'):
-                    x_adjust += 1
-                if (piece.pid == 'I'):
-                    y_adjust -= 1
-                bu.draw_rect(piece.shape[j][0] + x_adjust, piece.shape[j][1] + y_adjust + (i * 3), piece.colour, surface)
+                x_adjust = bu.QUEUED_PIECES_X_POS
+                y_adjust = bu.QUEUED_PIECES_Y_POS
                 
-                x_adjust = 15
-                y_adjust = 6
-        pass
+                if (piece.pid == pieces.OPiece.PID):
+                    x_adjust += 1
+                if (piece.pid == pieces.IPiece.PID):
+                    y_adjust -= 1
+                    
+                bu.draw_rect(piece.shape[j][0] + x_adjust, piece.shape[j][1] + y_adjust + (i * bu.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)
         
     def gravity_drop_piece(self) -> bool:
         """Attempts to drop a tetramino piece down by one row.
@@ -143,7 +168,7 @@ class PieceController():
             self.current_piece.set_x_pos(self.current_piece.x_pos + x_move)
             
     def rotate_piece(self, clockwise: bool) -> None:    
-        is_IPiece = self.current_piece.pid == 'I'
+        is_IPiece = self.current_piece.pid == pieces.IPiece.PID
         
         self.current_piece.rotate_piece(clockwise, is_IPiece)
             
@@ -151,34 +176,7 @@ class PieceController():
             
     def deactivate_piece(self) -> None:
         self.current_piece.active = False
-        self._place_piece(self.board_state, self.current_piece)
-    
-    def new_piece(self) -> None:
-        self.current_piece = self.piece_queue.pop(0)
-        self.add_piece_to_queue()
-    
-    def create_piece_bags(self):
-        self.first_bag_numbers = list(range(0, self.NUM_OF_PIECES))
-        random.shuffle(self.first_bag_numbers)
-        self.second_bag_numbers = list(range(0, self.NUM_OF_PIECES))
-        random.shuffle(self.second_bag_numbers)
-        
-    def add_piece_to_queue(self):
-        if (len(self.second_bag_numbers) <= 0):
-            self.second_bag_numbers = list(range(0, self.NUM_OF_PIECES))
-            random.shuffle(self.second_bag_numbers)
-            
-        piece_num = self.first_bag_numbers.pop(0)
-        self.first_bag_numbers.append(self.second_bag_numbers.pop(0))
-
-        self.piece_queue.append(self.PIECE_CLASS_LIST[piece_num]())
-
-    def _init_piece_queue(self):
-        self.create_piece_bags()
-        
-        for i in range(self.NUM_OF_PIECES):
-            piece_num = self.first_bag_numbers[i]
-            self.piece_queue.append(self.PIECE_CLASS_LIST[piece_num]())
+        self._place_piece(self.board_state, self.current_piece)    
         
     def perform_line_clears(self) -> int:
         lines_cleared = 0
@@ -210,7 +208,7 @@ class PieceController():
         
         shift_amount = 1
         
-        if (piece.pid == 'I'):
+        if (piece.pid == pieces.IPiece.PID):
             shift_amount = 2
         
         for i in range(len(piece.minos)):
