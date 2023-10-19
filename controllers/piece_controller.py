@@ -179,7 +179,7 @@ class PieceController():
         # Attempt to place piece using basic rotation
         for i in range(len(piece.minos)):
             if (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                piece.revert_rotation()
+                piece.revert_rotation(is_IPiece)
                 blocked = True
                 break
         
@@ -190,13 +190,20 @@ class PieceController():
             for i in range(len(piece.kick_options)):
                 piece.rotate(clockwise, is_IPiece, is_OPiece)
                 
-                kick_index = piece.kick_priority[piece.rotation_state][i]
+                if (is_IPiece):
+                    if (clockwise):
+                        kick_index = piece.CLOCKWISE_KICK_PRIORITY.copy()[piece.rotation_state][i]
+                    else:
+                        kick_index = piece.ANTI_CLOCKWISE_KICK_PRIORITY.copy()[piece.rotation_state][i]
+                else:
+                    kick_index = piece.kick_priority[piece.rotation_state][i]
+                    
                 piece.save_previous_pos()
                 piece.kick(kick_index, clockwise)
                 
                 for j in range(len(piece.minos)):
                     if (self.board_state[piece.minos[j][1]][piece.minos[j][0]] in self.BLOCKING_PIECE_TYPES):
-                        piece.revert_rotation()
+                        piece.revert_rotation(is_IPiece)
                         piece.revert_kick()
                         kick_found = False
                         break

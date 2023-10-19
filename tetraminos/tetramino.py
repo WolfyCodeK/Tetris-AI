@@ -89,8 +89,10 @@ class Tetramino:
         else:
             self.shape = rt.rotate_anticlockwise(self.shape, is_IPiece, is_OPiece)
             self.rotation_direction = -1
-
-        self.update_rotation_state()
+        
+        if (not is_IPiece):
+            self.update_rotation_state()
+            
         self.update_minos()
     
     def kick(self, kick_index, clockwise):
@@ -102,7 +104,7 @@ class Tetramino:
             # Invert horizonal transformations
             rot = -1
             
-            # # Mirror clockwise transformations
+            # Mirror clockwise transformations
             if (self.rotation_state in [0, 1, 2]):
                 relative_rot_state = relative_rot_state + 1
                 
@@ -149,10 +151,12 @@ class Tetramino:
             elif (kick_index == self.kick_options[3]):
                 self.transform(rot * 1, rot * 2)
     
-    def revert_rotation(self):
+    def revert_rotation(self, is_IPiece):
         self.shape = self.previous_shape.copy()
         self.rotation_direction = -self.rotation_direction
-        self.update_rotation_state()
+        
+        if (not is_IPiece):
+            self.update_rotation_state()
         
     def revert_kick(self):
         self.set_x_pos(self.previous_pos[0])
