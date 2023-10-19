@@ -1,10 +1,12 @@
 import random
 
-import numpy as np
+from numpy import full
 
-import tetraminos.pieces as pieces
 import utils.board_utils as bu
 import utils.game_settings as gs
+from tetraminos.i_piece import IPiece
+from tetraminos.o_piece import OPiece
+from tetraminos.symmetrical_tetramino import (JPiece, LPiece, SPiece, TPiece, ZPiece)
 from tetraminos.tetramino import Tetramino
 from utils.custom_game_exceptions import PiecePlacementError
 
@@ -16,7 +18,7 @@ class PieceController():
     NONE_PIECE_TYPES = [EMPTY_PIECE_PID, FLOOR_PIECE_PID, WALL_PIECE_PID]
 
     # All the available pieces to the piece controller
-    PIECE_CLASS_LIST = [pieces.ZPiece, pieces.SPiece, pieces.LPiece, pieces.JPiece, pieces.TPiece, pieces.IPiece, pieces.OPiece]
+    PIECE_CLASS_LIST = [ZPiece, SPiece, JPiece, LPiece, TPiece, IPiece, OPiece]
     
     PIECE_PID_LIST  = []
     for i in range(len(PIECE_CLASS_LIST)):
@@ -46,7 +48,7 @@ class PieceController():
         
     def _init_board_state(self):
         # Initialise board state to be empty
-        self.board_state = np.full(shape=(bu.BOARD_STATE_HEIGHT + bu.FLOOR_SIZE, bu.BOARD_STATE_WIDTH), fill_value=self.EMPTY_PIECE_PID)
+        self.board_state = full(shape=(bu.BOARD_STATE_HEIGHT + bu.FLOOR_SIZE, bu.BOARD_STATE_WIDTH), fill_value=self.EMPTY_PIECE_PID)
             
         # Set wall pieces
         # Right wall
@@ -112,9 +114,9 @@ class PieceController():
                 x_adjust = bu.HELD_PIECE_X_POS
                 y_adjust = bu.HELD_PIECE_Y_POS
                 
-                if (self.held_piece.pid == pieces.OPiece.PID):
+                if (self.held_piece.pid == OPiece.PID):
                     x_adjust += 1
-                if (self.held_piece.pid == pieces.IPiece.PID):
+                if (self.held_piece.pid == IPiece.PID):
                     y_adjust -= 1
                     
                 bu.draw_rect(self.held_piece.shape[i][0] + x_adjust, self.held_piece.shape[i][1] + y_adjust, self.held_piece.colour, surface)
@@ -129,9 +131,9 @@ class PieceController():
                 x_adjust = bu.QUEUED_PIECES_X_POS
                 y_adjust = bu.QUEUED_PIECES_Y_POS
                 
-                if (piece.pid == pieces.OPiece.PID):
+                if (piece.pid == OPiece.PID):
                     x_adjust += 1
-                if (piece.pid == pieces.IPiece.PID):
+                if (piece.pid == IPiece.PID):
                     y_adjust -= 1
                     
                 bu.draw_rect(piece.shape[j][0] + x_adjust, piece.shape[j][1] + y_adjust + (i * bu.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)
@@ -169,17 +171,15 @@ class PieceController():
             
     def rotate_piece(self, clockwise: bool) -> None:
         piece = self.current_piece    
-        is_IPiece = piece.pid == pieces.IPiece.PID
-        is_OPiece = piece.pid == pieces.OPiece.PID
         
-        piece.rotate(clockwise, is_IPiece, is_OPiece)
+        piece.rotate(clockwise)
         
         blocked = False
         
         # Attempt to place piece using basic rotation
         for i in range(len(piece.minos)):
             if (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                piece.revert_rotation(is_IPiece)
+                piece.revert_rotation()
                 blocked = True
                 break
         
@@ -188,22 +188,17 @@ class PieceController():
         # If basic rotation didn't work, then attempt a kick
         if blocked:
             for i in range(len(piece.kick_options)):
-                piece.rotate(clockwise, is_IPiece, is_OPiece)
+                piece.rotate(clockwise)
                 
-                if (is_IPiece):
-                    if (clockwise):
-                        kick_index = piece.CLOCKWISE_KICK_PRIORITY.copy()[piece.rotation_state][i]
-                    else:
-                        kick_index = piece.ANTI_CLOCKWISE_KICK_PRIORITY.copy()[piece.rotation_state][i]
-                else:
-                    kick_index = piece.kick_priority[piece.rotation_state][i]
+                kick_priority = piece.get_kick_priority()
+                kick_index = kick_priority[piece.rotation_state][i]
                     
                 piece.save_previous_pos()
                 piece.kick(kick_index, clockwise)
                 
                 for j in range(len(piece.minos)):
                     if (self.board_state[piece.minos[j][1]][piece.minos[j][0]] in self.BLOCKING_PIECE_TYPES):
-                        piece.revert_rotation(is_IPiece)
+                        piece.revert_rotation()
                         piece.revert_kick()
                         kick_found = False
                         break
@@ -239,26 +234,6 @@ class PieceController():
         for y in range(bu.BOARD_STATE_HEIGHT_BUFFER):
             if any(pid in self.PIECE_PID_LIST for pid in self.board_state[y].tolist()):
                 return True
-    
-    def _move_occupying_square_if_blocked(self):
-        piece = self.current_piece
-        x_pos = piece.x_pos
-        y_pos = piece.y_pos
-        
-        shift_amount = 1
-        
-        if (piece.pid == pieces.IPiece.PID):
-            shift_amount = 2
-        
-        for i in range(len(piece.minos)):
-            if (piece.minos[i][1] == y_pos + 1) and (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                piece.set_y_pos(piece.y_pos - shift_amount)
-                
-            if (piece.minos[i][0] == x_pos + 1) and (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                piece.set_x_pos(piece.x_pos - shift_amount)
-                
-            if (piece.minos[i][0] == x_pos - 1) and (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                piece.set_x_pos(piece.x_pos + shift_amount)
 
     def _piece_is_vertically_blocked(self, board_state, piece: Tetramino, y_move) -> bool:
         blocked = False
