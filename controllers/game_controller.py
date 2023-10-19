@@ -214,6 +214,6 @@ class GameController():
             
     def new_piece_and_timer(self):
         self.p_controller.deactivate_piece()
-        self.p_controller.new_piece()
+        self.p_controller.next_piece()
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
