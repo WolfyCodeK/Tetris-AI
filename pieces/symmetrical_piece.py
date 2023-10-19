@@ -1,10 +1,10 @@
 from numpy import ndarray, array
-import tetraminos.rotation_transformations as rt
+import pieces.rotation_transformations as rt
 
-from .tetramino import Tetramino
+from .piece import Piece
 
 
-class SymmetricalTetramino(Tetramino):
+class SymmetricalPiece(Piece):
     def __init__(self, pid: chr, x: int, colour: tuple, kick_priority: dict, shape: ndarray) -> None:
         super().__init__(pid, x, colour, shape)
         self.kick_priority = kick_priority
@@ -99,11 +99,11 @@ class SymmetricalTetramino(Tetramino):
         self.rotation_direction = -self.rotation_direction
         self.update_rotation_state()
         
-class ZPiece(SymmetricalTetramino):
+class ZPiece(SymmetricalPiece):
     PID = 'Z'
     START_BOARD_X = 4
     COLOUR = (255,85,82)
-    SHAPE = array([[0, 0], [1, 0], [0, -1], [-1, -1]])
+    DEFAULT_SHAPE = array([[0, 0], [1, 0], [0, -1], [-1, -1]])
     KICK_PRIORITY = {
         0: [0, 1, 2, 3],
         1: [2, 0, 1, 3],
@@ -112,13 +112,13 @@ class ZPiece(SymmetricalTetramino):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.SHAPE)
+        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
 
-class LPiece(SymmetricalTetramino):
+class LPiece(SymmetricalPiece):
     PID = 'L'
     START_BOARD_X = 4
     COLOUR = (255,159,122)
-    SHAPE = array([[0, 0], [-1, 0], [1, 0], [1, -1]])
+    DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [1, -1]])
     KICK_PRIORITY = {
         0: [1, 0, 2, 3],
         1: [0, 3, 1, 2],
@@ -127,13 +127,13 @@ class LPiece(SymmetricalTetramino):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.SHAPE)
+        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
-class SPiece(SymmetricalTetramino):
+class SPiece(SymmetricalPiece):
     PID = 'S'
     START_BOARD_X = 4
     COLOUR = (82,255,97)
-    SHAPE = array([[0, 0], [-1, 0], [0, -1], [1, -1]])
+    DEFAULT_SHAPE = array([[0, 0], [-1, 0], [0, -1], [1, -1]])
     KICK_PRIORITY = {
         0: [0, 1, 2, 3],
         1: [3, 0, 1, 2],
@@ -142,13 +142,13 @@ class SPiece(SymmetricalTetramino):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.SHAPE)
+        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
-class JPiece(SymmetricalTetramino):
+class JPiece(SymmetricalPiece):
     PID = 'J'
     START_BOARD_X = 4
     COLOUR = (62,101,255)
-    SHAPE = array([[0, 0], [-1, 0], [1, 0], [-1, -1]])
+    DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [-1, -1]])
     KICK_PRIORITY = {
         0: [1, 0, 2, 3],
         1: [0, 2, 1, 3],
@@ -157,13 +157,13 @@ class JPiece(SymmetricalTetramino):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.SHAPE)
+        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
-class TPiece(SymmetricalTetramino):
+class TPiece(SymmetricalPiece):
     PID = 'T'
     START_BOARD_X = 4
     COLOUR = (255,100,167)
-    SHAPE = array([[0, 0], [-1, 0], [1, 0], [0, -1]])
+    DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [0, -1]])
     KICK_PRIORITY = {
         0: [1, 0, 2, 3],
         1: [3, 0, 1, 2],
@@ -172,7 +172,7 @@ class TPiece(SymmetricalTetramino):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.SHAPE)
+        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
     
     def kick(self, kick_index, clockwise): 
         relative_rot_state = self.rotation_state

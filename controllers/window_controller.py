@@ -1,13 +1,13 @@
 import pygame
 
-import utils.board_utils as bu
-import utils.game_settings as gs
+import board.board_utils as bu
+import game.game_settings as gs
 
-from .game_controller import GameController
+from .logic_controller import LogicController
 
 
 class WindowController():
-    def __init__(self, g_controller: GameController) -> None:
+    def __init__(self, g_controller: LogicController) -> None:
         # Set Game Controller
         self.g_controller = g_controller
         

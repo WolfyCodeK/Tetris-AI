@@ -1,53 +1,28 @@
-import random
 
-import utils.game_settings as gs
-import utils.board_utils as bu
-from tetraminos.i_piece import IPiece
-from tetraminos.o_piece import OPiece
-from tetraminos.symmetrical_tetramino import (JPiece, LPiece, SPiece, TPiece, ZPiece)
-from tetraminos.tetramino import Tetramino
-from utils.custom_game_exceptions import PiecePlacementError
-from piece_queue import PieceQueue
-from board import Board
+import board.board_utils as bu
+from board.board import Board
+from .piece_holder import PieceHolder
+from .piece_queue import PieceQueue
+from pieces.piece import Piece
+from game.game_exceptions import PiecePlacementError
 
 
-class PieceController():
-    NONE_PIECE_TYPES = [Board.EMPTY_PIECE_PID, Board.FLOOR_PIECE_PID, Board.WALL_PIECE_PID]
-
-    # All the available pieces to the piece controller
-    PIECE_LIST = [ZPiece, SPiece, JPiece, LPiece, TPiece, IPiece, OPiece]
-    
-    PIECE_PID_LIST  = []
-    for i in range(len(PIECE_LIST)):
-                PIECE_PID_LIST.append(PIECE_LIST[i].PID)
-    
-    BLOCKING_PIECE_TYPES = PIECE_PID_LIST.copy()
-    BLOCKING_PIECE_TYPES.append(Board.FLOOR_PIECE_PID)
-    BLOCKING_PIECE_TYPES.append(Board.WALL_PIECE_PID)
-    
-    COLOUR_PID_DICT = {}
-    for i in range(len(PIECE_LIST)):
-        COLOUR_PID_DICT[PIECE_PID_LIST[i]] = PIECE_LIST[i].COLOUR
-    
-    def __init__(self) -> None:
-        self.restart_board()
+class PieceController():    
+    def __init__(self, board: Board) -> None:
+        self.board = board
+        self.reset_pieces()
         
-    def restart_board(self) -> None:
-        self.board = Board()
-        self.piece_queue = PieceQueue(self.PIECE_LIST)
+    def reset_pieces(self) -> None:
+        self.board.reset_board_state()
+        self.piece_queue = PieceQueue(Board.PIECE_LIST)
+        self.piece_holder = PieceHolder()
         self.next_piece()
-        
-        self.held_piece = None
-        self.new_hold_available = True    
         
     def next_piece(self) -> None:
         self.current_piece = self.piece_queue.get_next_piece()
         
-    def draw_deactivated_pieces(self, surface):
-        for y in range(len(self.board.board_state)):
-            for x in range(len(self.board.board_state[0])):
-                if (self.board.board_state[y][x] not in self.NONE_PIECE_TYPES):
-                    bu.draw_rect(x, y, self.COLOUR_PID_DICT[self.board.board_state[y][x]], surface)
+    def draw_board_pieces(self, surface):
+        self.board.draw(surface)
             
     def draw_current_piece(self, surface):
         self.current_piece.draw(surface)
@@ -56,36 +31,10 @@ class PieceController():
         self.current_piece.draw_ghost(surface, self._calculate_max_drop_height())
         
     def draw_held_piece(self, surface):
-        if (self.held_piece != None):
-            self.held_piece.reset_shape()
-            
-            for i in range(len(self.held_piece.shape)):
-                x_adjust = bu.HELD_PIECE_X_POS
-                y_adjust = bu.HELD_PIECE_Y_POS
-                
-                if (self.held_piece.pid == OPiece.PID):
-                    x_adjust += 1
-                if (self.held_piece.pid == IPiece.PID):
-                    y_adjust -= 1
-                    
-                bu.draw_rect(self.held_piece.shape[i][0] + x_adjust, self.held_piece.shape[i][1] + y_adjust, self.held_piece.colour, surface)
-                
+        self.piece_holder.draw(surface)
+        
     def draw_queued_pieces(self, surface):
-        for i in range(gs.NUM_OF_QUEUE_TO_SHOW):
-            # Get piece in queue
-            piece = self.piece_queue.queue[i]
-            piece.reset_shape()
-            
-            for j in range(len(piece.shape)):
-                x_adjust = bu.QUEUED_PIECES_X_POS
-                y_adjust = bu.QUEUED_PIECES_Y_POS
-                
-                if (piece.pid == OPiece.PID):
-                    x_adjust += 1
-                if (piece.pid == IPiece.PID):
-                    y_adjust -= 1
-                    
-                bu.draw_rect(piece.shape[j][0] + x_adjust, piece.shape[j][1] + y_adjust + (i * bu.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)
+        self.piece_queue.draw(surface)
         
     def gravity_drop_piece(self) -> bool:
         """Attempts to drop a tetramino piece down by one row.
@@ -127,7 +76,7 @@ class PieceController():
         
         # Attempt to place piece using basic rotation
         for i in range(len(piece.minos)):
-            if (self.board.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
+            if (self.board.board_state[piece.minos[i][1]][piece.minos[i][0]] in Board.BLOCKING_PIECE_TYPES):
                 piece.revert_rotation()
                 blocked = True
                 break
@@ -146,7 +95,7 @@ class PieceController():
                 piece.kick(kick_index, clockwise)
                 
                 for j in range(len(piece.minos)):
-                    if (self.board.board_state[piece.minos[j][1]][piece.minos[j][0]] in self.BLOCKING_PIECE_TYPES):
+                    if (self.board.board_state[piece.minos[j][1]][piece.minos[j][0]] in Board.BLOCKING_PIECE_TYPES):
                         piece.revert_rotation()
                         piece.revert_kick()
                         kick_found = False
@@ -168,7 +117,7 @@ class PieceController():
             column_count = 0 
             
             for x in range(bu.BOARD_STATE_WIDTH):
-                if self.board.board_state[y][x] not in self.NONE_PIECE_TYPES:
+                if self.board.board_state[y][x] not in Board.NONE_PIECE_TYPES:
                     column_count += 1
                     
             if column_count >= bu.BOARD_COLUMNS:    
@@ -180,11 +129,9 @@ class PieceController():
         return lines_cleared
                     
     def check_game_over(self) -> bool:
-        for y in range(bu.BOARD_STATE_HEIGHT_BUFFER):
-            if any(pid in self.PIECE_PID_LIST for pid in self.board.board_state[y].tolist()):
-                return True
+        return self.board.check_game_over()
 
-    def _piece_is_vertically_blocked(self, board_state, piece: Tetramino, y_move) -> bool:
+    def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move) -> bool:
         blocked = False
 
         for i in range(len(piece.minos)):
@@ -204,7 +151,7 @@ class PieceController():
                     
         return blocked
     
-    def _piece_is_horizontally_blocked(self, board_state, piece: Tetramino, x_move) -> bool:
+    def _piece_is_horizontally_blocked(self, board_state, piece: Piece, x_move) -> bool:
         blocked = False
         
         for i in range(len(piece.minos)):
@@ -228,32 +175,29 @@ class PieceController():
             
         return blocked
 
-    def _place_piece(self, board_state, piece: Tetramino):
+    def _place_piece(self, board_state, piece: Piece):
         for i in range(len(piece.minos)):
             y = piece.minos[i][1]
             x = piece.minos[i][0]
             
-            if (board_state[y][x] not in self.BLOCKING_PIECE_TYPES):
+            blocking = board_state[y][x]
+            
+            if (blocking not in Board.BLOCKING_PIECE_TYPES):
                 board_state[piece.minos[i][1]][piece.minos[i][0]] = piece.pid
             else:
-                raise PiecePlacementError(x, y, piece.pid)
+                raise PiecePlacementError(x, y, piece.pid, blocking)
             
-        self.new_hold_available = True
+        self.piece_holder.new_hold_available = True
         
     def hold_piece(self):
-        if (self.held_piece != None) and (self.new_hold_available):
-            temp_piece = self.current_piece
-            self.current_piece = self.held_piece
-            self.held_piece = temp_piece
-            
-            self.new_hold_available = False
-            
-            self.held_piece.reset_pos()
-            
-        elif (self.held_piece == None):
-            self.held_piece = self.current_piece
+        piece = self.piece_holder.hold_piece(self.current_piece)
+        
+        # Piece was switched with held piece
+        if piece == self.current_piece:
             self.next_piece()
-            
-            self.new_hold_available = False
-            
-            self.held_piece.reset_pos()
+        # No new hold was allowed
+        elif piece == None:
+            pass
+        # The first time the hold has been used
+        else:
+            self.current_piece = piece

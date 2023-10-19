@@ -3,13 +3,13 @@ from typing import List
 
 import pygame
 
-import utils.board_utils as bu
-import utils.game_settings as gs
+import board.board_utils as bu
+import game.game_settings as gs
 
-from .piece_controller import PieceController
+from pieces.piece_controller import PieceController
 
 
-class GameController():
+class LogicController():
     
     def __init__(self, p_controller: PieceController) -> None:
         # Set Piece Controller
@@ -83,8 +83,8 @@ class GameController():
         Args:
             surface (Surface): The surface being drawn to.
         """
+        self.p_controller.draw_board_pieces(surface)
         self.p_controller.draw_ghost_pieces(surface)
-        self.p_controller.draw_deactivated_pieces(surface)
         self.p_controller.draw_current_piece(surface)
         self.p_controller.draw_held_piece(surface)
         self.p_controller.draw_queued_pieces(surface)
@@ -166,7 +166,7 @@ class GameController():
                     self.p_controller.hard_drop_piece()
                     
                 if event.key == pygame.K_r:
-                    self.p_controller.restart_board()
+                    self.p_controller.reset_pieces()
                     self.reset_score()
                     
                 if event.key == pygame.K_LSHIFT:
@@ -209,7 +209,7 @@ class GameController():
         
         # Reset score and board if game over
         if (self.p_controller.check_game_over()):
-            self.p_controller.restart_board()
+            self.p_controller.reset_pieces()
             self.reset_score()
             
     def new_piece_and_timer(self):

@@ -1,13 +1,13 @@
-from numpy import ndarray, array
-import tetraminos.rotation_transformations as rt
+from numpy import array
+import pieces.rotation_transformations as rt
 
-from .tetramino import Tetramino
+from .piece import Piece
 
-class IPiece(Tetramino):
+class IPiece(Piece):
     PID = 'I'
     START_BOARD_X = 4
     COLOUR = (122,161,255)
-    SHAPE = array([[0, 0], [-1, 0], [1, 0], [2, 0]])
+    DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [2, 0]])
     CLOCKWISE_KICK_PRIORITY = {
         0: [2, 0, 1, 3],
         1: [2, 0, 1, 3],
@@ -23,7 +23,7 @@ class IPiece(Tetramino):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.SHAPE)
+        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
     
     def rotate(self, clockwise: bool):
         self.previous_shape = self.shape.copy()

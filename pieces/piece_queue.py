@@ -1,8 +1,12 @@
 from random import shuffle
-from tetraminos.tetramino import Tetramino
+import board.board_utils as bu
+import game.game_settings as gs
+from pieces.i_piece import IPiece
+from pieces.o_piece import OPiece
+from pieces.piece import Piece
 
 class PieceQueue():
-    def __init__(self, piece_list: list[Tetramino]) -> None:
+    def __init__(self, piece_list: list[Piece]) -> None:
         self.PIECE_LIST = piece_list
         self.NUM_OF_PIECES = len(self.PIECE_LIST)
         self.LIST_OF_PIECE_NUMBERS = list(range(0, self.NUM_OF_PIECES))
@@ -12,7 +16,23 @@ class PieceQueue():
         
         self.queue = self._init_piece_queue()
     
-    def _init_piece_queue(self) -> list[Tetramino]:
+    def draw(self, surface):
+        for i in range(gs.NUM_OF_QUEUE_TO_SHOW):
+            # Get piece in queue
+            piece = self.queue[i]
+            
+            for j in range(len(piece.shape)):
+                x_adjust = bu.QUEUED_PIECES_X_POS
+                y_adjust = bu.QUEUED_PIECES_Y_POS
+                
+                if (piece.pid == OPiece.PID):
+                    x_adjust += 1
+                if (piece.pid == IPiece.PID):
+                    y_adjust -= 1
+                    
+                bu.draw_rect(piece.DEFAULT_SHAPE[j][0] + x_adjust, piece.DEFAULT_SHAPE[j][1] + y_adjust + (i * bu.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)
+    
+    def _init_piece_queue(self) -> list[Piece]:
         queue = []
         
         for i in range(self.NUM_OF_PIECES):
@@ -26,7 +46,7 @@ class PieceQueue():
         
         return bag
     
-    def get_next_piece(self) -> Tetramino:
+    def get_next_piece(self) -> Piece:
         piece = self.queue.pop(0)
         self._add_piece_to_queue()
         

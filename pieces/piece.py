@@ -1,9 +1,8 @@
 from numpy import ndarray
 
-import tetraminos.rotation_transformations as rt
-import utils.board_utils as bu
+import board.board_utils as bu
 
-class Tetramino:
+class Piece:
     GHOST_PIECE_ALPHA = 225
     
     def __init__(self, pid: chr, x: int, colour: tuple, shape: ndarray) -> None:
@@ -22,7 +21,6 @@ class Tetramino:
         self.rotation_state = 0
         self.rotation_direction = 1
         
-        self.DEFAULT_SHAPE = shape.copy()
         self.previous_shape = shape.copy()
         self.minos = shape.copy()
         
