@@ -199,7 +199,8 @@ class GameController():
                 
             # Create new piece and restart timer if piece needs deactivating
             if (self.piece_deactivate_timer < 0):
-                self.new_piece_and_timer()
+                pass
+                #self.new_piece_and_timer()
 
             # Cycle total time
             self.total_time = self.total_time - self.drop_time

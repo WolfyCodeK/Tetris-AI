@@ -8,7 +8,9 @@ from game_states import GameStates
 
 def main():
     # Pygame intial setup
-    pygame.init()
+    pygame.display.init()
+    pygame.font.init()
+    
     pygame.display.set_caption("Tetris - Pygame")
 
     # Set window icon

@@ -62,7 +62,7 @@ class PieceController():
         # Set floor pieces
         for i in range(bu.FLOOR_SIZE):
             self.board_state[bu.BOARD_STATE_HEIGHT + i] = self.FLOOR_PIECE_PID
-            
+
     def _init_piece_queue(self):
         self.create_random_piece_bags()
         self.piece_queue = []
@@ -102,7 +102,7 @@ class PieceController():
         self.current_piece.draw(surface)
         
     def draw_ghost_pieces(self, surface):
-        self.current_piece.draw_ghost_pieces(surface, self._calculate_max_drop_height())
+        self.current_piece.draw_ghost(surface, self._calculate_max_drop_height())
         
     def draw_held_piece(self, surface):
         if (self.held_piece != None):
@@ -167,12 +167,44 @@ class PieceController():
         if (not self._piece_is_horizontally_blocked(self.board_state, self.current_piece, x_move)):
             self.current_piece.set_x_pos(self.current_piece.x_pos + x_move)
             
-    def rotate_piece(self, clockwise: bool) -> None:    
-        is_IPiece = self.current_piece.pid == pieces.IPiece.PID
+    def rotate_piece(self, clockwise: bool) -> None:
+        piece = self.current_piece    
+        is_IPiece = piece.pid == pieces.IPiece.PID
+        is_OPiece = piece.pid == pieces.OPiece.PID
         
-        self.current_piece.rotate_piece(clockwise, is_IPiece)
-            
-        self._move_occupying_square_if_blocked()
+        piece.rotate(clockwise, is_IPiece, is_OPiece)
+        
+        blocked = False
+        
+        # Attempt to place piece using basic rotation
+        for i in range(len(piece.minos)):
+            if (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
+                piece.revert_rotation()
+                blocked = True
+                break
+        
+        kick_found = False
+        
+        # If basic rotation didn't work, then attempt a kick
+        if blocked:
+            for i in range(len(piece.kick_options)):
+                piece.rotate(clockwise, is_IPiece, is_OPiece)
+                
+                kick_index = piece.kick_priority[piece.rotation_state][i]
+                piece.save_previous_pos()
+                piece.kick(kick_index, clockwise)
+                
+                for j in range(len(piece.minos)):
+                    if (self.board_state[piece.minos[j][1]][piece.minos[j][0]] in self.BLOCKING_PIECE_TYPES):
+                        piece.revert_rotation()
+                        piece.revert_kick()
+                        kick_found = False
+                        break
+                    else:
+                        kick_found = True  
+                        
+                if kick_found:
+                    break
             
     def deactivate_piece(self) -> None:
         self.current_piece.active = False
@@ -213,14 +245,14 @@ class PieceController():
         
         for i in range(len(piece.minos)):
             if (piece.minos[i][1] == y_pos + 1) and (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                self.current_piece.set_y_pos(self.current_piece.y_pos - shift_amount)
+                piece.set_y_pos(piece.y_pos - shift_amount)
                 
             if (piece.minos[i][0] == x_pos + 1) and (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                self.current_piece.set_x_pos(self.current_piece.x_pos - shift_amount)
+                piece.set_x_pos(piece.x_pos - shift_amount)
                 
             if (piece.minos[i][0] == x_pos - 1) and (self.board_state[piece.minos[i][1]][piece.minos[i][0]] in self.BLOCKING_PIECE_TYPES):
-                self.current_piece.set_x_pos(self.current_piece.x_pos + shift_amount)
-                
+                piece.set_x_pos(piece.x_pos + shift_amount)
+
     def _piece_is_vertically_blocked(self, board_state, piece: Tetramino, y_move) -> bool:
         blocked = False
 
