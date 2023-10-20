@@ -1,5 +1,5 @@
-from numpy import array
-import pieces.rotation_transformations as rt
+from numpy import array, ndarray
+from pieces.piece_lookup_tables import IPIECE_ROTATION_TABLE, IPIECE_KICK_TABLE
 
 from .piece import Piece
 
@@ -25,16 +25,45 @@ class IPiece(Piece):
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
     
+    def _adjust_i_piece(self, clockwise: bool, shape: ndarray, state: int, i: int):
+        if state in [0, 2]:
+            j = 0
+        else:
+            j = 1
+        
+        if not clockwise:
+            state += 4
+        
+        piece_num = shape[i][j] + 1
+        
+        shape[i][0] = shape[i][0] + IPIECE_ROTATION_TABLE[state][piece_num][0]
+        shape[i][1] = shape[i][1] + IPIECE_ROTATION_TABLE[state][piece_num][1]
+        
+        return shape
+    
     def rotate(self, clockwise: bool):
         self.previous_shape = self.shape.copy()
         
-        if (clockwise):
-            self.shape = rt.rotate_clockwise(self.shape, is_IPiece=True)
+        if clockwise:
             self.rotation_direction = 1
-
         else:
-            self.shape = rt.rotate_anticlockwise(self.shape, is_IPiece=True)
             self.rotation_direction = -1
+        
+        if (self.shape[0][0] == 0 and self.shape[0][1] == 0): # STATE 0
+            for i in range(len(self.shape)):
+                self.shape = self._adjust_i_piece(clockwise, self.shape, 0, i)
+                    
+        elif (self.shape[0][0] == 1 and self.shape[0][1] == 0): # STATE 1
+            for i in range(len(self.shape)):
+                self.shape = self._adjust_i_piece(clockwise, self.shape, 1, i)
+                
+        elif (self.shape[0][0] == 1 and self.shape[0][1] == 1): # STATE 2
+            for i in range(len(self.shape)):
+                self.shape = self._adjust_i_piece(clockwise, self.shape, 2, i)
+                
+        elif (self.shape[0][0] == 0 and self.shape[0][1] == 1): # STATE 3
+            for i in range(len(self.shape)):
+                self.shape = self._adjust_i_piece(clockwise, self.shape, 3, i)
             
         self.update_minos()
     
@@ -45,83 +74,15 @@ class IPiece(Piece):
             return self.ANTI_CLOCKWISE_KICK_PRIORITY 
         
     def kick(self, kick_index, clockwise):
-        if clockwise:
-            if (self.rotation_state == 0):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(-2, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(1, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(-2, 1)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(1, -2)
-                    
-            elif (self.rotation_state == 1):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(-1, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(2, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(-1, -2)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(2, 1)
-                    
-            elif (self.rotation_state == 2):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(2, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(-1, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(2, -1)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(-1, 2)
-                    
-            elif (self.rotation_state == 3):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(1, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(-2, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(1, 2)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(-2, -1)
-        else:
-            if (self.rotation_state == 0):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(-1, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(2, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(-1, -2)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(2, 1)
-                    
-            elif (self.rotation_state == 1):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(-2, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(1, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(-2, 1)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(1, -2)
-                    
-            elif (self.rotation_state == 2):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(1, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(-2, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(1, 2)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(-2, -1)
-                    
-            elif (self.rotation_state == 3):
-                if (kick_index == self.kick_options[0]):
-                    self.transform(2, 0)
-                elif (kick_index == self.kick_options[1]):
-                    self.transform(-1, 0)
-                elif (kick_index == self.kick_options[2]):
-                    self.transform(2, -1)
-                elif (kick_index == self.kick_options[3]):
-                    self.transform(-1, 2)
+        relative_rot_state = self.rotation_state
+        
+        if not clockwise:
+            relative_rot_state += 4
+            
+        self.transform(
+            IPIECE_KICK_TABLE[relative_rot_state][kick_index][0], 
+            IPIECE_KICK_TABLE[relative_rot_state][kick_index][1]
+        )
+        
+        print(IPIECE_KICK_TABLE[relative_rot_state][kick_index][0])
+        print(IPIECE_KICK_TABLE[relative_rot_state][kick_index][1])

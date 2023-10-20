@@ -31,7 +31,7 @@ class Piece:
     def draw(self, surface):
         for i in range(len(self.minos)):
             bu.draw_rect(self.minos[i][0], self.minos[i][1], self.colour, surface)
-            
+
     def draw_ghost(self, surface, max_height):
         for i in range(len(self.minos)):
             bu.draw_rect(self.minos[i][0], self.minos[i][1] + max_height, (50, 50, 50, self.GHOST_PIECE_ALPHA), surface)
