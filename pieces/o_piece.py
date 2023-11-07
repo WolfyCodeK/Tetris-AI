@@ -12,5 +12,4 @@ class OPiece(Piece):
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
         
     def rotate(self, clockwise: bool):
-        # OPiece cannot rotate using SRS system
-        pass
+        return super().rotate(clockwise)

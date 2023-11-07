@@ -1,8 +1,9 @@
 from numpy import ndarray
 
 import board.board_utils as bu
+from abc import ABC, abstractmethod
 
-class Piece:
+class Piece(ABC):
     GHOST_PIECE_ALPHA = 225
     
     def __init__(self, pid: chr, x: int, colour: tuple, shape: ndarray) -> None:
@@ -35,6 +36,10 @@ class Piece:
     def draw_ghost(self, surface, max_height):
         for i in range(len(self.minos)):
             bu.draw_rect(self.minos[i][0], self.minos[i][1] + max_height, (50, 50, 50, self.GHOST_PIECE_ALPHA), surface)
+            
+    @abstractmethod
+    def rotate(self, clockwise: bool):
+        pass
         
     def revert_rotation(self):
         self.shape = self.previous_shape.copy()
