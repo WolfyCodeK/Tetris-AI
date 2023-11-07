@@ -1,51 +1,5 @@
 from pygame import Rect, Surface, draw
-import game.game_settings as gs
-
-BOARD_ROWS = 20
-BOARD_COLUMNS = 10
-
-GRID_SIZE = gs.GAME_SIZE * 2
-INNER_GRID_ALPHA = 40
-OUTER_GRID_ALPHA = 200
-BACKGROUND_ALPHA = 150
-GRID_OUTLINE_WIDTH = 3
-
-MAX_PIECE_LENGTH = 4
-DROP_HEIGHT = 2
-FLOOR_SIZE = 4
-
-BOARD_STATE_HEIGHT_BUFFER = DROP_HEIGHT + MAX_PIECE_LENGTH
-BOARD_STATE_WIDTH_BUFFER = MAX_PIECE_LENGTH
-
-HELD_PIECE_X_POS = MAX_PIECE_LENGTH - 4
-HELD_PIECE_Y_POS = 4 + FLOOR_SIZE
-
-QUEUED_PIECES_X_POS = MAX_PIECE_LENGTH + 13
-QUEUED_PIECES_Y_POS = 4 + FLOOR_SIZE
-QUEUED_PIECES_VERTICAL_SPACING = 3
-
-BOARD_STATE_HEIGHT = BOARD_ROWS + BOARD_STATE_HEIGHT_BUFFER
-BOARD_STATE_WIDTH = BOARD_COLUMNS + BOARD_STATE_WIDTH_BUFFER * 2
-
-BOARD_LEFT_WALL = BOARD_STATE_WIDTH_BUFFER
-BOARD_RIGHT_WALL = BOARD_STATE_WIDTH_BUFFER + BOARD_COLUMNS
-
-BOARD_RIGHT_BUFFER = 7 * GRID_SIZE
-BOARD_LEFT_BUFFER = 7 * GRID_SIZE
-BOARD_TOP_BUFFER = 4 * GRID_SIZE
-BOARD_BOTTOM_BUFFER = 4 * GRID_SIZE
-
-BOARD_WIDTH = GRID_SIZE * BOARD_COLUMNS
-BOARD_HEIGHT = GRID_SIZE * BOARD_ROWS
-
-SCR_WIDTH = BOARD_WIDTH + BOARD_RIGHT_BUFFER + BOARD_LEFT_BUFFER
-SCR_HEIGHT = BOARD_HEIGHT + BOARD_TOP_BUFFER + BOARD_BOTTOM_BUFFER
-
-# Board Coordinate Definitions
-TOP_LEFT_BOARD_CORNER = (BOARD_LEFT_BUFFER - 2, BOARD_TOP_BUFFER)
-TOP_RIGHT_BOARD_CORNER = (BOARD_LEFT_BUFFER + BOARD_WIDTH + 1, BOARD_TOP_BUFFER)
-BOTTOM_LEFT_BOARD_CORNER = (BOARD_LEFT_BUFFER - 2, BOARD_TOP_BUFFER + BOARD_HEIGHT + 1)
-BOTTOM_RIGHT_BOARD_CORNER = (BOARD_LEFT_BUFFER + BOARD_WIDTH + 1, BOARD_TOP_BUFFER + BOARD_HEIGHT + 1)
+import board.board_definitions as bd
 
 def pixel_to_grid_size(x: int) -> int:
     """Converts pixel size to grid size e.g. 160 pixels to 5 squares, where grid size = 32.
@@ -56,7 +10,7 @@ def pixel_to_grid_size(x: int) -> int:
     Returns:
         int: That length divided by the grid size
     """    
-    return x / GRID_SIZE
+    return x / bd.GRID_SIZE
 
 def grid_to_pixel_length(x: int) -> int:
     """Converts grid size to pixel size e.g. 5 squares to 160 pixels, where grid size = 32.
@@ -67,7 +21,7 @@ def grid_to_pixel_length(x: int) -> int:
     Returns:
         int: That length multiplied by the grid size
     """
-    return x * GRID_SIZE
+    return x * bd.GRID_SIZE
 
 def _draw_outer_grid(surface: Surface):
     """Draw the thick outline of the boards grid.
@@ -76,13 +30,13 @@ def _draw_outer_grid(surface: Surface):
         surface (Surface): The surface being drawn to.
     """
     # BOTTOM
-    draw.line(surface, (255, 255, 255, OUTER_GRID_ALPHA), BOTTOM_LEFT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(surface, (255, 255, 255, bd.OUTER_GRID_ALPHA), bd.BOTTOM_LEFT_BOARD_CORNER, bd.BOTTOM_RIGHT_BOARD_CORNER, width=bd.GRID_OUTLINE_WIDTH)
     
     # LEFT
-    draw.line(surface, (255, 255, 255, OUTER_GRID_ALPHA), TOP_LEFT_BOARD_CORNER, BOTTOM_LEFT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(surface, (255, 255, 255, bd.OUTER_GRID_ALPHA), bd.TOP_LEFT_BOARD_CORNER, bd.BOTTOM_LEFT_BOARD_CORNER, width=bd.GRID_OUTLINE_WIDTH)
     
     # RIGHT
-    draw.line(surface, (255, 255, 255, OUTER_GRID_ALPHA), TOP_RIGHT_BOARD_CORNER, BOTTOM_RIGHT_BOARD_CORNER, width=GRID_OUTLINE_WIDTH)
+    draw.line(surface, (255, 255, 255, bd.OUTER_GRID_ALPHA), bd.TOP_RIGHT_BOARD_CORNER, bd.BOTTOM_RIGHT_BOARD_CORNER, width=bd.GRID_OUTLINE_WIDTH)
     
 def _draw_inner_grid(surface: Surface):
     """Draw the thin inner lines of the boards grid.
@@ -91,21 +45,21 @@ def _draw_inner_grid(surface: Surface):
         surface (Surface): The surface being drawn to.
     """
     # VERTICAL LINES
-    for x in range(1 * GRID_SIZE, BOARD_WIDTH, GRID_SIZE):
+    for x in range(1 * bd.GRID_SIZE, bd.BOARD_PIXEL_WIDTH, bd.GRID_SIZE):
         draw.line(
             surface, 
-            (255, 255, 255, INNER_GRID_ALPHA), 
-            (x + BOARD_LEFT_BUFFER, BOARD_TOP_BUFFER + 2), 
-            (x + BOARD_LEFT_BUFFER, BOARD_HEIGHT + BOARD_TOP_BUFFER - 1)
+            (255, 255, 255, bd.INNER_GRID_ALPHA), 
+            (x + bd.BOARD_LEFT_BUFFER, bd.BOARD_TOP_BUFFER + 2), 
+            (x + bd.BOARD_LEFT_BUFFER, bd.BOARD_PIXEL_HEIGHT + bd.BOARD_TOP_BUFFER - 1)
         )
     
     # HORIZONTAL LINES    
-    for y in range(1 * GRID_SIZE, BOARD_HEIGHT, GRID_SIZE):
+    for y in range(1 * bd.GRID_SIZE, bd.BOARD_PIXEL_HEIGHT, bd.GRID_SIZE):
         draw.line(
             surface, 
-            (255, 255, 255, INNER_GRID_ALPHA), 
-            (BOARD_LEFT_BUFFER, y + BOARD_TOP_BUFFER), 
-            (BOARD_WIDTH + BOARD_LEFT_BUFFER - 1, y + BOARD_TOP_BUFFER)
+            (255, 255, 255, bd.INNER_GRID_ALPHA), 
+            (bd.BOARD_LEFT_BUFFER, y + bd.BOARD_TOP_BUFFER), 
+            (bd.BOARD_PIXEL_WIDTH + bd.BOARD_LEFT_BUFFER - 1, y + bd.BOARD_TOP_BUFFER)
         )
 
 def draw_grids(surface: Surface, outer: bool = True, inner: bool = True) -> None:
@@ -131,6 +85,6 @@ def draw_rect(x: int, y: int, colour: tuple, surface: Surface):
         colour (tuple): The RGB colour of the rectangle.
         surface (Surface): The surface being drawn to.
     """
-    x = x + pixel_to_grid_size(BOARD_LEFT_BUFFER) - BOARD_STATE_WIDTH_BUFFER
-    y = y + pixel_to_grid_size(BOARD_TOP_BUFFER) - BOARD_STATE_HEIGHT_BUFFER
-    draw.rect(surface, colour, Rect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE))
+    x = x + pixel_to_grid_size(bd.BOARD_LEFT_BUFFER)
+    y = y + pixel_to_grid_size(bd.BOARD_TOP_BUFFER) - bd.BOARD_HEIGHT_BUFFER
+    draw.rect(surface, colour, Rect(x * bd.GRID_SIZE, y * bd.GRID_SIZE, bd.GRID_SIZE, bd.GRID_SIZE))

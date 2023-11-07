@@ -1,5 +1,4 @@
-
-import board.board_utils as bu
+import board.board_definitions as bd
 from board.board import Board
 from .piece_holder import PieceHolder
 from .piece_queue import PieceQueue
@@ -76,7 +75,7 @@ class PieceController():
         
         # Attempt to place piece using basic rotation
         for i in range(len(piece.minos)):
-            if (self.board.board_state[piece.minos[i][1]][piece.minos[i][0]] in Board.BLOCKING_PIECE_TYPES):
+            if (self.board.board_state[piece.minos[i][1]][piece.minos[i][0]] in Board.PIECE_PID_LIST):
                 piece.revert_rotation()
                 blocked = True
                 break
@@ -113,14 +112,14 @@ class PieceController():
     def perform_line_clears(self) -> int:
         lines_cleared = 0
         
-        for y in range(len(self.board.board_state)):
+        for y in range(bd.BOARD_ROWS):
             column_count = 0 
             
-            for x in range(bu.BOARD_STATE_WIDTH):
-                if self.board.board_state[y][x] not in Board.NONE_PIECE_TYPES:
+            for x in range(bd.BOARD_COLUMNS):
+                if self.board.board_state[y][x] in Board.PIECE_PID_LIST:
                     column_count += 1
                     
-            if column_count >= bu.BOARD_COLUMNS:    
+            if column_count >= bd.BOARD_COLUMNS:    
                 lines_cleared += 1   
                 
                 for y2 in range(y, 1, -1):
@@ -135,19 +134,19 @@ class PieceController():
         blocked = False
 
         for i in range(len(piece.minos)):
-            piece_pos = piece.minos[i][1] + y_move
+            piece_y_pos = piece.minos[i][1] + y_move
             
             # Check the piece isnt going to hit the floor
-            if (piece_pos != Board.FLOOR_PIECE_PID):
+            if (piece_y_pos >= bd.BOARD_HEIGHT):
+                blocked = True
+            else:
                 # Check if piece is in the board
                 if (piece.minos[i][1] + 1 >= 0):
-                    pos_state = board_state[piece_pos][piece.minos[i][0]]
+                    pos_state = board_state[piece_y_pos][piece.minos[i][0]]
                     
                     # If there is a piece there then the position is blocked
                     if (pos_state != Board.EMPTY_PIECE_PID):  
                         blocked = True
-            else:
-                blocked = True
                     
         return blocked
     
@@ -159,7 +158,7 @@ class PieceController():
             
             # Check for right input
             if (x_move > 0):
-                if (piece_pos + x_move <= bu.BOARD_RIGHT_WALL):
+                if (piece_pos + x_move <= bd.BOARD_COLUMNS):
                     if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_PID):
                         blocked = True
                 else:
@@ -167,7 +166,7 @@ class PieceController():
             
             # Check for left input
             if (x_move < 0):
-                if (piece_pos + x_move >= bu.BOARD_LEFT_WALL - 1):
+                if (piece_pos + x_move >= 0):
                     if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_PID):
                         blocked = True
                 else:
@@ -182,7 +181,7 @@ class PieceController():
             
             blocking = board_state[y][x]
             
-            if (blocking not in Board.BLOCKING_PIECE_TYPES):
+            if (blocking == Board.EMPTY_PIECE_PID):
                 board_state[piece.minos[i][1]][piece.minos[i][0]] = piece.pid
             else:
                 raise PiecePlacementError(x, y, piece.pid, blocking)

@@ -1,6 +1,6 @@
 from numpy import array
 
-SYMMETRICAL_PIECE_ROTATION_TABLE = array([
+THREE_WIDE_PIECE_ROTATION_TABLE = array([
     # Clockwise
     # Side Squares
     [
@@ -133,7 +133,7 @@ IPIECE_ROTATION_TABLE = array([
     ]
 ])
 
-SYMMETRICAL_PIECE_KICK_TABLE = ([
+THREE_WIDE_PIECE_KICK_TABLE = ([
     # State 0
     [
         [-1, 0],

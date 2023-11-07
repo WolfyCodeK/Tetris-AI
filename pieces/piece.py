@@ -1,5 +1,6 @@
 from numpy import ndarray
 
+import board.board_definitions as bd
 import board.board_utils as bu
 from abc import ABC, abstractmethod
 
@@ -7,8 +8,8 @@ class Piece(ABC):
     GHOST_PIECE_ALPHA = 225
     
     def __init__(self, pid: chr, x: int, colour: tuple, shape: ndarray) -> None:
-        self.START_X_POS = x + bu.BOARD_STATE_WIDTH_BUFFER
-        self.START_Y_POS = bu.MAX_PIECE_LENGTH
+        self.START_X_POS = x
+        self.START_Y_POS = bd.MAX_PIECE_LENGTH
         
         self.pid = pid
         self.x_pos = self.START_X_POS

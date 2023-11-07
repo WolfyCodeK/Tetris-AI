@@ -1,13 +1,13 @@
 from numpy import ndarray, array
 from pieces.piece_lookup_tables import (
-    SYMMETRICAL_PIECE_ROTATION_TABLE, 
-    SYMMETRICAL_PIECE_KICK_TABLE
+    THREE_WIDE_PIECE_ROTATION_TABLE, 
+    THREE_WIDE_PIECE_KICK_TABLE
     )
 
 from .piece import Piece
 
 
-class SymmetricalPiece(Piece):
+class ThreeWidePiece(Piece):
     def __init__(self, pid: chr, x: int, colour: tuple, kick_priority: dict, shape: ndarray) -> None:
         super().__init__(pid, x, colour, shape)
         self.kick_priority = kick_priority
@@ -33,8 +33,8 @@ class SymmetricalPiece(Piece):
         if not clockwise:
             state += 2
         
-        x_adjust = SYMMETRICAL_PIECE_ROTATION_TABLE[state][piece_num][0]
-        y_adjust = SYMMETRICAL_PIECE_ROTATION_TABLE[state][piece_num][1]
+        x_adjust = THREE_WIDE_PIECE_ROTATION_TABLE[state][piece_num][0]
+        y_adjust = THREE_WIDE_PIECE_ROTATION_TABLE[state][piece_num][1]
         
         if (shape[i][0] == 0 and shape[i][1] == 0):
             x_adjust = 0
@@ -94,8 +94,8 @@ class SymmetricalPiece(Piece):
                 relative_rot_state = 0
 
         self.transform(
-            rot * SYMMETRICAL_PIECE_KICK_TABLE[relative_rot_state][kick_index][0], 
-            rot * SYMMETRICAL_PIECE_KICK_TABLE[relative_rot_state][kick_index][1]
+            rot * THREE_WIDE_PIECE_KICK_TABLE[relative_rot_state][kick_index][0], 
+            rot * THREE_WIDE_PIECE_KICK_TABLE[relative_rot_state][kick_index][1]
         )
         
     def revert_rotation(self):
@@ -103,7 +103,7 @@ class SymmetricalPiece(Piece):
         self.rotation_direction = -self.rotation_direction
         self.update_rotation_state()
         
-class ZPiece(SymmetricalPiece):
+class ZPiece(ThreeWidePiece):
     PID = 'Z'
     START_BOARD_X = 4
     COLOUR = (255,85,82)
@@ -118,7 +118,7 @@ class ZPiece(SymmetricalPiece):
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
 
-class LPiece(SymmetricalPiece):
+class LPiece(ThreeWidePiece):
     PID = 'L'
     START_BOARD_X = 4
     COLOUR = (255,159,122)
@@ -133,7 +133,7 @@ class LPiece(SymmetricalPiece):
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
-class SPiece(SymmetricalPiece):
+class SPiece(ThreeWidePiece):
     PID = 'S'
     START_BOARD_X = 4
     COLOUR = (82,255,97)
@@ -148,7 +148,7 @@ class SPiece(SymmetricalPiece):
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
-class JPiece(SymmetricalPiece):
+class JPiece(ThreeWidePiece):
     PID = 'J'
     START_BOARD_X = 4
     COLOUR = (62,101,255)
@@ -163,7 +163,7 @@ class JPiece(SymmetricalPiece):
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
-class TPiece(SymmetricalPiece):
+class TPiece(ThreeWidePiece):
     PID = 'T'
     START_BOARD_X = 4
     COLOUR = (255,100,167)
@@ -201,6 +201,6 @@ class TPiece(SymmetricalPiece):
             pass
         else:
             self.transform(
-                rot * SYMMETRICAL_PIECE_KICK_TABLE[relative_rot_state][kick_index][0], 
-                rot * SYMMETRICAL_PIECE_KICK_TABLE[relative_rot_state][kick_index][1]
+                rot * THREE_WIDE_PIECE_KICK_TABLE[relative_rot_state][kick_index][0], 
+                rot * THREE_WIDE_PIECE_KICK_TABLE[relative_rot_state][kick_index][1]
             )

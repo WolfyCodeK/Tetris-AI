@@ -3,7 +3,7 @@ from typing import List
 
 import pygame
 
-import board.board_utils as bu
+import board.board_definitions as bd
 import game.game_settings as gs
 
 from pieces.piece_controller import PieceController
@@ -27,7 +27,7 @@ class LogicController():
         self.b2b_colour = (255, 0, 0)
     
         # Set fps string
-        self.font = pygame.font.Font("freesansbold.ttf", bu.GRID_SIZE)
+        self.font = pygame.font.Font("freesansbold.ttf", bd.GRID_SIZE)
         self.fps_string = self.font.render(str("- - -"), True, self.fps_colour)
         
         
@@ -135,19 +135,19 @@ class LogicController():
         
         if (key[pygame.K_RIGHT] == True) and (self.move_delay < 0):
             self.p_controller.shift_piece_horizontally(1)
-            self.move_delay = 75 * 32 / bu.GRID_SIZE
+            self.move_delay = 75 * 32 / bd.GRID_SIZE
             
         if key[pygame.K_LEFT] == True and (self.move_delay < 0):
             self.p_controller.shift_piece_horizontally(-1)
-            self.move_delay = 75 * 32 / bu.GRID_SIZE
+            self.move_delay = 75 * 32 / bd.GRID_SIZE
             
         if key[pygame.K_x] == True and (self.rotate_delay < 0):
             self.p_controller.rotate_piece(clockwise=True)
-            self.rotate_delay = 120 * 32 / bu.GRID_SIZE
+            self.rotate_delay = 120 * 32 / bd.GRID_SIZE
             
         if key[pygame.K_z] == True and (self.rotate_delay < 0):
             self.p_controller.rotate_piece(clockwise=False)
-            self.rotate_delay = 120 * 32 / bu.GRID_SIZE
+            self.rotate_delay = 120 * 32 / bd.GRID_SIZE
         
         # DEBUG EVENTS
         if key[pygame.K_a] == True:

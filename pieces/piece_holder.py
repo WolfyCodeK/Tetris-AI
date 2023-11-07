@@ -1,6 +1,7 @@
 from pieces.i_piece import IPiece
 from pieces.o_piece import OPiece
 from pieces.piece import Piece
+import board.board_definitions as bd
 import board.board_utils as bu
 
 class PieceHolder():
@@ -12,8 +13,8 @@ class PieceHolder():
         if (self.held_piece != None):
             
             for i in range(len(self.held_piece.shape)):
-                x_adjust = bu.HELD_PIECE_X_POS
-                y_adjust = bu.HELD_PIECE_Y_POS
+                x_adjust = bd.HELD_PIECE_X_POS
+                y_adjust = bd.HELD_PIECE_Y_POS
                 
                 if (self.held_piece.pid == OPiece.PID):
                     x_adjust += 1
