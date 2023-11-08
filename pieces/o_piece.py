@@ -10,6 +10,11 @@ class OPiece(Piece):
     
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
+    
+    # O Piece cannot rotate or kick using SRS
         
     def rotate(self, clockwise: bool):
         return super().rotate(clockwise)
+    
+    def kick(self, kick_index: int, clockwise: bool):
+        return super().kick(kick_index, clockwise)

@@ -26,7 +26,7 @@ class Board():
     
     def draw(self, surface):
         for y in range(bd.BOARD_HEIGHT_BUFFER, bd.BOARD_HEIGHT):
-            for x in range(bd.BOARD_COLUMNS):
+            for x in range(bd.BOARD_WIDTH):
                 pid = self.board_state[y][x]
                 
                 if (pid in Board.PIECE_PID_LIST):
@@ -42,6 +42,6 @@ class Board():
     
     def _init_board_state(self):
         # Initialise board state to be empty
-        board_state = full(shape=(bd.BOARD_HEIGHT, bd.BOARD_COLUMNS), fill_value=self.EMPTY_PIECE_PID)
+        board_state = full(shape=(bd.BOARD_HEIGHT, bd.BOARD_WIDTH), fill_value=self.EMPTY_PIECE_PID)
             
         return board_state

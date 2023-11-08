@@ -43,11 +43,8 @@ class IPiece(Piece):
     
     def rotate(self, clockwise: bool):
         self.previous_shape = self.shape.copy()
-        
-        if clockwise:
-            self.rotation_direction = 1
-        else:
-            self.rotation_direction = -1
+    
+        self.rotating_clockwise = clockwise
         
         if (self.shape[0][0] == 0 and self.shape[0][1] == 0): # STATE 0
             for i in range(len(self.shape)):
@@ -68,21 +65,18 @@ class IPiece(Piece):
         self.update_minos()
     
     def get_kick_priority(self):
-        if self.rotation_direction == 1:
+        if self.rotating_clockwise:
             return self.CLOCKWISE_KICK_PRIORITY
-        elif self.rotation_direction == -1:
+        elif not self.rotating_clockwise:
             return self.ANTI_CLOCKWISE_KICK_PRIORITY 
         
-    def kick(self, kick_index, clockwise):
-        relative_rot_state = self.rotation_state
+    def kick(self, kick_index: int, clockwise: bool):
+        relative_rotation_state = self.rotation_state
         
         if not clockwise:
-            relative_rot_state += 4
+            relative_rotation_state += 4
             
         self.transform(
-            IPIECE_KICK_TABLE[relative_rot_state][kick_index][0], 
-            IPIECE_KICK_TABLE[relative_rot_state][kick_index][1]
+            IPIECE_KICK_TABLE[relative_rotation_state][kick_index][0], 
+            IPIECE_KICK_TABLE[relative_rotation_state][kick_index][1]
         )
-        
-        print(IPIECE_KICK_TABLE[relative_rot_state][kick_index][0])
-        print(IPIECE_KICK_TABLE[relative_rot_state][kick_index][1])

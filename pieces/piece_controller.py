@@ -66,24 +66,29 @@ class PieceController():
         if (not self._piece_is_horizontally_blocked(self.board.board_state, self.current_piece, x_move)):
             self.current_piece.set_x_pos(self.current_piece.x_pos + x_move)
             
+    def is_move_allowed(self, x: int, y: int) -> bool:
+        if (x < 0) or (x >= bd.BOARD_WIDTH) or (y >= bd.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_PID_LIST):
+            return False
+        else:
+            return True
+
     def rotate_piece(self, clockwise: bool) -> None:
+        rotation_blocked = False
+        
         piece = self.current_piece    
-        
         piece.rotate(clockwise)
-        
-        blocked = False
         
         # Attempt to place piece using basic rotation
         for i in range(len(piece.minos)):
-            if (self.board.board_state[piece.minos[i][1]][piece.minos[i][0]] in Board.PIECE_PID_LIST):
+            if (not self.is_move_allowed(piece.minos[i][0], piece.minos[i][1])):
                 piece.revert_rotation()
-                blocked = True
+                rotation_blocked = True
                 break
         
         kick_found = False
         
         # If basic rotation didn't work, then attempt a kick
-        if blocked:
+        if rotation_blocked:
             for i in range(len(piece.kick_options)):
                 piece.rotate(clockwise)
                 
@@ -94,7 +99,7 @@ class PieceController():
                 piece.kick(kick_index, clockwise)
                 
                 for j in range(len(piece.minos)):
-                    if (self.board.board_state[piece.minos[j][1]][piece.minos[j][0]] in Board.BLOCKING_PIECE_TYPES):
+                    if (not self.is_move_allowed(piece.minos[j][0], piece.minos[j][1])):
                         piece.revert_rotation()
                         piece.revert_kick()
                         kick_found = False
@@ -112,18 +117,19 @@ class PieceController():
     def perform_line_clears(self) -> int:
         lines_cleared = 0
         
-        for y in range(bd.BOARD_ROWS):
+        for y in range(bd.BOARD_HEIGHT_BUFFER, bd.BOARD_HEIGHT):
             column_count = 0 
             
-            for x in range(bd.BOARD_COLUMNS):
+            for x in range(bd.BOARD_WIDTH):
                 if self.board.board_state[y][x] in Board.PIECE_PID_LIST:
                     column_count += 1
                     
-            if column_count >= bd.BOARD_COLUMNS:    
-                lines_cleared += 1   
-                
+            if column_count == bd.BOARD_WIDTH:    
+                # Move all lines down by one row
                 for y2 in range(y, 1, -1):
                     self.board.board_state[y2] = self.board.board_state[y2 - 1]
+                    
+                lines_cleared += 1 
                     
         return lines_cleared
                     
@@ -158,7 +164,7 @@ class PieceController():
             
             # Check for right input
             if (x_move > 0):
-                if (piece_pos + x_move <= bd.BOARD_COLUMNS):
+                if (piece_pos + x_move <= bd.BOARD_WIDTH):
                     if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_PID):
                         blocked = True
                 else:
@@ -166,7 +172,7 @@ class PieceController():
             
             # Check for left input
             if (x_move < 0):
-                if (piece_pos + x_move >= 0):
+                if (piece_pos + x_move >= -1):
                     if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_PID):
                         blocked = True
                 else:
@@ -176,15 +182,15 @@ class PieceController():
 
     def _place_piece(self, board_state, piece: Piece):
         for i in range(len(piece.minos)):
-            y = piece.minos[i][1]
             x = piece.minos[i][0]
+            y = piece.minos[i][1]
             
-            blocking = board_state[y][x]
+            pid = board_state[y][x]
             
-            if (blocking == Board.EMPTY_PIECE_PID):
+            if (pid == Board.EMPTY_PIECE_PID):
                 board_state[piece.minos[i][1]][piece.minos[i][0]] = piece.pid
             else:
-                raise PiecePlacementError(x, y, piece.pid, blocking)
+                raise PiecePlacementError(x, y, piece.pid, pid)
             
         self.piece_holder.new_hold_available = True
         

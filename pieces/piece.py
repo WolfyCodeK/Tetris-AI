@@ -1,5 +1,6 @@
-from numpy import ndarray
+from numpy import ndarray, array_equal
 
+from game.game_exceptions import RevertRotationError
 import board.board_definitions as bd
 import board.board_utils as bu
 from abc import ABC, abstractmethod
@@ -21,7 +22,7 @@ class Piece(ABC):
         self.previous_pos = (self.x_pos, self.y_pos)
         
         self.rotation_state = 0
-        self.rotation_direction = 1
+        self.rotating_clockwise = True
         
         self.previous_shape = shape.copy()
         self.minos = shape.copy()
@@ -41,10 +42,18 @@ class Piece(ABC):
     @abstractmethod
     def rotate(self, clockwise: bool):
         pass
+    
+    @abstractmethod
+    def kick(self, kick_index:int, clockwise: bool):
+        pass
         
-    def revert_rotation(self):
-        self.shape = self.previous_shape.copy()
-        self.rotation_direction = -self.rotation_direction
+    def revert_rotation(self) -> bool:
+        if (not array_equal(self.shape, self.previous_shape.copy())):
+            self.shape = self.previous_shape.copy()
+            self.rotating_clockwise = not self.rotating_clockwise
+            return True
+        else:
+            return False
     
     def update_minos(self):      
         for i in range(len(self.shape)):
