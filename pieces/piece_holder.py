@@ -41,14 +41,14 @@ class PieceHolder():
             
             self.new_hold_available = False
             
-            self.held_piece.reset_pos()
+            self.held_piece.reset_piece()
             
         elif (empty_hold):
             self.held_piece = current_piece
             
             self.new_hold_available = False
             
-            self.held_piece.reset_pos()
+            self.held_piece.reset_piece()
         else:
             current_piece = None
             

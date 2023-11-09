@@ -25,7 +25,7 @@ class IPiece(Piece):
     def __init__(self) -> None:
         super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
     
-    def _adjust_i_piece(self, clockwise: bool, shape: ndarray, state: int, i: int):
+    def _rotate_from_table(self, clockwise: bool, shape: ndarray, state: int, i: int):
         if state in [0, 2]:
             j = 0
         else:
@@ -48,19 +48,19 @@ class IPiece(Piece):
         
         if (self.shape[0][0] == 0 and self.shape[0][1] == 0): # STATE 0
             for i in range(len(self.shape)):
-                self.shape = self._adjust_i_piece(clockwise, self.shape, 0, i)
+                self.shape = self._rotate_from_table(clockwise, self.shape, 0, i)
                     
         elif (self.shape[0][0] == 1 and self.shape[0][1] == 0): # STATE 1
             for i in range(len(self.shape)):
-                self.shape = self._adjust_i_piece(clockwise, self.shape, 1, i)
+                self.shape = self._rotate_from_table(clockwise, self.shape, 1, i)
                 
         elif (self.shape[0][0] == 1 and self.shape[0][1] == 1): # STATE 2
             for i in range(len(self.shape)):
-                self.shape = self._adjust_i_piece(clockwise, self.shape, 2, i)
+                self.shape = self._rotate_from_table(clockwise, self.shape, 2, i)
                 
         elif (self.shape[0][0] == 0 and self.shape[0][1] == 1): # STATE 3
             for i in range(len(self.shape)):
-                self.shape = self._adjust_i_piece(clockwise, self.shape, 3, i)
+                self.shape = self._rotate_from_table(clockwise, self.shape, 3, i)
             
         self.update_minos()
     

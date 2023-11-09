@@ -41,8 +41,10 @@ class PieceController():
         Returns:
             bool: True if the piece was successfully dropped down one row
         """
-        if (not self._piece_is_vertically_blocked(self.board.board_state, self.current_piece, 1)):
-            self.current_piece.set_y_pos(self.current_piece.y_pos + 1)
+        DROP_AMOUNT = 1
+        
+        if (not self._piece_is_vertically_blocked(self.board.board_state, self.current_piece, DROP_AMOUNT)):
+            self.current_piece.transform(0, DROP_AMOUNT)
             return True
         else:
             return False
@@ -60,11 +62,11 @@ class PieceController():
         return drop_amount - 1
         
     def hard_drop_piece(self) -> None:
-        self.current_piece.set_y_pos(self.current_piece.y_pos + self._calculate_max_drop_height())
+        self.current_piece.transform(0, self._calculate_max_drop_height())
         
     def shift_piece_horizontally(self, x_move):
         if (not self._piece_is_horizontally_blocked(self.board.board_state, self.current_piece, x_move)):
-            self.current_piece.set_x_pos(self.current_piece.x_pos + x_move)
+            self.current_piece.transform(x_move, 0)
             
     def is_move_allowed(self, x: int, y: int) -> bool:
         if (x < 0) or (x >= bd.BOARD_WIDTH) or (y >= bd.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_PID_LIST):
@@ -95,7 +97,6 @@ class PieceController():
                 kick_priority = piece.get_kick_priority()
                 kick_index = kick_priority[piece.rotation_state][i]
                     
-                piece.save_previous_pos()
                 piece.kick(kick_index, clockwise)
                 
                 for j in range(len(piece.minos)):
@@ -111,7 +112,6 @@ class PieceController():
                     break
             
     def deactivate_piece(self) -> None:
-        self.current_piece.active = False
         self._place_piece(self.board.board_state, self.current_piece)    
         
     def perform_line_clears(self) -> int:
@@ -197,12 +197,12 @@ class PieceController():
     def hold_piece(self):
         piece = self.piece_holder.hold_piece(self.current_piece)
         
-        # Piece was switched with held piece
+        # The first time the hold has been used
         if piece == self.current_piece:
             self.next_piece()
         # No new hold was allowed
         elif piece == None:
             pass
-        # The first time the hold has been used
+        # Piece was switched with held piece
         else:
             self.current_piece = piece
