@@ -7,10 +7,10 @@ from pieces.o_piece import OPiece
 from pieces.three_wide_pieces import (JPiece, LPiece, SPiece, TPiece, ZPiece)
 
 class Board():
-    EMPTY_PIECE_PID = 'E'
-    
     # All the available pieces to the piece controller
     PIECE_LIST = [ZPiece, SPiece, JPiece, LPiece, TPiece, IPiece, OPiece]
+    
+    EMPTY_PIECE_PID = 'E'
     
     PIECE_PID_LIST  = []
     for i in range(len(PIECE_LIST)):

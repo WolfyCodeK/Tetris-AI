@@ -23,7 +23,7 @@ def grid_to_pixel_length(x: int) -> int:
     """
     return x * bd.GRID_SIZE
 
-def _draw_outer_grid(surface: Surface):
+def _draw_outer_grid(surface: Surface) -> None:
     """Draw the thick outline of the boards grid.
 
     Args:
@@ -38,7 +38,7 @@ def _draw_outer_grid(surface: Surface):
     # RIGHT
     draw.line(surface, (255, 255, 255, bd.OUTER_GRID_ALPHA), bd.TOP_RIGHT_BOARD_CORNER, bd.BOTTOM_RIGHT_BOARD_CORNER, width=bd.GRID_OUTLINE_WIDTH)
     
-def _draw_inner_grid(surface: Surface):
+def _draw_inner_grid(surface: Surface) -> None:
     """Draw the thin inner lines of the boards grid.
 
     Args:
@@ -76,7 +76,7 @@ def draw_grids(surface: Surface, outer: bool = True, inner: bool = True) -> None
     if (inner):
         _draw_inner_grid(surface)
     
-def draw_rect(x: int, y: int, colour: tuple, surface: Surface):
+def draw_rect(x: int, y: int, colour: tuple, surface: Surface) -> None:
     """Draw a rectangle to the board based on the grid size.
 
     Args:
@@ -87,4 +87,5 @@ def draw_rect(x: int, y: int, colour: tuple, surface: Surface):
     """
     x = x + pixel_to_grid_size(bd.BOARD_LEFT_BUFFER)
     y = y + pixel_to_grid_size(bd.BOARD_TOP_BUFFER) - bd.BOARD_HEIGHT_BUFFER
+    
     draw.rect(surface, colour, Rect(x * bd.GRID_SIZE, y * bd.GRID_SIZE, bd.GRID_SIZE, bd.GRID_SIZE))

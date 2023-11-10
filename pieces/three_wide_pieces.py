@@ -45,7 +45,7 @@ class ThreeWidePiece(Piece):
         
         return shape
     
-    def rotate(self, clockwise: bool):
+    def rotate(self, clockwise: bool) -> None:
         self.previous_shape = self.shape.copy()
         
         self.rotating_clockwise = clockwise
@@ -59,7 +59,7 @@ class ThreeWidePiece(Piece):
         self.rotation_state = self.cycle_rotation_state(self.rotation_state, clockwise)  
         self.update_minos()
         
-    def cycle_rotation_state(self, rotation_state, clockwise):
+    def cycle_rotation_state(self, rotation_state: int, clockwise: bool) -> int:
         if clockwise:
             rotation_state = self.increment_rotation_state(rotation_state)
         elif not clockwise:
@@ -69,19 +69,25 @@ class ThreeWidePiece(Piece):
         
     def get_kick_priority(self) -> dict:
         return self.kick_priority
+    
+    def _kick_from_table(self, clockwise: bool, rotation_state: int, kick_index: int) -> None:
+        if (clockwise):
+            invert_transformation = 1
+        else:
+            invert_transformation = -1
+            
+        self.transform(
+            invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[rotation_state][kick_index][0], 
+            invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[rotation_state][kick_index][1]
+        )
         
     def kick(self, kick_index: int, clockwise: bool):
         relative_rotation_state = self.rotation_state
-        invert_transformation = 1
         
         if not clockwise:
-            invert_transformation = -1
             relative_rotation_state = self.increment_rotation_state(relative_rotation_state)
 
-        self.transform(
-            invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[relative_rotation_state][kick_index][0], 
-            invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[relative_rotation_state][kick_index][1]
-        )
+        self._kick_from_table(clockwise, relative_rotation_state, kick_index) 
         
     def revert_rotation(self) -> bool:
         if (not array_equal(self.shape, self.previous_shape.copy())):
@@ -169,10 +175,8 @@ class TPiece(ThreeWidePiece):
     
     def kick(self, kick_index, clockwise):
         relative_rotation_state = self.rotation_state
-        invert_transformation = 1
         
         if not clockwise:
-            invert_transformation = -1
             relative_rotation_state = self.increment_rotation_state(relative_rotation_state)
 
         # If illegal kick is being attempted, do nothing
@@ -181,7 +185,4 @@ class TPiece(ThreeWidePiece):
         elif (relative_rotation_state == 3) and (kick_index == 1):
             pass
         else:
-            self.transform(
-                invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[relative_rotation_state][kick_index][0], 
-                invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[relative_rotation_state][kick_index][1]
-            )
+            self._kick_from_table(clockwise, relative_rotation_state, kick_index)

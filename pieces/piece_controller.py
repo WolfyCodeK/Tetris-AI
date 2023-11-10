@@ -91,7 +91,7 @@ class PieceController():
         
         # If basic rotation didn't work, then attempt a kick
         if rotation_blocked:
-            for i in range(len(piece.kick_options)):
+            for i in range(len(piece.KICK_OPTIONS)):
                 piece.rotate(clockwise)
                 
                 kick_priority = piece.get_kick_priority()
