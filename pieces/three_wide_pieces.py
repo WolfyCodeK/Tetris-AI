@@ -15,19 +15,19 @@ class ThreeWidePiece(Piece):
     def _is_side_square(self, x: int, y: int) -> bool:
         return (not x) ^ (not y)
     
-    def _rotate_from_table(self, clockwise: bool, shape: ndarray, state: int, i: int) -> ndarray:
+    def _rotate_from_table(self, clockwise: bool, shape: ndarray, state: int, piece_index: int) -> ndarray:
         piece_num = 0
         
-        if (shape[i][0] == 0 and shape[i][1] == -1) or (shape[i][0] == -1 and shape[i][1] == -1): 
+        if (shape[piece_index][0] == 0 and shape[piece_index][1] == -1) or (shape[piece_index][0] == -1 and shape[piece_index][1] == -1): 
             piece_num = 0
             
-        if (shape[i][0] == 0 and shape[i][1] == 1) or (shape[i][0] == 1 and shape[i][1] == -1): 
+        if (shape[piece_index][0] == 0 and shape[piece_index][1] == 1) or (shape[piece_index][0] == 1 and shape[piece_index][1] == -1): 
             piece_num = 1
             
-        if (shape[i][0] == -1 and shape[i][1] == 0) or (shape[i][0] == 1 and shape[i][1] == 1): 
+        if (shape[piece_index][0] == -1 and shape[piece_index][1] == 0) or (shape[piece_index][0] == 1 and shape[piece_index][1] == 1): 
             piece_num = 2
             
-        if (shape[i][0] == 1 and shape[i][1] == 0) or (shape[i][0] == -1 and shape[i][1] == 1): 
+        if (shape[piece_index][0] == 1 and shape[piece_index][1] == 0) or (shape[piece_index][0] == -1 and shape[piece_index][1] == 1): 
             piece_num = 3
         
         if not clockwise:
@@ -36,12 +36,12 @@ class ThreeWidePiece(Piece):
         x_adjust = THREE_WIDE_PIECE_ROTATION_TABLE[state][piece_num][0]
         y_adjust = THREE_WIDE_PIECE_ROTATION_TABLE[state][piece_num][1]
         
-        if (shape[i][0] == 0 and shape[i][1] == 0):
+        if (shape[piece_index][0] == 0 and shape[piece_index][1] == 0):
             x_adjust = 0
             y_adjust = 0
         
-        shape[i][0] = shape[i][0] + x_adjust
-        shape[i][1] = shape[i][1] + y_adjust
+        shape[piece_index][0] = shape[piece_index][0] + x_adjust
+        shape[piece_index][1] = shape[piece_index][1] + y_adjust
         
         return shape
     

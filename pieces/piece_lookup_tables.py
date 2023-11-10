@@ -18,7 +18,6 @@ THREE_WIDE_PIECE_ROTATION_TABLE = array([
     ],
     
     # Corner Squares
-    # ()
     [
         # (-1, -1)
         [2, 0],
