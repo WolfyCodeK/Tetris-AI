@@ -69,7 +69,7 @@ class PieceController():
             self.current_piece.transform(x_move, 0)
             
     def is_move_allowed(self, x: int, y: int) -> bool:
-        if (x < 0) or (x >= bd.BOARD_WIDTH) or (y >= bd.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_PID_LIST):
+        if (x < 0) or (x >= bd.BOARD_WIDTH) or (y >= bd.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys()):
             return False
         else:
             return True
@@ -117,11 +117,11 @@ class PieceController():
     def perform_line_clears(self) -> int:
         lines_cleared = 0
         
-        for y in range(bd.BOARD_HEIGHT_BUFFER, bd.BOARD_HEIGHT):
+        for y in bd.BOARD_HEIGHT_RANGE:
             column_count = 0 
             
             for x in range(bd.BOARD_WIDTH):
-                if self.board.board_state[y][x] in Board.PIECE_PID_LIST:
+                if self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys():
                     column_count += 1
                     
             if column_count == bd.BOARD_WIDTH:    
@@ -151,7 +151,7 @@ class PieceController():
                     pos_state = board_state[piece_y_pos][piece.minos[i][0]]
                     
                     # If there is a piece there then the position is blocked
-                    if (pos_state != Board.EMPTY_PIECE_PID):  
+                    if (pos_state != Board.EMPTY_PIECE_ID):  
                         blocked = True
                     
         return blocked
@@ -165,7 +165,7 @@ class PieceController():
             # Check for right input
             if (x_move > 0):
                 if (piece_pos + x_move <= bd.BOARD_WIDTH):
-                    if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_PID):
+                    if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
                         blocked = True
                 else:
                     blocked = True
@@ -173,7 +173,7 @@ class PieceController():
             # Check for left input
             if (x_move < 0):
                 if (piece_pos + x_move >= -1):
-                    if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_PID):
+                    if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
                         blocked = True
                 else:
                     blocked = True          
@@ -185,12 +185,12 @@ class PieceController():
             x = piece.minos[i][0]
             y = piece.minos[i][1]
             
-            pid = board_state[y][x]
+            id = board_state[y][x]
             
-            if (pid == Board.EMPTY_PIECE_PID):
-                board_state[piece.minos[i][1]][piece.minos[i][0]] = piece.pid
+            if (id == Board.EMPTY_PIECE_ID):
+                board_state[piece.minos[i][1]][piece.minos[i][0]] = piece.id
             else:
-                raise PiecePlacementError(x, y, piece.pid, pid)
+                raise PiecePlacementError(x, y, piece.id, id)
             
         self.piece_holder.new_hold_available = True
         

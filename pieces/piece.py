@@ -12,13 +12,13 @@ class Piece(ABC):
     NUM_OF_ROTATION_STATES = 4
     KICK_OPTIONS = list(range(0, NUM_OF_KICK_OPTIONS))
     
-    def __init__(self, pid: chr, x: int, colour: tuple, shape: ndarray) -> None:
+    def __init__(self, id: chr, x: int, colour: tuple, shape: ndarray) -> None:
         self.START_X_POS = x
         self.START_Y_POS = bd.MAX_PIECE_LENGTH
         self.x_pos = self.START_X_POS
         self.y_pos = self.START_Y_POS
         
-        self.pid = pid
+        self.id = id
         self.colour = colour
         self.shape = shape
         

@@ -30,7 +30,6 @@ class LogicController():
         self.font = pygame.font.Font("freesansbold.ttf", bd.GRID_SIZE)
         self.fps_string = self.font.render(str("- - -"), True, self.fps_colour)
         
-        
         # The speed at which the tetramino pieces fall
         self.drop_speed = gs.DROP_SPEED
         self.drop_time = 1 / self.drop_speed

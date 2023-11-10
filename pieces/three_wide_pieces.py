@@ -8,8 +8,8 @@ from .piece import Piece
 
 
 class ThreeWidePiece(Piece):
-    def __init__(self, pid: chr, x: int, colour: tuple, kick_priority: dict, shape: ndarray) -> None:
-        super().__init__(pid, x, colour, shape)
+    def __init__(self, id: chr, x: int, colour: tuple, kick_priority: dict, shape: ndarray) -> None:
+        super().__init__(id, x, colour, shape)
         self.kick_priority = kick_priority
     
     def _is_side_square(self, x: int, y: int) -> bool:
@@ -99,7 +99,7 @@ class ThreeWidePiece(Piece):
             return False
         
 class ZPiece(ThreeWidePiece):
-    PID = 'Z'
+    ID = 'Z'
     START_BOARD_X = 4
     COLOUR = (255,85,82)
     DEFAULT_SHAPE = array([[0, 0], [1, 0], [0, -1], [-1, -1]])
@@ -111,10 +111,10 @@ class ZPiece(ThreeWidePiece):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
+        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
 
 class LPiece(ThreeWidePiece):
-    PID = 'L'
+    ID = 'L'
     START_BOARD_X = 4
     COLOUR = (255,159,122)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [1, -1]])
@@ -126,10 +126,10 @@ class LPiece(ThreeWidePiece):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
+        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
 class SPiece(ThreeWidePiece):
-    PID = 'S'
+    ID = 'S'
     START_BOARD_X = 4
     COLOUR = (82,255,97)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [0, -1], [1, -1]])
@@ -141,10 +141,10 @@ class SPiece(ThreeWidePiece):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
+        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
 class JPiece(ThreeWidePiece):
-    PID = 'J'
+    ID = 'J'
     START_BOARD_X = 4
     COLOUR = (62,101,255)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [-1, -1]])
@@ -156,10 +156,10 @@ class JPiece(ThreeWidePiece):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
+        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
 class TPiece(ThreeWidePiece):
-    PID = 'T'
+    ID = 'T'
     START_BOARD_X = 4
     COLOUR = (255,100,167)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [0, -1]])
@@ -171,7 +171,7 @@ class TPiece(ThreeWidePiece):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
+        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
     
     def kick(self, kick_index, clockwise):
         relative_rotation_state = self.rotation_state

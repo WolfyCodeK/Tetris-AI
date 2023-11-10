@@ -16,9 +16,9 @@ class PieceHolder():
                 x_adjust = bd.HELD_PIECE_X_POS
                 y_adjust = bd.HELD_PIECE_Y_POS
                 
-                if (self.held_piece.pid == OPiece.PID):
+                if (self.held_piece.id == OPiece.ID):
                     x_adjust += 1
-                if (self.held_piece.pid == IPiece.PID):
+                if (self.held_piece.id == IPiece.ID):
                     y_adjust -= 1
                     
                 bu.draw_rect(self.held_piece.DEFAULT_SHAPE[i][0] + x_adjust, self.held_piece.DEFAULT_SHAPE[i][1] + y_adjust, self.held_piece.colour, surface)

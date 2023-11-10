@@ -26,9 +26,9 @@ class PieceQueue():
                 x_adjust = bd.QUEUED_PIECES_X_POS
                 y_adjust = bd.QUEUED_PIECES_Y_POS
                 
-                if (piece.pid == OPiece.PID):
+                if (piece.id == OPiece.ID):
                     x_adjust += 1
-                if (piece.pid == IPiece.PID):
+                if (piece.id == IPiece.ID):
                     y_adjust -= 1
                     
                 bu.draw_rect(piece.DEFAULT_SHAPE[j][0] + x_adjust, piece.DEFAULT_SHAPE[j][1] + y_adjust + (i * bd.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)

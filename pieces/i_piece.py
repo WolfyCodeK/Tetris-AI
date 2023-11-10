@@ -4,7 +4,7 @@ from pieces.piece_lookup_tables import IPIECE_ROTATION_TABLE, IPIECE_KICK_TABLE
 from .piece import Piece
 
 class IPiece(Piece):
-    PID = 'I'
+    ID = 'I'
     START_BOARD_X = 4
     COLOUR = (122,161,255)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [2, 0]])
@@ -23,7 +23,7 @@ class IPiece(Piece):
     }
     
     def __init__(self) -> None:
-        super().__init__(self.PID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
+        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.DEFAULT_SHAPE.copy())
     
     def _rotate_from_table(self, clockwise: bool, shape: ndarray, state: int, i: int):
         if state in [0, 2]:

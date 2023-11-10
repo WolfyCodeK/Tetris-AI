@@ -8,9 +8,9 @@ from .logic_controller import LogicController
 
 
 class WindowController():
-    def __init__(self, g_controller: LogicController) -> None:
-        # Set Game Controller
-        self.g_controller = g_controller
+    def __init__(self, l_controller: LogicController) -> None:
+        # Set logic controller
+        self.l_controller = l_controller
         
         # Set window and surface sizes
         self.window = pygame.display.set_mode((bd.SCR_WIDTH, bd.SCR_HEIGHT))
@@ -38,17 +38,17 @@ class WindowController():
         # Draw all pieces
         #window.blit(piece_surface, (0, 0))
         #piece_surface.fill(0)
-        self.g_controller.draw_pieces(self.board_surface)
+        self.l_controller.draw_pieces(self.board_surface)
 
         # Draw fps counter
         if (gs.SHOW_FPS_COUNTER):
-            self.board_surface.blit(self.g_controller.fps_string, (bd.SCR_WIDTH - (bd.GRID_SIZE * 3), bd.GRID_SIZE / 2))
+            self.board_surface.blit(self.l_controller.fps_string, (bd.SCR_WIDTH - (bd.GRID_SIZE * 3), bd.GRID_SIZE / 2))
 
         # Draw score
-        self.board_surface.blit(self.g_controller.score_string, ((bd.GRID_SIZE), bd.GRID_SIZE / 2))
+        self.board_surface.blit(self.l_controller.score_string, ((bd.GRID_SIZE), bd.GRID_SIZE / 2))
 
         # Draw back 2 back counter
-        self.board_surface.blit(self.g_controller.b2b_string, ((bd.GRID_SIZE), bd.GRID_SIZE * 2))
+        self.board_surface.blit(self.l_controller.b2b_string, ((bd.GRID_SIZE), bd.GRID_SIZE * 2))
 
         # Update window
         pygame.display.flip()
