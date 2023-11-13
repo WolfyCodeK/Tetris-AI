@@ -1,5 +1,6 @@
 from pygame import Rect, Surface, draw
 import board.board_definitions as bd
+from board.board import Board
 
 def pixel_to_grid_size(x: int) -> int:
     """Converts pixel size to grid size e.g. 160 pixels to 5 squares, where grid size = 32.
@@ -10,7 +11,7 @@ def pixel_to_grid_size(x: int) -> int:
     Returns:
         int: That length divided by the grid size
     """    
-    return x / bd.GRID_SIZE
+    return x / Board.GRID_SIZE
 
 def grid_to_pixel_length(x: int) -> int:
     """Converts grid size to pixel size e.g. 5 squares to 160 pixels, where grid size = 32.
@@ -21,7 +22,7 @@ def grid_to_pixel_length(x: int) -> int:
     Returns:
         int: That length multiplied by the grid size
     """
-    return x * bd.GRID_SIZE
+    return x * Board.GRID_SIZE
 
 def _draw_outer_grid(surface: Surface) -> None:
     """Draw the thick outline of the boards grid.
@@ -45,7 +46,7 @@ def _draw_inner_grid(surface: Surface) -> None:
         surface (Surface): The surface being drawn to.
     """
     # VERTICAL LINES
-    for x in range(1 * bd.GRID_SIZE, bd.BOARD_PIXEL_WIDTH, bd.GRID_SIZE):
+    for x in range(1 * Board.GRID_SIZE, bd.BOARD_PIXEL_WIDTH, Board.GRID_SIZE):
         draw.line(
             surface, 
             (255, 255, 255, bd.INNER_GRID_ALPHA), 
@@ -54,7 +55,7 @@ def _draw_inner_grid(surface: Surface) -> None:
         )
     
     # HORIZONTAL LINES    
-    for y in range(1 * bd.GRID_SIZE, bd.BOARD_PIXEL_HEIGHT, bd.GRID_SIZE):
+    for y in range(1 * Board.GRID_SIZE, bd.BOARD_PIXEL_HEIGHT, Board.GRID_SIZE):
         draw.line(
             surface, 
             (255, 255, 255, bd.INNER_GRID_ALPHA), 
@@ -88,4 +89,4 @@ def draw_rect(x: int, y: int, colour: tuple, surface: Surface) -> None:
     x = x + pixel_to_grid_size(bd.BOARD_LEFT_BUFFER)
     y = y + pixel_to_grid_size(bd.BOARD_TOP_BUFFER) - bd.BOARD_HEIGHT_BUFFER
     
-    draw.rect(surface, colour, Rect(x * bd.GRID_SIZE, y * bd.GRID_SIZE, bd.GRID_SIZE, bd.GRID_SIZE))
+    draw.rect(surface, colour, Rect(x * Board.GRID_SIZE, y * Board.GRID_SIZE, Board.GRID_SIZE, Board.GRID_SIZE))

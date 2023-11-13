@@ -1,6 +1,7 @@
 from numpy import full
 import board.board_definitions as bd
 import board.board_utils as bu
+from game.game_settings import GameSettings
 
 from pieces.i_piece import IPiece
 from pieces.o_piece import OPiece
@@ -16,8 +17,11 @@ class Board():
     PIECE_COLOUR_DICT = {}
     for i in range(len(PIECE_LIST)):
         PIECE_COLOUR_DICT[PIECE_LIST[i].ID] = PIECE_LIST[i].COLOUR
+        
+    GRID_SIZE = GameSettings.screen_size * 2    
     
     def __init__(self) -> None:
+        self.GRID_SIZE = GameSettings.screen_size * 2    
         self.INITIAL_BOARD_STATE = self._init_board_state()
         self.reset_board_state()
     

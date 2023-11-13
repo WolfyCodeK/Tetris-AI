@@ -4,7 +4,7 @@ from typing import List
 import pygame
 
 import board.board_definitions as bd
-import game.game_settings as gs
+from game.game_settings import GameSettings
 
 from pieces.piece_controller import PieceController
 
@@ -20,18 +20,14 @@ class LogicController():
         self.total_time = 0
         self.fps_time = 0
         self.frames = 0
-    
-        # Colour values
-        self.fps_colour = (0, 255, 0)
-        self.score_colour = (255, 255, 255)
-        self.b2b_colour = (255, 0, 0)
-    
-        # Set fps string
-        self.font = pygame.font.Font("freesansbold.ttf", bd.GRID_SIZE)
-        self.fps_string = self.font.render(str("- - -"), True, self.fps_colour)
+        self.last_fps_recorded = 0
+        
+        # Scores
+        self.score = 0
+        self.b2b = 0
         
         # The speed at which the tetramino pieces fall
-        self.drop_speed = gs.DROP_SPEED
+        self.drop_speed = GameSettings.drop_speed
         self.drop_time = 1 / self.drop_speed
         
         # Restrict how often player can input keys (temp solution)
@@ -42,13 +38,8 @@ class LogicController():
         self.piece_deactivate_delay = self.drop_speed
         self.piece_deactivate_timer = self.piece_deactivate_delay
         
-        # Set score string
-        self.score = 0
-        self.score_string = self.font.render(str(self.score), True, (255, 255, 255))
-        
-        # Set back to back string
-        self.b2b = 0
-        self.b2b_string = self.font.render(str(self.b2b), True, (255, 255, 255))
+    def get_grid_size(self):
+        return self.p_controller.board.GRID_SIZE
         
     def increment_frames_passed(self):
         """Increase number of frames that have passed by 1.
@@ -107,20 +98,6 @@ class LogicController():
                 self.b2b += 1
             else:
                 self.b2b = 0
-                
-        # Update score
-        self.score_string = self.font.render(
-            str(f"score:  {self.score}"),
-            True, 
-            self.score_colour
-        )
-        
-        # Update back 2 back counter
-        self.b2b_string = self.font.render(
-            str(f"B2B:  {self.b2b}"),
-            True, 
-            self.b2b_colour
-        )
     
     def reset_score(self):
         self.score = 0
@@ -153,7 +130,7 @@ class LogicController():
             self.set_drop_speed(20)
         
         if key[pygame.K_s] == True:
-            self.set_drop_speed(gs.DROP_SPEED)
+            self.set_drop_speed(GameSettings.drop_speed)
         
         for event in event_list:          
             if event.type == pygame.KEYDOWN:
@@ -175,16 +152,11 @@ class LogicController():
         """Update the fps counter with the current number of frames.
         """
         if (self.fps_time >= 1):
-            self.fps_string = self.font.render(
-                str(int(self.frames)),
-                True, 
-                self.fps_colour
-            )
-            
             self.fps_time -= 1
+            self.last_fps_recorded = self.frames
             self.frames = 0
     
-    def run_timed_game_logic(self):
+    def run(self):
         """Runs the logic for the movement of the pieces over time.
         """
         # Attempt Drop current piece every set amount of time
@@ -196,7 +168,7 @@ class LogicController():
             else:
                 self.piece_deactivate_timer -= 1
                 
-            # Create new piece and restart timer if piece needs deactivating
+            # Create new piece and restart timer if piece has been touching ground for too long
             if (self.piece_deactivate_timer < 0):
                 pass
                 #self.new_piece_and_timer()

@@ -1,7 +1,7 @@
 from random import shuffle
 import board.board_utils as bu
 import board.board_definitions as bd
-import game.game_settings as gs
+from game.game_settings import GameSettings
 from pieces.i_piece import IPiece
 from pieces.o_piece import OPiece
 from pieces.piece import Piece
@@ -18,7 +18,7 @@ class PieceQueue():
         self.queue = self._init_piece_queue()
     
     def draw(self, surface):
-        for i in range(gs.NUM_OF_QUEUE_TO_SHOW):
+        for i in range(GameSettings.num_of_queue_to_show):
             # Get piece in queue
             piece = self.queue[i]
             
