@@ -1,5 +1,5 @@
-import board.board_definitions as bd
-from board.board import Board
+import utils.board_constants as bc
+from controllers.board import Board
 from .piece_holder import PieceHolder
 from .piece_queue import PieceQueue
 from pieces.piece import Piece
@@ -7,8 +7,9 @@ from game.game_exceptions import PiecePlacementError
 
 
 class PieceController():    
-    def __init__(self, board: Board) -> None:
-        self.board = board
+    def __init__(self) -> None:
+        # Create game board
+        self.board = Board()
         self.reset_pieces()
         
     def reset_pieces(self) -> None:
@@ -69,7 +70,7 @@ class PieceController():
             self.current_piece.transform(x_move, 0)
             
     def is_move_allowed(self, x: int, y: int) -> bool:
-        if (x < 0) or (x >= bd.BOARD_WIDTH) or (y >= bd.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys()):
+        if (x < 0) or (x >= bc.BOARD_WIDTH) or (y >= bc.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys()):
             return False
         else:
             return True
@@ -117,14 +118,14 @@ class PieceController():
     def perform_line_clears(self) -> int:
         lines_cleared = 0
         
-        for y in bd.BOARD_HEIGHT_RANGE:
+        for y in bc.BOARD_HEIGHT_RANGE:
             column_count = 0 
             
-            for x in range(bd.BOARD_WIDTH):
+            for x in range(bc.BOARD_WIDTH):
                 if self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys():
                     column_count += 1
                     
-            if column_count == bd.BOARD_WIDTH:    
+            if column_count == bc.BOARD_WIDTH:    
                 # Move all lines down by one row
                 for y2 in range(y, 1, -1):
                     self.board.board_state[y2] = self.board.board_state[y2 - 1]
@@ -143,7 +144,7 @@ class PieceController():
             piece_y_pos = piece.minos[i][1] + y_move
             
             # Check the piece isnt going to hit the floor
-            if (piece_y_pos >= bd.BOARD_HEIGHT):
+            if (piece_y_pos >= bc.BOARD_HEIGHT):
                 blocked = True
             else:
                 # Check if piece is in the board
@@ -164,7 +165,7 @@ class PieceController():
             
             # Check for right input
             if (x_move > 0):
-                if (piece_pos + x_move <= bd.BOARD_WIDTH):
+                if (piece_pos + x_move <= bc.BOARD_WIDTH):
                     if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
                         blocked = True
                 else:

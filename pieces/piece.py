@@ -1,8 +1,7 @@
 from numpy import ndarray, array_equal
 
-from game.game_exceptions import RevertRotationError
-import board.board_definitions as bd
-import board.board_utils as bu
+import utils.board_constants as bc
+import utils.window_utils as win_utils
 from abc import ABC, abstractmethod
 
 class Piece(ABC):
@@ -14,7 +13,7 @@ class Piece(ABC):
     
     def __init__(self, id: chr, x: int, colour: tuple, shape: ndarray) -> None:
         self.START_X_POS = x
-        self.START_Y_POS = bd.MAX_PIECE_LENGTH
+        self.START_Y_POS = bc.MAX_PIECE_LENGTH
         self.x_pos = self.START_X_POS
         self.y_pos = self.START_Y_POS
         
@@ -50,11 +49,11 @@ class Piece(ABC):
     
     def draw(self, surface):
         for i in range(len(self.minos)):
-            bu.draw_rect(self.minos[i][0], self.minos[i][1], self.colour, surface)
+            win_utils.draw_rect(self.minos[i][0], self.minos[i][1], self.colour, surface)
 
     def draw_ghost(self, surface, max_height):
         for i in range(len(self.minos)):
-            bu.draw_rect(self.minos[i][0], self.minos[i][1] + max_height, self.GHOST_PIECE_COLOUR, surface)
+            win_utils.draw_rect(self.minos[i][0], self.minos[i][1] + max_height, self.GHOST_PIECE_COLOUR, surface)
         
     def increment_rotation_state(self, rotation_state) -> int:
         # Mirror clockwise transformations by incrementing rotation state - uses modulo operator to wrap around value    

@@ -3,17 +3,16 @@ from typing import List
 
 import pygame
 
-import board.board_definitions as bd
+import utils.window_utils as win_utils
 from game.game_settings import GameSettings
 
 from pieces.piece_controller import PieceController
 
-
-class LogicController():
+class GameController():
     
-    def __init__(self, p_controller: PieceController) -> None:
+    def __init__(self) -> None:
         # Set Piece Controller
-        self.p_controller = p_controller
+        self.p_controller = PieceController()
     
         # Initialise time recording variables
         self.previous_time = time.time()
@@ -37,9 +36,6 @@ class LogicController():
         # How long the tetramino can move around before without dropping before being deativated
         self.piece_deactivate_delay = self.drop_speed
         self.piece_deactivate_timer = self.piece_deactivate_delay
-        
-    def get_grid_size(self):
-        return self.p_controller.board.GRID_SIZE
         
     def increment_frames_passed(self):
         """Increase number of frames that have passed by 1.
@@ -111,19 +107,19 @@ class LogicController():
         
         if (key[pygame.K_RIGHT] == True) and (self.move_delay < 0):
             self.p_controller.shift_piece_horizontally(1)
-            self.move_delay = 75 * 32 / bd.GRID_SIZE
+            self.move_delay = 75 * 32 / win_utils.get_grid_size()
             
         if key[pygame.K_LEFT] == True and (self.move_delay < 0):
             self.p_controller.shift_piece_horizontally(-1)
-            self.move_delay = 75 * 32 / bd.GRID_SIZE
+            self.move_delay = 75 * 32 / win_utils.get_grid_size()
             
         if key[pygame.K_x] == True and (self.rotate_delay < 0):
             self.p_controller.rotate_piece(clockwise=True)
-            self.rotate_delay = 120 * 32 / bd.GRID_SIZE
+            self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
             
         if key[pygame.K_z] == True and (self.rotate_delay < 0):
             self.p_controller.rotate_piece(clockwise=False)
-            self.rotate_delay = 120 * 32 / bd.GRID_SIZE
+            self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
         
         # DEBUG EVENTS
         if key[pygame.K_a] == True:

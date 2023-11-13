@@ -1,8 +1,6 @@
 import pygame
-from board.board import Board
-from controllers.logic_controller import LogicController
-from pieces.piece_controller import PieceController
-from controllers.window_controller import WindowController
+from controllers.game_controller import GameController
+from controllers.window import Window
 from game.game_states import GameStates
 from game.game_settings import GameSettings
 from enum import IntEnum
@@ -39,57 +37,67 @@ class TetrisEnv():
         self.render_window = True
 
     def main(self):
-        # Create game board
-        board = Board()
-
-        # Create controllers for the game
-        p_controller = PieceController(board)
-        l_controller = LogicController(p_controller)
-        
-        # Init window controller for rendering window if enviroment needs rendering
-        if self.render_window:
-            w_controller = WindowController(l_controller)
-
+        # Create controller for the game
+        game = GameController()
         game_state = GameStates.INIT_STATE
         
         running = True
         
-        while running:
-            # Check if user has quit the window
-            if self.render_window:
+        if self.render_window:
+            # Initial pygame setup
+            pygame.display.init()
+            pygame.font.init()
+                
+            # State machine - Rendered
+            while running:
+                # Check if user has quit the window
                 if (pygame.event.get(pygame.QUIT)):
                     running = False
-            
-            match game_state:
-                case GameStates.INIT_STATE:
-                    print("Game Running...")
-                    # Run any initialisation code here
-                    game_state = GameStates.UPDATE_TIME
                 
-                case GameStates.UPDATE_TIME:
-                    l_controller.update_delta_time()
-                    l_controller.increment_frames_passed()
-                    l_controller.update_fps_counter()
-                    
-                    if self.render_window:
-                        game_state = GameStates.TAKE_INPUTS
-                    else:
-                        game_state = GameStates.RUN_LOGIC
-                    
-                case GameStates.TAKE_INPUTS:
-                    l_controller.take_player_inputs(pygame.event.get())
-                    game_state = GameStates.RUN_LOGIC
-                    
-                case GameStates.RUN_LOGIC:
-                    l_controller.run()
-
-                    if self.render_window:
-                        game_state = GameStates.DRAW_GAME
-                    else:
+                match game_state:
+                    case GameStates.INIT_STATE:
+                        # Run any initialisation code here
+                        print("Game Running...")
+                        # Init window for rendering enviroment
+                        window = Window(game)
                         game_state = GameStates.UPDATE_TIME
                     
-                case GameStates.DRAW_GAME:
-                    w_controller.draw()
-                    game_state = GameStates.UPDATE_TIME
+                    case GameStates.UPDATE_TIME:
+                        game.update_delta_time()
+                        game.increment_frames_passed()
+                        game.update_fps_counter()
+                        game_state = GameStates.TAKE_INPUTS
+                        
+                    case GameStates.TAKE_INPUTS:
+                        game.take_player_inputs(pygame.event.get())
+                        game_state = GameStates.RUN_LOGIC
+                        
+                    case GameStates.RUN_LOGIC:
+                        game.run()
+                        game_state = GameStates.DRAW_GAME
+
+                    case GameStates.DRAW_GAME:
+                        window.draw()
+                        game_state = GameStates.UPDATE_TIME
+        else:
+            # State machine - Unrendered
+            for i in range(10000):
+                match game_state:
+                    case GameStates.INIT_STATE:
+                        # Run any initialisation code here
+                        print("Game Running...")
+                        game_state = GameStates.UPDATE_TIME
+                    
+                    case GameStates.UPDATE_TIME:
+                        game.update_delta_time()
+                        game.increment_frames_passed()
+                        game.update_fps_counter()
+                        game_state = GameStates.RUN_LOGIC
+                        
+                    case GameStates.RUN_LOGIC:
+                        game.run()
+                        game_state = GameStates.UPDATE_TIME
         
+        print(f"Score: {game.score}")
         print("Game Stopped.")
+        pygame.quit()

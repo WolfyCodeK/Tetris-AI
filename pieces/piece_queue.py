@@ -1,6 +1,6 @@
 from random import shuffle
-import board.board_utils as bu
-import board.board_definitions as bd
+import utils.board_constants as bc
+import utils.window_utils as win_utils
 from game.game_settings import GameSettings
 from pieces.i_piece import IPiece
 from pieces.o_piece import OPiece
@@ -23,15 +23,15 @@ class PieceQueue():
             piece = self.queue[i]
             
             for j in range(len(piece.shape)):
-                x_adjust = bd.QUEUED_PIECES_X_POS
-                y_adjust = bd.QUEUED_PIECES_Y_POS
+                x_adjust = bc.QUEUED_PIECES_X_POS
+                y_adjust = bc.QUEUED_PIECES_Y_POS
                 
                 if (piece.id == OPiece.ID):
                     x_adjust += 1
                 if (piece.id == IPiece.ID):
                     y_adjust -= 1
                     
-                bu.draw_rect(piece.DEFAULT_SHAPE[j][0] + x_adjust, piece.DEFAULT_SHAPE[j][1] + y_adjust + (i * bd.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)
+                win_utils.draw_rect(piece.DEFAULT_SHAPE[j][0] + x_adjust, piece.DEFAULT_SHAPE[j][1] + y_adjust + (i * bc.QUEUED_PIECES_VERTICAL_SPACING), piece.colour, surface)
     
     def _init_piece_queue(self) -> list[Piece]:
         queue = []
