@@ -1,8 +1,7 @@
 import time
-from typing import List
 
-import utils.window_utils as win_utils
 from game.game_settings import GameSettings
+from game.actions_enum import Actions
 
 from pieces.piece_controller import PieceController
 
@@ -11,6 +10,9 @@ class GameController():
     def __init__(self) -> None:
         # Set Piece Controller
         self.p_controller = PieceController()
+        
+        # The seed being used for all random number generators
+        self.seed = 0
     
         # Initialise time recording variables
         self.previous_time = time.time()
@@ -51,6 +53,11 @@ class GameController():
         
         self.piece_deactivate_delay = self.drop_speed
         self.piece_deactivate_timer = self.piece_deactivate_delay
+    
+    def cycle_game_clock(self):
+        self.update_delta_time()
+        self.increment_frames_passed()
+        self.update_fps_counter()
         
     def update_delta_time(self):
         """Updates to the latest delta time value.
@@ -92,16 +99,42 @@ class GameController():
                 self.b2b += 1
             else:
                 self.b2b = 0
+                
+        return self.score
     
-    def reset_score(self):
+    def reset_scores(self):
         self.score = 0
         self.b2b = 0
         
     def get_board_state(self):
         return self.p_controller.board.board_state
     
-    def take_player_inputs(self, list):
-        pass    
+    def perform_action(self, action: int):
+        match(action):
+            case Actions.MOVE_LEFT:
+                self.p_controller.shift_piece_horizontally(-1)
+                
+            case Actions.MOVE_RIGHT:
+                self.p_controller.shift_piece_horizontally(1)
+                
+            case Actions.ROTATE_CLOCKWISE:
+                self.p_controller.rotate_piece(clockwise=True)
+                
+            case Actions.ROTATE_ANTICLOCKWISE:
+                self.p_controller.rotate_piece(clockwise=False)
+                
+            case Actions.SOFT_DROP:
+                self.p_controller.hard_drop_piece()
+                
+            case Actions.HARD_DROP:
+                self.p_controller.hard_drop_piece()
+                self.new_piece_and_timer()
+                
+            case Actions.HOLD_PIECE:
+                self.p_controller.hold_piece()
+            
+            case _:
+                raise ValueError("ERROR: perform_action(action) - action is invalid")
         
     # def take_player_inputs(self, event_list: List[pygame.event.Event]):
     #     # Take player input
@@ -156,12 +189,13 @@ class GameController():
             self.last_fps_recorded = self.frames
             self.frames = 0
     
-    def run(self):
+    def run_logic(self):
         """Runs the logic for the movement of the pieces over time.
         """
         # Attempt Drop current piece every set amount of time
         if (self.total_time > self.drop_time):
             if (self.p_controller.gravity_drop_piece()):
+                # print(f"fps -> {self.last_fps_recorded}")
                 # If delay timer was running then restart it
                 if (self.piece_deactivate_timer < self.piece_deactivate_delay):
                     self.piece_deactivate_timer = self.piece_deactivate_delay
@@ -175,13 +209,12 @@ class GameController():
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
             
-        self.clear_lines_and_add_score()
+        return self.clear_lines_and_add_score(), self.p_controller.check_game_over()
+    
+    def reset(self):
+        self.p_controller.reset_game()
+        self.reset_scores()
         
-        # Reset score and board if game over
-        if (self.p_controller.check_game_over()):
-            self.p_controller.reset_pieces()
-            self.reset_score()
-            
     def new_piece_and_timer(self):
         self.p_controller.deactivate_piece()
         self.p_controller.next_piece()

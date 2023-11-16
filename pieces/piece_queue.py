@@ -1,4 +1,4 @@
-from random import shuffle
+import random
 import utils.board_constants as bc
 import utils.window_utils as win_utils
 from game.game_settings import GameSettings
@@ -43,7 +43,8 @@ class PieceQueue():
     
     def _create_random_piece_bag(self) -> list[int]:
         bag = self.LIST_OF_PIECE_NUMBERS.copy()
-        shuffle(bag)
+        random.seed(GameSettings.seed)
+        random.shuffle(bag)
         
         return bag
     

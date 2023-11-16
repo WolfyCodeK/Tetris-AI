@@ -1,10 +1,11 @@
 import pygame
 from controllers.game_controller import GameController
 from controllers.window import Window
-from game.game_states import GameStates
+from game.actions_enum import Actions
 from game.game_settings import GameSettings
 from enum import IntEnum
 from gym.spaces import Discrete
+from gym import Env
 
 class ScreenSizes(IntEnum):
         XXSMALL = 6,
@@ -15,23 +16,46 @@ class ScreenSizes(IntEnum):
         XLARGE = 16,
         XXLARGE = 18
 
-class TetrisEnv():
+class TetrisEnv(Env):
     SCREEN_SIZE_TYPE_ERROR = "TetrisEnv.render() -> size must be of types int or str"
     SCREEN_SIZE_STRING_ERROR = f"TetrisEnv.render() -> size must be from list {ScreenSizes._member_names_}"
     
     render_window = False
     
     def __init__(self) -> None:
-        # Create controller for the game
         self.game = GameController()
-        self.game_state = GameStates.UPDATE_TIME
+        self.action_space = Discrete(len(Actions))
+        self.window = None
         
-        self.action_space = Discrete(6)
-    
+    def _update_window(self):
+        if (pygame.event.get(pygame.QUIT)):
+            pygame.quit()
+            
+        self.window.draw()
+            
+    def step(self, action):     
+        self.game.cycle_game_clock()
+        self.game.perform_action(action)
+        score, done = self.game.run_logic()
+        
+        if self.window is not None:
+            self._update_window()
+        
+        if done:
+            self.game.reset()
+        
+        return score, done
+
     def render(self, screen_size: ScreenSizes|int, show_fps: bool):
         # Initial pygame setup
         pygame.display.init()
         pygame.font.init()
+        
+        # Create window to be rendered
+        self.window = Window(self.game)
+        
+        # Configure window settings
+        GameSettings.show_fps_counter = show_fps
         
         if (screen_size in ScreenSizes._value2member_map_):
             GameSettings.set_screen_size(screen_size)
@@ -42,65 +66,14 @@ class TetrisEnv():
         else:
             raise TypeError(GameSettings.SCREEN_SIZE_TYPE_ERROR)
         
-        GameSettings.show_fps_counter = show_fps
-        self.render_window = True
-        self._run_env()
+    def seed(self, seed=None):
+        GameSettings.seed = seed
         
-    def step(self, action):
-        # State machine - Unrendered
-        match self.game_state:            
-            case GameStates.UPDATE_TIME:
-                self.game.update_delta_time()
-                self.game.increment_frames_passed()
-                self.game.update_fps_counter()
-                self.game_state = GameStates.RUN_LOGIC
-                
-            case GameStates.RUN_LOGIC:
-                self.game.run()
-                self.game_state = GameStates.UPDATE_TIME
-
+        return GameSettings.seed   
+        
+    def reset(self):
+        self.game.reset()
+        return self.observation_space
+    
     def close(self):
-        print(f"Score: {self.game.score}")
-        print("Game Stopped.")
-        print(self.game.get_board_state())
-
-    def _run_env(self):
-        if self.render_window:        
-            # State machine - Rendered
-            while running:
-                # Check if user has quit the window
-                if (pygame.event.get(pygame.QUIT)):
-                    running = False
-                
-                match self.game_state:
-                    case GameStates.INIT_STATE:
-                        # Run any initialisation code here
-                        print("Game Running...")
-                        # Init window for rendering enviroment
-                        window = Window(self.game)
-                        self.game_state = GameStates.UPDATE_TIME
-                    
-                    case GameStates.UPDATE_TIME:
-                        self.game.update_delta_time()
-                        self.game.increment_frames_passed()
-                        self.game.update_fps_counter()
-                        
-                        if self.perform_step:
-                            self.game_state = GameStates.TAKE_INPUTS
-                            self.perform_step = False
-                        else:
-                            self.game_state = GameStates.DRAW_GAME
-                        
-                    case GameStates.TAKE_INPUTS:
-                        self.game.take_player_inputs(pygame.event.get())
-                        self.game_state = GameStates.RUN_LOGIC
-                        
-                    case GameStates.RUN_LOGIC:
-                        self.game.run()
-                        self.game_state = GameStates.DRAW_GAME
-
-                    case GameStates.DRAW_GAME:
-                        window.draw()
-                        self.game_state = GameStates.UPDATE_TIME    
-        if self.render_window:
-            pygame.quit()
+        print("Enviroment closed.")
