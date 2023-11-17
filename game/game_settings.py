@@ -9,14 +9,12 @@ class GameSettings():
     # How many pieces to show in the queue
     num_of_queue_to_show = 5
     
+    # Random seed for piece queue
     seed = 0
 
     #########################################################
     #------------------- VISUAL SETTINGS -------------------#
     #########################################################
-
-    # Screen size constants
-    LOWEST_SCREEN_SIZE = 3
 
     # How large the game window and board are
     screen_size = 14
@@ -30,12 +28,11 @@ class GameSettings():
     #########################################################
     #------------------- ERROR MESSAGES -------------------#
     #########################################################
-    SCREEN_SIZE_MINIMUM_ERROR = "GameSettings.set_screen_size() -> screen size must be at least 1"
+    
+    SCREEN_SIZE_MINIMUM_ERROR = "Screen size must be at least 1"
     
     def set_screen_size(size: int):
         if (size > 0):
             GameSettings.screen_size = size
         else:
             raise ValueError(GameSettings.SCREEN_SIZE_MINIMUM_ERROR)
-            
-        

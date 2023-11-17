@@ -3,9 +3,9 @@ from tetris_env import TetrisEnv, ScreenSizes
 if __name__ == '__main__':
     
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=False, show_score=False)
+    # env.render(screen_size=ScreenSizes.MEDIUM, show_fps=False, show_score=False)
     env.seed(0)
-    
+
     episode = 1
     highest_score = 0
     
@@ -14,13 +14,13 @@ if __name__ == '__main__':
         
         while not done:
             action = env.action_space.sample()  
-            score, done = env.step(action, actions_per_second=5)
+            done = env.step(action)
         
-        print(f"Episode: {episode}, Score: {score}")
+        print(f"Episode: {episode}, Score: {env.score}")
         episode += 1
         
-        if (score > highest_score):
-            highest_score = score
+        if (env.score > highest_score):
+            highest_score = env.score
         else:
             env.reset()
     

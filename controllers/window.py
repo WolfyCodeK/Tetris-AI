@@ -12,14 +12,12 @@ class Window():
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(100, 100)
         
         # Configure window settings
-        GameSettings.set_screen_size(screen_size)
         GameSettings.show_fps = show_fps
         GameSettings.show_score = show_score
+        GameSettings.set_screen_size(screen_size)
         
+        # Set Icon and title
         pygame.display.set_caption("Tetris - Pygame")
-        pygame.display.set_mode((1, 1))
-
-        # Set window icon
         tetris_icon = pygame.image.load("res/tetris-icon.png")
         pygame.display.set_icon(tetris_icon)
         
@@ -62,13 +60,9 @@ class Window():
         self.board_surface.fill((0, 0, 0, bc.BACKGROUND_ALPHA), pygame.Rect(left_buf, top_buf, self.scr_width, self.scr_height))
 
         # Draw board grids 
-        #window.blit(grid_surface, (0, 0))   
-        #grid_surface.fill(0) 
         win_utils.draw_grids(self.board_surface)
 
         # Draw all pieces
-        #window.blit(piece_surface, (0, 0))
-        #piece_surface.fill(0)
         self.game.draw_pieces(self.board_surface)
 
         # Draw fps counter

@@ -169,7 +169,7 @@ class GameController():
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
             
-        return self.clear_lines_and_add_score(), self.p_controller.check_game_over()
+        return self.p_controller.check_game_over()
     
     def reset(self):
         self.p_controller.reset_game()
