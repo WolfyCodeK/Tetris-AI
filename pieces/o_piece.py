@@ -1,9 +1,10 @@
 from numpy import array
 
 from .piece import Piece
+from .piece_type_id import PieceTypeID
 
 class OPiece(Piece):
-    ID = 'O'
+    ID = PieceTypeID.O_PIECE
     START_BOARD_X = 5
     COLOUR = (255,255,102)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [-1, -1], [0, -1]])

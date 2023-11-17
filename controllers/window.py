@@ -7,9 +7,14 @@ import utils.window_utils as win_utils
 from controllers.game_controller import GameController
 
 class Window():
-    def __init__(self, game: GameController) -> None:
+    def __init__(self, game: GameController, screen_size: int, show_fps: bool = True, show_score: bool = True) -> None:
         # Set window position
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(100, 100)
+        
+        # Configure window settings
+        GameSettings.set_screen_size(screen_size)
+        GameSettings.show_fps = show_fps
+        GameSettings.show_score = show_score
         
         pygame.display.set_caption("Tetris - Pygame")
         pygame.display.set_mode((1, 1))
@@ -67,7 +72,7 @@ class Window():
         self.game.draw_pieces(self.board_surface)
 
         # Draw fps counter
-        if GameSettings.show_fps_counter:
+        if GameSettings.show_fps:
             fps_string = self.font.render(
                 str(int(self.game.last_fps_recorded)),
                 True, 
@@ -75,26 +80,27 @@ class Window():
             )
             
             self.board_surface.blit(fps_string, (self.scr_width - (win_utils.get_grid_size() * 3), win_utils.get_grid_size() / 2))
-            
-        # Draw score
-        score_string = self.font.render(
-            str(f"score:  {self.game.score}"),
-            True, 
-            self.score_colour
-        )
         
-        # Draw back 2 back counter
-        b2b_string = self.font.render(
-            str(f"B2B:  {self.game.b2b}"),
-            True, 
-            self.b2b_colour
-        )
-
         # Draw score
-        self.board_surface.blit(score_string, ((win_utils.get_grid_size()), win_utils.get_grid_size() / 2))
+        if GameSettings.show_score:
+            score_string = self.font.render(
+                str(f"score:  {self.game.score}"),
+                True, 
+                self.score_colour
+            )
+            
+            # Draw back 2 back counter
+            b2b_string = self.font.render(
+                str(f"B2B:  {self.game.b2b}"),
+                True, 
+                self.b2b_colour
+            )
 
-        # Draw back 2 back counter
-        self.board_surface.blit(b2b_string, ((win_utils.get_grid_size()), win_utils.get_grid_size() * 2))
+            # Draw score
+            self.board_surface.blit(score_string, ((win_utils.get_grid_size()), win_utils.get_grid_size() / 2))
+
+            # Draw back 2 back counter
+            self.board_surface.blit(b2b_string, ((win_utils.get_grid_size()), win_utils.get_grid_size() * 2))
 
         # Update window
         pygame.display.flip()

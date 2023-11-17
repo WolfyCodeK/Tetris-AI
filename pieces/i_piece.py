@@ -1,10 +1,10 @@
 from numpy import array, ndarray
 from pieces.piece_lookup_tables import IPIECE_ROTATION_TABLE, IPIECE_KICK_TABLE
-
 from .piece import Piece
+from .piece_type_id import PieceTypeID
 
 class IPiece(Piece):
-    ID = 'I'
+    ID = PieceTypeID.I_PIECE
     START_BOARD_X = 4
     COLOUR = (122,161,255)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [2, 0]])

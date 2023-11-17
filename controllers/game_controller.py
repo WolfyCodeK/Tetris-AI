@@ -1,9 +1,10 @@
 import time
 
 from game.game_settings import GameSettings
-from game.actions_enum import Actions
+from game.actions import Actions
 
 from pieces.piece_controller import PieceController
+from pieces.piece_type_id import PieceTypeID
 
 class GameController():
     
@@ -107,7 +108,11 @@ class GameController():
         self.b2b = 0
         
     def get_board_state(self):
-        return self.p_controller.board.board_state
+        return self.p_controller.board.get_minimal_board_state()
+    
+    def get_board_value_bounds(self):
+        return self.p_controller.board.EMPTY_PIECE_ID, len(PieceTypeID)
+        
     
     def perform_action(self, action: int):
         match(action):
@@ -134,52 +139,7 @@ class GameController():
                 self.p_controller.hold_piece()
             
             case _:
-                raise ValueError("ERROR: perform_action(action) - action is invalid")
-        
-    # def take_player_inputs(self, event_list: List[pygame.event.Event]):
-    #     # Take player input
-    #     key = pygame.key.get_pressed()
-    #     self.move_delay -= 1 
-    #     self.rotate_delay -= 1
-        
-    #     if (key[pygame.K_RIGHT] == True) and (self.move_delay < 0):
-    #         self.p_controller.shift_piece_horizontally(1)
-    #         self.move_delay = 75 * 32 / win_utils.get_grid_size()
-            
-    #     if key[pygame.K_LEFT] == True and (self.move_delay < 0):
-    #         self.p_controller.shift_piece_horizontally(-1)
-    #         self.move_delay = 75 * 32 / win_utils.get_grid_size()
-            
-    #     if key[pygame.K_x] == True and (self.rotate_delay < 0):
-    #         self.p_controller.rotate_piece(clockwise=True)
-    #         self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
-            
-    #     if key[pygame.K_z] == True and (self.rotate_delay < 0):
-    #         self.p_controller.rotate_piece(clockwise=False)
-    #         self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
-        
-    #     # DEBUG EVENTS
-    #     if key[pygame.K_a] == True:
-    #         self.set_drop_speed(20)
-        
-    #     if key[pygame.K_s] == True:
-    #         self.set_drop_speed(GameSettings.drop_speed)
-        
-    #     for event in event_list:          
-    #         if event.type == pygame.KEYDOWN:
-    #             if event.key == pygame.K_SPACE:
-    #                 self.p_controller.hard_drop_piece()
-    #                 self.new_piece_and_timer()
-                    
-    #             if event.key == pygame.K_DOWN:
-    #                 self.p_controller.hard_drop_piece()
-                    
-    #             if event.key == pygame.K_r:
-    #                 self.p_controller.reset_pieces()
-    #                 self.reset_score()
-                    
-    #             if event.key == pygame.K_LSHIFT:
-    #                 self.p_controller.hold_piece()
+                raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
     
     def update_fps_counter(self):
         """Update the fps counter with the current number of frames.

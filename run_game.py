@@ -1,11 +1,11 @@
-import time
 from tetris_env import TetrisEnv, ScreenSizes
 
 if __name__ == '__main__':
+    
     env = TetrisEnv()
-    env.render(ScreenSizes.LARGE, True)
-    env.seed(1)
-    episodes = 10
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=False, show_score=False)
+    env.seed(0)
+    
     episode = 1
     highest_score = 0
     
@@ -13,9 +13,8 @@ if __name__ == '__main__':
         done = False
         
         while not done:
-            action = env.action_space.sample()
-            score, done = env.step(action)
-            time.sleep(2)
+            action = env.action_space.sample()  
+            score, done = env.step(action, actions_per_second=5)
         
         print(f"Episode: {episode}, Score: {score}")
         episode += 1

@@ -22,14 +22,17 @@ class GameSettings():
     screen_size = 14
 
     # If the fps counter should be displayed in the top right corner of the window
-    show_fps_counter = True
+    show_fps = True
+    
+    # If scores should be displayed in the top left corner of the window
+    show_score = True
     
     #########################################################
     #------------------- ERROR MESSAGES -------------------#
     #########################################################
     SCREEN_SIZE_MINIMUM_ERROR = "GameSettings.set_screen_size() -> screen size must be at least 1"
     
-    def set_screen_size(size):
+    def set_screen_size(size: int):
         if (size > 0):
             GameSettings.screen_size = size
         else:

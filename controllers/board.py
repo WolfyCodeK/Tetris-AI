@@ -1,4 +1,4 @@
-from numpy import full
+import numpy as np
 import utils.board_constants as bc
 
 import utils.window_utils as win_utils
@@ -10,7 +10,7 @@ class Board():
     # All the available pieces to the piece controller
     PIECE_LIST = [ZPiece, SPiece, JPiece, LPiece, TPiece, IPiece, OPiece]
     
-    EMPTY_PIECE_ID = 'E'
+    EMPTY_PIECE_ID = 0
     
     # Dict of (ID, colour) pairs for all pieces
     PIECE_COLOUR_DICT = {}
@@ -38,4 +38,11 @@ class Board():
         self.board_state = self.INITIAL_BOARD_STATE.copy()
     
     def _init_board_state(self):
-        return full(shape=(bc.BOARD_HEIGHT, bc.BOARD_WIDTH), fill_value=self.EMPTY_PIECE_ID)
+        return np.full(shape=(bc.BOARD_HEIGHT, bc.BOARD_WIDTH), fill_value=self.EMPTY_PIECE_ID)
+    
+    def get_minimal_board_state(self):
+        min_board_state = self.board_state.copy()
+        
+        min_board_state = np.delete(min_board_state, range(0, bc.BOARD_HEIGHT_BUFFER), axis=0)
+        
+        return min_board_state

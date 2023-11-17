@@ -5,7 +5,7 @@ from pieces.piece_lookup_tables import (
     )
 
 from .piece import Piece
-
+from .piece_type_id import PieceTypeID
 
 class ThreeWidePiece(Piece):
     def __init__(self, id: chr, x: int, colour: tuple, kick_priority: dict, shape: ndarray) -> None:
@@ -99,7 +99,7 @@ class ThreeWidePiece(Piece):
             return False
         
 class ZPiece(ThreeWidePiece):
-    ID = 'Z'
+    ID = PieceTypeID.Z_PIECE
     START_BOARD_X = 4
     COLOUR = (255,85,82)
     DEFAULT_SHAPE = array([[0, 0], [1, 0], [0, -1], [-1, -1]])
@@ -114,7 +114,7 @@ class ZPiece(ThreeWidePiece):
         super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
 
 class LPiece(ThreeWidePiece):
-    ID = 'L'
+    ID = PieceTypeID.L_PIECE
     START_BOARD_X = 4
     COLOUR = (255,159,122)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [1, -1]])
@@ -129,7 +129,7 @@ class LPiece(ThreeWidePiece):
         super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
 class SPiece(ThreeWidePiece):
-    ID = 'S'
+    ID = PieceTypeID.S_PIECE
     START_BOARD_X = 4
     COLOUR = (82,255,97)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [0, -1], [1, -1]])
@@ -144,7 +144,7 @@ class SPiece(ThreeWidePiece):
         super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
 class JPiece(ThreeWidePiece):
-    ID = 'J'
+    ID = PieceTypeID.J_PIECE
     START_BOARD_X = 4
     COLOUR = (62,101,255)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [-1, -1]])
@@ -159,7 +159,7 @@ class JPiece(ThreeWidePiece):
         super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
         
 class TPiece(ThreeWidePiece):
-    ID = 'T'
+    ID = PieceTypeID.T_PIECE
     START_BOARD_X = 4
     COLOUR = (255,100,167)
     DEFAULT_SHAPE = array([[0, 0], [-1, 0], [1, 0], [0, -1]])
