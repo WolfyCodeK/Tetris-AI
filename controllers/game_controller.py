@@ -105,7 +105,7 @@ class GameController():
             else:
                 self.b2b = 0
                 
-        return self.score, self.score - last_score
+        return self.score - last_score
     
     def reset_scores(self):
         self.score = 0
@@ -172,10 +172,8 @@ class GameController():
 
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
-        
-        self.score, gained_score = self.clear_lines_and_add_score()
-        
-        return self.check_game_over(), gained_score
+            
+        return self.check_game_over(), self.clear_lines_and_add_score()
     
     def check_game_over(self) -> bool:
         return self.piece_manager.board.check_game_over()

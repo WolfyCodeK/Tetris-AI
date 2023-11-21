@@ -18,7 +18,8 @@ if __name__ == '__main__':
     # env.seed(0)
     env.reset()
 
-    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logs_directory)
+    # model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logs_directory)
+    model = PPO.load("models/2023-11-21---22-23-20/192000.zip", env=env)
 
     STEPS = 12000
     count = 0

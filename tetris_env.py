@@ -62,17 +62,13 @@ class TetrisEnv(Env):
         
         self._game.cycle_game_clock()
         self._game.perform_action(action)
-        self.done, self.gained_score = self._game.run_logic()
+        self.done, gained_score = self._game.run_logic()
         
         if self._window is not None:
             self._update_window()
-            
-        if self.done:    
-            self.reward = -50
         
-        max_height = self._game.get_max_piece_height_on_board()
-        
-        if (max_height > 0):
+        if self.done:   
+            max_height = self._game.get_max_piece_height_on_board()
             occupied_spaces = self._game.get_occupied_spaces_on_board()
             
             nine_piece_row_reduction = math.floor(occupied_spaces / 10)
@@ -80,12 +76,10 @@ class TetrisEnv(Env):
             
             # ranges from 1-9 where 9 = best, 1 = worst
             pieces_max_height_ratio = reduced_occupied_spaces / max_height
-                
-            self.reward += ((pieces_max_height_ratio - 6) * 10)
-        
-        self.reward += self.gained_score
             
-        print(self.reward)
+            self.reward += ((pieces_max_height_ratio - 4) * 5)
+            
+        self.reward += gained_score
             
         info = {}
         

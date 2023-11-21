@@ -6,7 +6,7 @@ if __name__ == '__main__':
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
     env.seed(0)
     
-    check_env(env, skip_render_check=True)
+    # check_env(env, skip_render_check=True)
 
     episode = 1
     highest_score = 0
@@ -17,9 +17,9 @@ if __name__ == '__main__':
         
         while not done:
             action = env.action_space.sample()  
-            obs, reward, done, info = env.step(action, actions_per_second=1)
+            obs, reward, done, info = env.step(action)
         
-        print(f"Episode: {episode}, Score: {env.game_score}")
+        print(f"Episode: {episode}, Score: {env.game_score}, Reward: {env.reward}")
         episode += 1
         
         if (env.game_score > highest_score):

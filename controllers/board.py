@@ -42,17 +42,17 @@ class Board():
         max_height = 0 
         
         # Start looping from bottom of board to top of board
-        for y in bc.BOARD_HEIGHT_RANGE_DECR:
+        for y in range(bc.BOARD_HEIGHT - 1, 0, -1):
             
             # If board row is empty, get the height of the row below
             if all(id == 0 for id in self.board_state[y].tolist()):
                 
                 # When checking array: BOARD_HEIGHT represents bottom of board, BOARD_BUFFER represent top of board. This is the opposite of how max_height is read.
-                if (y == bc.BOARD_HEIGHT_RANGE_DECR.start):
+                if (y == bc.BOARD_HEIGHT - 1):
                     max_height = 0
                     
                 else:
-                    max_height = bc.BOARD_HEIGHT_RANGE_DECR.start - y
+                    max_height = bc.BOARD_HEIGHT - 1 - y
                     
                 break
                 
