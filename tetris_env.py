@@ -48,7 +48,11 @@ class TetrisEnv(Env):
         if (pygame.event.get(pygame.QUIT)):
             pygame.quit()
             
-        self._window.draw()
+            # Delete window object
+            self._window = None
+            print("Stopped rendering window.")
+        else:
+            self._window.draw()
             
     def step(self, action, actions_per_second: int = 0):
         # Delay action - for analysing purposes
