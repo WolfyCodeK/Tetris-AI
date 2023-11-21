@@ -33,6 +33,7 @@ class Board():
         for y in range(bc.BOARD_HEIGHT_BUFFER):
             if any(id in self.PIECE_COLOUR_DICT.keys() for id in self.board_state[y].tolist()):
                 return True
+        return False
     
     def reset_board_state(self):
         self.board_state = self.INITIAL_BOARD_STATE.copy()

@@ -10,9 +10,9 @@ class PieceController():
     def __init__(self) -> None:
         # Create game board
         self.board = Board()
-        self.reset_game()
+        self.reset_board_and_pieces()
         
-    def reset_game(self) -> None:
+    def reset_board_and_pieces(self) -> None:
         self.board.reset_board_state()
         self.piece_queue = PieceQueue(Board.PIECE_LIST)
         self.piece_holder = PieceHolder()
