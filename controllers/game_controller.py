@@ -1,16 +1,19 @@
 import time
 
+import pygame
+import utils.window_utils as win_utils
+
 from game.game_settings import GameSettings
 from game.actions import Actions
 
-from pieces.piece_controller import PieceController
+from pieces.piece_manager import PieceManager
 from pieces.piece_type_id import PieceTypeID
 
 class GameController():
     
     def __init__(self) -> None:
         # Set Piece Controller
-        self.p_controller = PieceController()
+        self.piece_manager = PieceManager()
         
         # The seed being used for all random number generators
         self.seed = 0
@@ -75,14 +78,15 @@ class GameController():
         Args:
             surface (Surface): The surface being drawn to.
         """
-        self.p_controller.draw_board_pieces(surface)
-        self.p_controller.draw_ghost_pieces(surface)
-        self.p_controller.draw_current_piece(surface)
-        self.p_controller.draw_held_piece(surface)
-        self.p_controller.draw_queued_pieces(surface)
+        self.piece_manager.draw_board_pieces(surface)
+        self.piece_manager.draw_ghost_pieces(surface)
+        self.piece_manager.draw_current_piece(surface)
+        self.piece_manager.draw_held_piece(surface)
+        self.piece_manager.draw_queued_pieces(surface)
         
     def clear_lines_and_add_score(self):
-        lines_cleared = self.p_controller.perform_line_clears()
+        lines_cleared = self.piece_manager.perform_line_clears()
+        last_score = self.score
         
         # Award points
         if (lines_cleared != 0):
@@ -101,42 +105,42 @@ class GameController():
             else:
                 self.b2b = 0
                 
-        return self.score
+        return self.score, self.score - last_score
     
     def reset_scores(self):
         self.score = 0
         self.b2b = 0
         
     def get_board_state(self):
-        return self.p_controller.board.get_minimal_board_state()
+        return self.piece_manager.board.get_minimal_board_state()
     
     def get_board_value_bounds(self):
-        return self.p_controller.board.EMPTY_PIECE_ID, len(PieceTypeID)
+        return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
         
     
     def perform_action(self, action: int):
         match(action):
             case Actions.MOVE_LEFT:
-                self.p_controller.shift_piece_horizontally(-1)
+                self.piece_manager.shift_piece_horizontally(-1)
                 
             case Actions.MOVE_RIGHT:
-                self.p_controller.shift_piece_horizontally(1)
+                self.piece_manager.shift_piece_horizontally(1)
                 
             case Actions.ROTATE_CLOCKWISE:
-                self.p_controller.rotate_piece(clockwise=True)
+                self.piece_manager.rotate_piece(clockwise=True)
                 
             case Actions.ROTATE_ANTICLOCKWISE:
-                self.p_controller.rotate_piece(clockwise=False)
+                self.piece_manager.rotate_piece(clockwise=False)
                 
             case Actions.SOFT_DROP:
-                self.p_controller.hard_drop_piece()
+                self.piece_manager.hard_drop_piece()
                 
             case Actions.HARD_DROP:
-                self.p_controller.hard_drop_piece()
+                self.piece_manager.hard_drop_piece()
                 self.new_piece_and_timer()
                 
             case Actions.HOLD_PIECE:
-                self.p_controller.hold_piece()
+                self.piece_manager.hold_piece()
             
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
@@ -154,7 +158,7 @@ class GameController():
         """
         # Attempt Drop current piece every set amount of time
         if (self.total_time > self.drop_time):
-            if (self.p_controller.gravity_drop_piece()):
+            if (self.piece_manager.gravity_drop_piece()):
                 # print(f"fps -> {self.last_fps_recorded}")
                 # If delay timer was running then restart it
                 if (self.piece_deactivate_timer < self.piece_deactivate_delay):
@@ -168,15 +172,70 @@ class GameController():
 
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
-            
-        return self.p_controller.check_game_over(), self.score
+        
+        self.score, gained_score = self.clear_lines_and_add_score()
+        
+        return self.check_game_over(), gained_score
+    
+    def check_game_over(self) -> bool:
+        return self.piece_manager.board.check_game_over()
     
     def reset_game(self):
-        self.p_controller.reset_board_and_pieces()
+        self.piece_manager.reset_board_and_pieces()
         self.reset_scores()
         
+    def get_max_piece_height_on_board(self):
+        return self.piece_manager.board.get_max_piece_height()
+    
+    def get_occupied_spaces_on_board(self):
+        return self.piece_manager.board.occupied_spaces
+        
     def new_piece_and_timer(self):
-        self.p_controller.deactivate_piece()
-        self.p_controller.next_piece()
+        self.piece_manager.deactivate_piece()
+        self.piece_manager.next_piece()
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
+        
+    def take_player_inputs(self, event_list):
+        # Take player input
+        key = pygame.key.get_pressed()
+        self.move_delay -= 1 
+        self.rotate_delay -= 1
+        
+        if (key[pygame.K_RIGHT] == True) and (self.move_delay < 0):
+            self.piece_manager.shift_piece_horizontally(1)
+            self.move_delay = 75 * 32 / win_utils.get_grid_size()
+            
+        if key[pygame.K_LEFT] == True and (self.move_delay < 0):
+            self.piece_manager.shift_piece_horizontally(-1)
+            self.move_delay = 75 * 32 / win_utils.get_grid_size()
+            
+        if key[pygame.K_x] == True and (self.rotate_delay < 0):
+            self.piece_manager.rotate_piece(clockwise=True)
+            self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
+            
+        if key[pygame.K_z] == True and (self.rotate_delay < 0):
+            self.piece_manager.rotate_piece(clockwise=False)
+            self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
+        
+        # DEBUG EVENTS
+        if key[pygame.K_a] == True:
+            self.set_drop_speed(20)
+        
+        if key[pygame.K_s] == True:
+            self.set_drop_speed(GameSettings.drop_speed)
+        
+        for event in event_list:          
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    self.piece_manager.hard_drop_piece()
+                    self.new_piece_and_timer()
+                    
+                if event.key == pygame.K_DOWN:
+                    self.piece_manager.hard_drop_piece()
+                    
+                if event.key == pygame.K_r:
+                    self.reset_game()
+                    
+                if event.key == pygame.K_LSHIFT:
+                    self.piece_manager.hold_piece()

@@ -19,10 +19,11 @@ class Board():
         
     def __init__(self) -> None:
         self.INITIAL_BOARD_STATE = self._init_board_state()
+        self.occupied_spaces = 0
         self.reset_board_state()
     
     def draw(self, surface):
-        for y in bc.BOARD_HEIGHT_RANGE:
+        for y in bc.BOARD_HEIGHT_RANGE_INCR:
             for x in range(bc.BOARD_WIDTH):
                 id = self.board_state[y][x]
                 
@@ -35,8 +36,31 @@ class Board():
                 return True
         return False
     
+    def get_max_piece_height(self):
+        # Behavior has been flipped from how standard array works (e.g. top row is y = 0) so that now:      
+        #           0 = bottom of board      &    BOARD_HEIGHT = top of board. 
+        max_height = 0 
+        
+        # Start looping from bottom of board to top of board
+        for y in bc.BOARD_HEIGHT_RANGE_DECR:
+            
+            # If board row is empty, get the height of the row below
+            if all(id == 0 for id in self.board_state[y].tolist()):
+                
+                # When checking array: BOARD_HEIGHT represents bottom of board, BOARD_BUFFER represent top of board. This is the opposite of how max_height is read.
+                if (y == bc.BOARD_HEIGHT_RANGE_DECR.start):
+                    max_height = 0
+                    
+                else:
+                    max_height = bc.BOARD_HEIGHT_RANGE_DECR.start - y
+                    
+                break
+                
+        return max_height
+    
     def reset_board_state(self):
         self.board_state = self.INITIAL_BOARD_STATE.copy()
+        self.occupied_spaces = 0
     
     def _init_board_state(self):
         return np.full(shape=(bc.BOARD_HEIGHT, bc.BOARD_WIDTH), fill_value=self.EMPTY_PIECE_ID)

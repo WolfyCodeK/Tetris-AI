@@ -17,7 +17,7 @@ if __name__ == '__main__':
         
         while not done:
             action = env.action_space.sample()  
-            obs, reward, done, info = env.step(action)
+            obs, reward, done, info = env.step(action, actions_per_second=1)
         
         print(f"Episode: {episode}, Score: {env.game_score}")
         episode += 1

@@ -6,7 +6,7 @@ from pieces.piece import Piece
 from game.game_exceptions import PiecePlacementError
 
 
-class PieceController():    
+class PieceManager():    
     def __init__(self) -> None:
         # Create game board
         self.board = Board()
@@ -118,7 +118,7 @@ class PieceController():
     def perform_line_clears(self) -> int:
         lines_cleared = 0
         
-        for y in bc.BOARD_HEIGHT_RANGE:
+        for y in bc.BOARD_HEIGHT_RANGE_INCR:
             column_count = 0 
             
             for x in range(bc.BOARD_WIDTH):
@@ -132,11 +132,10 @@ class PieceController():
                     
                 lines_cleared += 1 
                     
+        self.board.occupied_spaces -= lines_cleared * bc.BOARD_WIDTH               
+    
         return lines_cleared
                     
-    def check_game_over(self) -> bool:
-        return self.board.check_game_over()
-
     def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move) -> bool:
         blocked = False
 
@@ -194,6 +193,7 @@ class PieceController():
                 raise PiecePlacementError(x, y, piece.id, id)
             
         self.piece_holder.new_hold_available = True
+        self.board.occupied_spaces += bc.PIECE_COMPONENTS
         
     def hold_piece(self):
         piece = self.piece_holder.hold_piece(self.current_piece)
