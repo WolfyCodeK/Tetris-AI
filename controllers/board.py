@@ -58,6 +58,19 @@ class Board():
                 
         return max_height
     
+    def get_average_height(self):
+        max_height_list = []
+        
+        for i in range(bc.BOARD_COLUMNS):
+            column = self.board_state[:, i]
+            
+            for j in range(bc.BOARD_HEIGHT - 1, 0, -1):
+                if (column[j] > 0):
+                    max_height_list.append(j)
+                    break
+        
+        return sum(max_height_list) / len(max_height_list)
+    
     def reset_board_state(self):
         self.board_state = self.INITIAL_BOARD_STATE.copy()
         self.occupied_spaces = 0

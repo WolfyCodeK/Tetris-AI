@@ -1,5 +1,5 @@
 from tetris_env import TetrisEnv, ScreenSizes
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, A2C
 import os
 from datetime import datetime
 
@@ -15,16 +15,15 @@ if __name__ == '__main__':
     
     env = TetrisEnv()
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
-    # env.seed(0)
     env.reset()
 
-    # model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=logs_directory)
-    model = PPO.load("models/2023-11-21---22-23-20/192000.zip", env=env)
+    model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=logs_directory)
 
     STEPS = 12000
     count = 0
     
     while True:
         count += 1
-        model.learn(total_timesteps=STEPS, reset_num_timesteps=False, tb_log_name=f"PPO")
+        print(env.reward)
+        model.learn(total_timesteps=STEPS, reset_num_timesteps=False, tb_log_name=f"A2C")
         model.save(f"{models_directory}/{STEPS*count}")

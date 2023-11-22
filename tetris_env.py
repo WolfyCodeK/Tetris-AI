@@ -60,31 +60,35 @@ class TetrisEnv(Env):
         if (actions_per_second > 0):
             sleep(1 / actions_per_second)
         
+        previous_pieces_dropped = self._game.get_num_of_pieces_dropped()
+        
         self._game.cycle_game_clock()
         self._game.perform_action(action)
         self.done, gained_score = self._game.run_logic()
         
+        if (self._game.get_num_of_pieces_dropped() - previous_pieces_dropped):
+            self.reward += self.occupied_spaces_to_average_height_ratio_reward()
+        
         if self._window is not None:
             self._update_window()
-        
-        if self.done:   
-            max_height = self._game.get_max_piece_height_on_board()
-            occupied_spaces = self._game.get_occupied_spaces_on_board()
-            
-            nine_piece_row_reduction = math.floor(occupied_spaces / 10)
-            reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
-            
-            # ranges from 1-9 where 9 = best, 1 = worst
-            pieces_max_height_ratio = reduced_occupied_spaces / max_height
-            
-            self.reward += ((pieces_max_height_ratio - 4) * 5)
             
         self.reward += gained_score
             
         info = {}
         
         return self.observation, self.reward, self.done, info
-
+    
+    def occupied_spaces_to_average_height_ratio_reward(self):
+        average_height = self._game.get_average_board_height()
+        occupied_spaces = self._game.get_occupied_spaces_on_board()
+        
+        nine_piece_row_reduction = math.floor(occupied_spaces / 10)
+        reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
+        
+        pieces_max_height_ratio = reduced_occupied_spaces / average_height
+        
+        return (1 - pieces_max_height_ratio) * 5
+    
     def render(self, screen_size: ScreenSizes|int, show_fps: bool, show_score: bool):
         # Initial pygame setup
         pygame.display.init()

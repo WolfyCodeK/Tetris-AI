@@ -10,12 +10,19 @@ class PieceManager():
     def __init__(self) -> None:
         # Create game board
         self.board = Board()
-        self.reset_board_and_pieces()
         
-    def reset_board_and_pieces(self) -> None:
+        self.num_of_pieces_dropped = 0
+        
+        self.reset()
+        
+    def reset(self) -> None:
         self.board.reset_board_state()
+        
         self.piece_queue = PieceQueue(Board.PIECE_LIST)
         self.piece_holder = PieceHolder()
+        
+        self.num_of_pieces_dropped = 0
+        
         self.next_piece()
         
     def next_piece(self) -> None:

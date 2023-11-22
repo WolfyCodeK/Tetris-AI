@@ -179,18 +179,25 @@ class GameController():
         return self.piece_manager.board.check_game_over()
     
     def reset_game(self):
-        self.piece_manager.reset_board_and_pieces()
+        self.piece_manager.reset()
         self.reset_scores()
+        
+    def get_average_board_height(self):
+        return self.piece_manager.board.get_average_height()    
         
     def get_max_piece_height_on_board(self):
         return self.piece_manager.board.get_max_piece_height()
     
     def get_occupied_spaces_on_board(self):
         return self.piece_manager.board.occupied_spaces
+    
+    def get_num_of_pieces_dropped(self):
+        return self.piece_manager.num_of_pieces_dropped
         
     def new_piece_and_timer(self):
         self.piece_manager.deactivate_piece()
         self.piece_manager.next_piece()
+        self.piece_manager.num_of_pieces_dropped += 1
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
         
