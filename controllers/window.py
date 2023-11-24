@@ -50,7 +50,7 @@ class Window():
     def draw(self):
         """Draw all features to the screen.
         """
-        # Clear window and draw window background       
+        # Clear window and draw window background 
         self.window.fill(0)
 
         # Draw board background

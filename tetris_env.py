@@ -8,7 +8,7 @@ from controllers.window import Window
 from game.actions import Actions
 from game.game_settings import GameSettings
 
-from utils.board_constants import BOARD_ROWS, BOARD_COLUMNS
+import utils.board_constants as bc
 
 from enum import IntEnum
 
@@ -31,8 +31,6 @@ class TetrisEnv(Env):
         self._game = GameController()
         self._window = None
         
-        self.game_score = self._game.score
-        
         low, high = self._game.get_board_value_bounds()
 
         self.action_space = Discrete(len(Actions))
@@ -43,7 +41,7 @@ class TetrisEnv(Env):
         #         "hold": Discrete(high)
         #     }   
         # )
-        self.observation_space = Box(low=low, high=high, shape=(BOARD_ROWS, BOARD_COLUMNS), dtype=np.int32)
+        self.observation_space = Box(low=low, high=high, shape=(bc.BOARD_ROWS, bc.BOARD_COLUMNS), dtype=np.int32)
         
     def _update_window(self):
         if (pygame.event.get(pygame.QUIT)):
@@ -53,41 +51,76 @@ class TetrisEnv(Env):
             self._window = None
             print("Stopped rendering window.")
         else:
-            self._window.draw()
+            if (pygame.display.get_active()):
+                self._window.draw()
             
     def step(self, action, actions_per_second: int = 0):
         # Delay action - for analysing purposes
         if (actions_per_second > 0):
             sleep(1 / actions_per_second)
         
-        previous_pieces_dropped = self._game.get_num_of_pieces_dropped()
+        last_num_of_pieces_dropped = self._game.get_num_of_pieces_dropped()
+        last_num_of_gaps = self._game.get_num_of_gaps()
         
         self._game.cycle_game_clock()
-        self._game.perform_action(action)
-        self.done, gained_score = self._game.run_logic()
         
-        if (self._game.get_num_of_pieces_dropped() - previous_pieces_dropped):
-            self.reward += self.occupied_spaces_to_average_height_ratio_reward()
+        self._game.perform_action(action)
+        
+        self.done, b2b = self._game.run_logic()
+        
+        if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
+            # action_reward = self.add_height_difference_reward() - ((self._game.get_num_of_gaps() - last_num_of_gaps))
+            # action_reward = self.add_height_difference_reward()
+            # action_reward -= self._game.get_max_piece_height_on_board()
+            # self.reward += action_reward
+            
+            # MAX_ACTIONS = 30
+            # if (self._game.actions_per_piece > MAX_ACTIONS):
+            #     self.actions_over_limit = self._game.actions_per_piece - MAX_ACTIONS
+            self.reward += self.add_height_difference_reward()
+            self._game.actions_per_piece = 0
         
         if self._window is not None:
             self._update_window()
             
-        self.reward += gained_score
+        # self.reward -= self.actions_over_limit
+        # self.actions_over_limit = 0
+        
+        self.game_steps += 1
+    
+        if self._game.piece_manager.num_of_pieces_dropped > 9 or self.game_steps > 2000:
+            self.done = True
+        
+        if self.done:
+            self.reward += b2b * 1000
+            # print(self.reward)
             
         info = {}
         
         return self.observation, self.reward, self.done, info
     
-    def occupied_spaces_to_average_height_ratio_reward(self):
-        average_height = self._game.get_average_board_height()
+    def add_height_difference_reward(self):
         occupied_spaces = self._game.get_occupied_spaces_on_board()
-        
-        nine_piece_row_reduction = math.floor(occupied_spaces / 10)
+        max_height = self._game.get_max_piece_height_on_board()
+        second_min_height = self._game.get_second_min_piece_height_on_board()
+        board_height_difference = max_height - second_min_height
+
+        nine_piece_row_reduction = math.floor(occupied_spaces / bc.BOARD_COLUMNS)
         reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
+
+        # ranges from 1-9 where 9 = best, 1 = worst
+        # pieces_max_height_ratio = reduced_occupied_spaces / max_height
+
+        adjusted_difference = (6 - board_height_difference) * (occupied_spaces / 10)
+
+        reward = 0
         
-        pieces_max_height_ratio = reduced_occupied_spaces / average_height
-        
-        return (1 - pieces_max_height_ratio) * 5
+        if adjusted_difference > 0:
+            reward = adjusted_difference ** 3
+        else:
+            reward = 0
+            
+        return reward
     
     def render(self, screen_size: ScreenSizes|int, show_fps: bool, show_score: bool):
         # Initial pygame setup
@@ -104,7 +137,10 @@ class TetrisEnv(Env):
     def reset(self):
         self._game.reset_game()
         
+        self.game_steps = 0
         self.game_score = self._game.score
+        self.actions_per_piece = 0
+        self.actions_over_limit = 0
         self.done = False
         self.reward = 0
         

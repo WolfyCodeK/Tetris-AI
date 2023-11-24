@@ -4,7 +4,6 @@ from tetris_env import TetrisEnv, ScreenSizes
 if __name__ == '__main__':
     env = TetrisEnv()
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
-    env.seed(0)
     
     # check_env(env, skip_render_check=True)
 

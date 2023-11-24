@@ -8,7 +8,7 @@ if __name__ == '__main__':
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
     env.seed()
 
-    model = A2C.load("models/2023-11-22---02-37-27/384000.zip", env=env)
+    model = PPO.load("models/2023-11-24---03-04-46/1260000.zip", env=env)
     
     episode = 1
     highest_score = 0

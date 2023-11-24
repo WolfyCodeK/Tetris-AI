@@ -14,16 +14,20 @@ if __name__ == '__main__':
         os.makedirs(models_directory)
     
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True)
     env.reset()
+    env.seed(0)
 
-    model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=logs_directory)
+    # model = PPO('MlpPolicy', env, verbose=0, tensorboard_log=logs_directory, learning_rate=0.00003)
+    model = PPO.load("models/2023-11-24---05-02-24/1080000.zip", env=env)
+    model.verbose = 0
 
-    STEPS = 12000
+    STEPS = 20000
     count = 0
+    
+    print("Training agent...")
     
     while True:
         count += 1
-        print(env.reward)
-        model.learn(total_timesteps=STEPS, reset_num_timesteps=False, tb_log_name=f"A2C")
+        model.learn(total_timesteps=STEPS, reset_num_timesteps=False, tb_log_name=f"PPO")
         model.save(f"{models_directory}/{STEPS*count}")

@@ -4,13 +4,13 @@ class GameSettings():
     #########################################################
 
     # The larger the drop speed, the quicker pieces will fall
-    drop_speed = 1
+    drop_speed = 10
 
     # How many pieces to show in the queue
     num_of_queue_to_show = 5
     
     # Random seed for piece queue
-    seed = 0
+    seed = None
 
     #########################################################
     #------------------- VISUAL SETTINGS -------------------#

@@ -36,41 +36,69 @@ class Board():
                 return True
         return False
     
-    def get_max_piece_height(self):
-        # Behavior has been flipped from how standard array works (e.g. top row is y = 0) so that now:      
-        #           0 = bottom of board      &    BOARD_HEIGHT = top of board. 
-        max_height = 0 
-        
-        # Start looping from bottom of board to top of board
-        for y in range(bc.BOARD_HEIGHT - 1, 0, -1):
-            
-            # If board row is empty, get the height of the row below
-            if all(id == 0 for id in self.board_state[y].tolist()):
-                
-                # When checking array: BOARD_HEIGHT represents bottom of board, BOARD_BUFFER represent top of board. This is the opposite of how max_height is read.
-                if (y == bc.BOARD_HEIGHT - 1):
-                    max_height = 0
-                    
-                else:
-                    max_height = bc.BOARD_HEIGHT - 1 - y
-                    
-                break
-                
-        return max_height
-    
-    def get_average_height(self):
+    def get_max_height_column_list(self):
         max_height_list = []
         
+        # Horizontal loop
         for i in range(bc.BOARD_COLUMNS):
             column = self.board_state[:, i]
             
-            for j in range(bc.BOARD_HEIGHT - 1, 0, -1):
+            peak_found = False
+            
+            # Vertical loop
+            for j in bc.BOARD_HEIGHT_RANGE_INCR:
                 if (column[j] > 0):
-                    max_height_list.append(j)
+                    max_height_list.append(bc.BOARD_HEIGHT - j)
+                    peak_found = True
                     break
+                
+            if (peak_found == False):
+                max_height_list.append(0) 
         
-        return sum(max_height_list) / len(max_height_list)
+        return max_height_list
     
+    def get_max_height(self):
+        return max(self.get_max_height_column_list())
+    
+    def get_min_height_column_list(self):
+        min_height_list = []
+        
+        # Horizontal loop
+        for i in range(bc.BOARD_COLUMNS):
+            column = self.board_state[:, i]
+            
+            min_found = False
+            
+            # Vertical loop
+            for j in bc.BOARD_HEIGHT_RANGE_INCR:
+                if (column[j] > 0):
+                    min_height_list.append(bc.BOARD_HEIGHT - j)
+                    min_found = True
+                    break
+                
+            if (min_found == False):
+                min_height_list.append(0) 
+        
+        return min_height_list
+    
+    def get_min_height(self):
+        return min(self.get_min_height_column_list())
+    
+    def get_num_of_gaps(self):
+        max_height_list = self.get_max_height_column_list()
+        gaps = 0
+        
+        # Horizontal loop
+        for i in range(bc.BOARD_COLUMNS):
+            column = self.board_state[:, i]
+
+            # Vertical loop
+            for j in range(bc.BOARD_HEIGHT - max_height_list[i], bc.BOARD_HEIGHT):
+                if (column[j] == 0) and (column[j - 1] > 0):
+                    gaps += 1
+                    
+        return gaps            
+        
     def reset_board_state(self):
         self.board_state = self.INITIAL_BOARD_STATE.copy()
         self.occupied_spaces = 0

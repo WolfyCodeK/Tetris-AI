@@ -25,6 +25,8 @@ class GameController():
         self.frames = 0
         self.last_fps_recorded = 0
         
+        self.actions_per_piece = 0
+        
         # Scores
         self.score = 0
         self.b2b = 0
@@ -40,6 +42,7 @@ class GameController():
         # How long the tetramino can move around before without dropping before being deativated
         self.piece_deactivate_delay = self.drop_speed
         self.piece_deactivate_timer = self.piece_deactivate_delay
+        self.piece_global_deactivate_timer = self.piece_deactivate_delay
         
     def increment_frames_passed(self):
         """Increase number of frames that have passed by 1.
@@ -56,7 +59,7 @@ class GameController():
         self.drop_time = 1 / speed
         
         self.piece_deactivate_delay = self.drop_speed
-        self.piece_deactivate_timer = self.piece_deactivate_delay
+        self.piece_deactivate_timer = self.piece_deactivate_delay * 3
     
     def cycle_game_clock(self):
         self.update_delta_time()
@@ -86,7 +89,6 @@ class GameController():
         
     def clear_lines_and_add_score(self):
         lines_cleared = self.piece_manager.perform_line_clears()
-        last_score = self.score
         
         # Award points
         if (lines_cleared != 0):
@@ -105,11 +107,12 @@ class GameController():
             else:
                 self.b2b = 0
                 
-        return self.score - last_score
+        return self.b2b
     
     def reset_scores(self):
         self.score = 0
         self.b2b = 0
+        self.actions_per_piece = 0
         
     def get_board_state(self):
         return self.piece_manager.board.get_minimal_board_state()
@@ -144,6 +147,8 @@ class GameController():
             
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
+            
+        self.actions_per_piece += 1
     
     def update_fps_counter(self):
         """Update the fps counter with the current number of frames.
@@ -165,9 +170,10 @@ class GameController():
                     self.piece_deactivate_timer = self.piece_deactivate_delay
             else:
                 self.piece_deactivate_timer -= 1
+                self.piece_global_deactivate_timer -= 1
                 
             # Create new piece and restart timer if piece has been touching ground for too long
-            if (self.piece_deactivate_timer < 0):
+            if (self.piece_deactivate_timer < 0) or (self.piece_global_deactivate_timer < 0):
                 self.new_piece_and_timer()
 
             # Cycle total time
@@ -182,24 +188,13 @@ class GameController():
         self.piece_manager.reset()
         self.reset_scores()
         
-    def get_average_board_height(self):
-        return self.piece_manager.board.get_average_height()    
-        
-    def get_max_piece_height_on_board(self):
-        return self.piece_manager.board.get_max_piece_height()
-    
-    def get_occupied_spaces_on_board(self):
-        return self.piece_manager.board.occupied_spaces
-    
-    def get_num_of_pieces_dropped(self):
-        return self.piece_manager.num_of_pieces_dropped
-        
     def new_piece_and_timer(self):
         self.piece_manager.deactivate_piece()
         self.piece_manager.next_piece()
         self.piece_manager.num_of_pieces_dropped += 1
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
+        self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
         
     def take_player_inputs(self, event_list):
         # Take player input
@@ -244,3 +239,23 @@ class GameController():
                     
                 if event.key == pygame.K_LSHIFT:
                     self.piece_manager.hold_piece()
+                    
+                self.actions_per_piece += 1
+                    
+    def get_board_peaks_list(self):
+        return self.piece_manager.board.get_max_height_column_list()
+        
+    def get_max_piece_height_on_board(self):
+        return self.piece_manager.board.get_max_height()
+    
+    def get_second_min_piece_height_on_board(self):
+        return sorted(self.piece_manager.board.get_min_height_column_list())[1]
+    
+    def get_occupied_spaces_on_board(self):
+        return self.piece_manager.board.occupied_spaces
+    
+    def get_num_of_pieces_dropped(self):
+        return self.piece_manager.num_of_pieces_dropped
+    
+    def get_num_of_gaps(self):
+        return self.piece_manager.board.get_num_of_gaps()
