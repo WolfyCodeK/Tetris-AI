@@ -83,15 +83,15 @@ class PieceManager():
             return True
 
     def rotate_piece(self, clockwise: bool) -> None:
-        rotation_blocked = False
+        piece = self.current_piece  
         
-        piece = self.current_piece    
-        piece.rotate(clockwise)
+        rotation_blocked = False
+        rotated_shape, rotation_state = piece.get_shape_after_rotation(clockwise)
+        absolute_rotated_shape = piece.convert_to_absolute_shape(rotated_shape)
         
         # Attempt to place piece using basic rotation
-        for i in range(len(piece.minos)):
-            if (not self.is_move_allowed(piece.minos[i][0], piece.minos[i][1])):
-                piece.revert_rotation()
+        for i in range(len(absolute_rotated_shape)):
+            if (not self.is_move_allowed(absolute_rotated_shape[i][0], absolute_rotated_shape[i][1])):
                 rotation_blocked = True
                 break
         
@@ -100,24 +100,25 @@ class PieceManager():
         # If basic rotation didn't work, then attempt a kick
         if rotation_blocked:
             for i in range(len(piece.KICK_OPTIONS)):
-                piece.rotate(clockwise)
-                
                 kick_priority = piece.get_kick_priority()
-                kick_index = kick_priority[piece.rotation_state][i]
+                kick_index = kick_priority[rotation_state][i]   
                     
-                piece.kick(kick_index, clockwise)
+                kicked_shape, new_x_pos, new_y_pos = piece.get_minos_after_kick(rotated_shape, kick_index, clockwise, rotation_state)
                 
-                for j in range(len(piece.minos)):
-                    if (not self.is_move_allowed(piece.minos[j][0], piece.minos[j][1])):
-                        piece.revert_rotation()
-                        piece.revert_kick()
-                        kick_found = False
+                if not (new_x_pos == 0 and new_y_pos == 0):
+                    for j in range(len(kicked_shape)):
+                        if (not self.is_move_allowed(kicked_shape[j][0], kicked_shape[j][1])):
+                            kick_found = False
+                            break
+                        else:
+                            kick_found = True  
+                            
+                    if kick_found:
+                        piece.transform(new_x_pos, new_y_pos)
+                        piece.set_minos_from_shape(clockwise, rotated_shape)
                         break
-                    else:
-                        kick_found = True  
-                        
-                if kick_found:
-                    break
+        else:
+            piece.set_minos_from_shape(clockwise, rotated_shape)
             
     def deactivate_piece(self) -> None:
         self._place_piece(self.board.board_state, self.current_piece)    
@@ -143,7 +144,7 @@ class PieceManager():
     
         return lines_cleared
                     
-    def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move) -> bool:
+    def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move: int) -> bool:
         blocked = False
 
         for i in range(len(piece.minos)):
@@ -183,10 +184,10 @@ class PieceManager():
                     try:
                         if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
                             blocked = True
-                    except IndexError:
+                    except:
                         print(f"i: {i}\n piece_id: {piece.id}\n piece_x: {piece.x_pos}\n piece_y: {piece.y_pos}\n piece_pos: {piece_pos}\n piece_minos: {piece.minos}\n x_move: {x_move}\n shape: {piece.shape}\n mino[i][1]: {piece.minos[i][1]}\n board_state: {board_state}\n")
                         
-                        raise(f"i: {i}\n, piece_id: {piece.id}\n, piece_x: {piece.x_pos}\n, piece_y: {piece.y_pos}\n, piece_pos: {piece_pos}\n, piece_minos: {piece.minos}\n, x_move: {x_move}\n, shape: {piece.shape}\n, mino[i][1]: {piece.minos[i][1]}\n, board_state: {board_state}\n")
+                        raise IndexError(f"i: {i}\n, piece_id: {piece.id}\n, piece_x: {piece.x_pos}\n, piece_y: {piece.y_pos}\n, piece_pos: {piece_pos}\n, piece_minos: {piece.minos}\n, x_move: {x_move}\n, shape: {piece.shape}\n, mino[i][1]: {piece.minos[i][1]}\n, board_state: {board_state}\n")
                 else:
                     blocked = True          
             

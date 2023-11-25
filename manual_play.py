@@ -46,7 +46,7 @@ if __name__ == '__main__':
     reward = 0
     
     actions_over_limit = 0
-    
+
     while running:
         # Check if user has quit the window
         if (pygame.event.get(pygame.QUIT)):
