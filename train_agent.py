@@ -1,4 +1,4 @@
-from tetris_env import TetrisEnv, ScreenSizes
+from gym_tetris_env import TetrisEnv, ScreenSizes
 from stable_baselines3 import PPO, A2C
 import os
 from datetime import datetime
