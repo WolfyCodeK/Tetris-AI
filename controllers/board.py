@@ -97,7 +97,47 @@ class Board():
                 if (column[j] == 0) and (column[j - 1] > 0):
                     gaps += 1
                     
-        return gaps            
+        return gaps         
+    
+    def check_row_filled(self, row):
+        filled_count = 0
+        
+        for i in range(bc.BOARD_COLUMNS):
+            if self.board_state[row, i] > 0:
+                filled_count += 1
+                
+        if filled_count == 9:
+            return True
+        else:
+            return False
+        
+    def check_all_previous_rows_filled(self):
+        all_rows_filled = False
+        top_filled_found = False
+        previous_filled = True
+        row = bc.BOARD_HEIGHT - 1
+        
+        while not top_filled_found:
+            if self.check_row_filled(row) and not previous_filled:
+                all_rows_filled = False
+                top_filled_found = True
+                
+            elif self.check_row_filled(row) and previous_filled:
+                row -= 1
+                all_rows_filled = True
+                previous_filled = True
+                
+            elif not self.check_row_filled(row) and previous_filled:
+                row -= 1
+                previous_filled = False
+                all_rows_filled = True
+                top_filled_found = False
+                
+            else:
+                top_filled_found = True
+                all_rows_filled = True
+                
+        return all_rows_filled
         
     def reset_board_state(self):
         self.board_state = self.INITIAL_BOARD_STATE.copy()
@@ -112,3 +152,15 @@ class Board():
         min_board_state = np.delete(min_board_state, range(0, bc.BOARD_HEIGHT_BUFFER), axis=0)
         
         return min_board_state
+    
+    def get_board_state_range_removed(self, low, high, area):
+        board_state_range = self.board_state.copy()
+        
+        # Remove top of board
+        board_state_range = np.delete(board_state_range, range(low, high), axis=0)
+        
+        # Remove remaining bottom of board
+        if high < (bc.BOARD_HEIGHT - area):
+            board_state_range = np.delete(board_state_range, range(area, len(board_state_range)), axis=0)
+        
+        return board_state_range

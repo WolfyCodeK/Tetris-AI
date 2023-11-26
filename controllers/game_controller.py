@@ -117,7 +117,7 @@ class GameController():
     def get_board_state(self):
         return self.piece_manager.board.get_minimal_board_state()
     
-    def get_board_value_bounds(self):
+    def get_piece_value_bounds(self):
         return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
         
     
@@ -192,6 +192,7 @@ class GameController():
         self.piece_manager.deactivate_piece()
         self.piece_manager.next_piece()
         self.piece_manager.num_of_pieces_dropped += 1
+        self.actions_per_piece = 0
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
         self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
@@ -259,3 +260,6 @@ class GameController():
     
     def get_num_of_gaps(self):
         return self.piece_manager.board.get_num_of_gaps()
+    
+    def get_board_state_range_removed(self, low, high, area):
+        return self.piece_manager.board.get_board_state_range_removed(low, high, area)

@@ -5,7 +5,7 @@ import utils.board_constants as bc
 from controllers.window import Window
 from tetris_env import ScreenSizes
 
-def occupied_spaces_to_average_height_ratio_reward():
+def occupied_spaces_to_average_height_ratio_reward(prev_gaps, prev_height_difference):
     occupied_spaces = game.get_occupied_spaces_on_board()
     max_height = game.get_max_piece_height_on_board()
     second_min_height = game.get_second_min_piece_height_on_board()
@@ -17,14 +17,24 @@ def occupied_spaces_to_average_height_ratio_reward():
     # ranges from 1-9 where 9 = best, 1 = worst
     # pieces_max_height_ratio = reduced_occupied_spaces / max_height
 
-    adjusted_difference = (6 - board_height_difference)
-
-    if adjusted_difference > 0 and occupied_spaces > bc.PIECE_COMPONENTS:
-        reward = adjusted_difference ** 2
-    else:
-        reward = 0
+    gaps_multiplyer = 1 - (game.get_num_of_gaps() - prev_gaps)
         
-    return reward
+    if (gaps_multiplyer < 0):
+        gaps_multiplyer = 0
+
+    diff_reward = (5 - board_height_difference)
+    
+    if (diff_reward < 0):
+        diff_reward = 0
+    else:
+        diff_reward = diff_reward ** 4
+        
+    if gaps_multiplyer < 1:
+        gaps_multiplyer = 0
+    
+    reward = gaps_multiplyer * diff_reward
+
+    return int(reward / 10)
 
 if __name__ == '__main__':    
     game = GameController()
@@ -58,14 +68,18 @@ if __name__ == '__main__':
         
         event_list = pygame.event.get()
         
-        gaps = game.get_num_of_gaps()
+        prev_gaps = game.get_num_of_gaps()
+        
+        max_height = game.get_max_piece_height_on_board()
+        second_min_height = game.get_second_min_piece_height_on_board()
+        prev_height_difference = max_height - second_min_height
         
         game.take_player_inputs(event_list)
         done, gained_score = game.run_logic()
         window.draw()
 
-        # if (game.get_num_of_pieces_dropped() - previous_pieces_dropped) > 0:
-        #     reward += occupied_spaces_to_average_height_ratio_reward()
+        if (game.get_num_of_pieces_dropped() - previous_pieces_dropped) > 0:
+            reward += occupied_spaces_to_average_height_ratio_reward(prev_gaps, prev_height_difference)
 
         for event in event_list:     
             if event.type == pygame.KEYDOWN:
@@ -74,9 +88,7 @@ if __name__ == '__main__':
                 else:
                     gaps = game.get_num_of_gaps()
         
-        if done:   
-
-            reward += 100 - gaps
+        if done:             
             print(reward)
             game.reset_game()
             reward = 0

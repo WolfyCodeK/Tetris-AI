@@ -181,13 +181,8 @@ class PieceManager():
             # Check for left input
             if (x_move < 0):
                 if (piece_pos + x_move >= -1):
-                    try:
-                        if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
-                            blocked = True
-                    except:
-                        print(f"i: {i}\n piece_id: {piece.id}\n piece_x: {piece.x_pos}\n piece_y: {piece.y_pos}\n piece_pos: {piece_pos}\n piece_minos: {piece.minos}\n x_move: {x_move}\n shape: {piece.shape}\n mino[i][1]: {piece.minos[i][1]}\n board_state: {board_state}\n")
-                        
-                        raise IndexError(f"i: {i}\n, piece_id: {piece.id}\n, piece_x: {piece.x_pos}\n, piece_y: {piece.y_pos}\n, piece_pos: {piece_pos}\n, piece_minos: {piece.minos}\n, x_move: {x_move}\n, shape: {piece.shape}\n, mino[i][1]: {piece.minos[i][1]}\n, board_state: {board_state}\n")
+                    if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
+                        blocked = True
                 else:
                     blocked = True          
             
