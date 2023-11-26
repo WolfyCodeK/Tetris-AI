@@ -1,20 +1,28 @@
-import board.board_definitions as bd
-from board.board import Board
+import utils.board_constants as bc
+from controllers.board import Board
 from .piece_holder import PieceHolder
 from .piece_queue import PieceQueue
 from pieces.piece import Piece
 from game.game_exceptions import PiecePlacementError
 
 
-class PieceController():    
-    def __init__(self, board: Board) -> None:
-        self.board = board
-        self.reset_pieces()
+class PieceManager():    
+    def __init__(self) -> None:
+        # Create game board
+        self.board = Board()
         
-    def reset_pieces(self) -> None:
+        self.num_of_pieces_dropped = 0
+        
+        self.reset()
+        
+    def reset(self) -> None:
         self.board.reset_board_state()
+        
         self.piece_queue = PieceQueue(Board.PIECE_LIST)
         self.piece_holder = PieceHolder()
+        
+        self.num_of_pieces_dropped = 0
+        
         self.next_piece()
         
     def next_piece(self) -> None:
@@ -69,21 +77,21 @@ class PieceController():
             self.current_piece.transform(x_move, 0)
             
     def is_move_allowed(self, x: int, y: int) -> bool:
-        if (x < 0) or (x >= bd.BOARD_WIDTH) or (y >= bd.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys()):
+        if (x < 0) or (x >= bc.BOARD_WIDTH) or (y >= bc.BOARD_HEIGHT) or (self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys()):
             return False
         else:
             return True
 
     def rotate_piece(self, clockwise: bool) -> None:
-        rotation_blocked = False
+        piece = self.current_piece  
         
-        piece = self.current_piece    
-        piece.rotate(clockwise)
+        rotation_blocked = False
+        rotated_shape, rotation_state = piece.get_shape_after_rotation(clockwise)
+        absolute_rotated_shape = piece.convert_to_absolute_shape(rotated_shape)
         
         # Attempt to place piece using basic rotation
-        for i in range(len(piece.minos)):
-            if (not self.is_move_allowed(piece.minos[i][0], piece.minos[i][1])):
-                piece.revert_rotation()
+        for i in range(len(absolute_rotated_shape)):
+            if (not self.is_move_allowed(absolute_rotated_shape[i][0], absolute_rotated_shape[i][1])):
                 rotation_blocked = True
                 break
         
@@ -92,24 +100,25 @@ class PieceController():
         # If basic rotation didn't work, then attempt a kick
         if rotation_blocked:
             for i in range(len(piece.KICK_OPTIONS)):
-                piece.rotate(clockwise)
-                
                 kick_priority = piece.get_kick_priority()
-                kick_index = kick_priority[piece.rotation_state][i]
+                kick_index = kick_priority[rotation_state][i]   
                     
-                piece.kick(kick_index, clockwise)
+                kicked_shape, new_x_pos, new_y_pos = piece.get_minos_after_kick(rotated_shape, kick_index, clockwise, rotation_state)
                 
-                for j in range(len(piece.minos)):
-                    if (not self.is_move_allowed(piece.minos[j][0], piece.minos[j][1])):
-                        piece.revert_rotation()
-                        piece.revert_kick()
-                        kick_found = False
+                if not (new_x_pos == 0 and new_y_pos == 0):
+                    for j in range(len(kicked_shape)):
+                        if (not self.is_move_allowed(kicked_shape[j][0], kicked_shape[j][1])):
+                            kick_found = False
+                            break
+                        else:
+                            kick_found = True  
+                            
+                    if kick_found:
+                        piece.transform(new_x_pos, new_y_pos)
+                        piece.set_minos_from_shape(clockwise, rotated_shape)
                         break
-                    else:
-                        kick_found = True  
-                        
-                if kick_found:
-                    break
+        else:
+            piece.set_minos_from_shape(clockwise, rotated_shape)
             
     def deactivate_piece(self) -> None:
         self._place_piece(self.board.board_state, self.current_piece)    
@@ -117,33 +126,32 @@ class PieceController():
     def perform_line_clears(self) -> int:
         lines_cleared = 0
         
-        for y in bd.BOARD_HEIGHT_RANGE:
+        for y in bc.BOARD_HEIGHT_RANGE_INCR:
             column_count = 0 
             
-            for x in range(bd.BOARD_WIDTH):
+            for x in range(bc.BOARD_WIDTH):
                 if self.board.board_state[y][x] in Board.PIECE_COLOUR_DICT.keys():
                     column_count += 1
                     
-            if column_count == bd.BOARD_WIDTH:    
+            if column_count == bc.BOARD_WIDTH:    
                 # Move all lines down by one row
                 for y2 in range(y, 1, -1):
                     self.board.board_state[y2] = self.board.board_state[y2 - 1]
                     
                 lines_cleared += 1 
                     
+        self.board.occupied_spaces -= lines_cleared * bc.BOARD_WIDTH               
+    
         return lines_cleared
                     
-    def check_game_over(self) -> bool:
-        return self.board.check_game_over()
-
-    def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move) -> bool:
+    def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move: int) -> bool:
         blocked = False
 
         for i in range(len(piece.minos)):
             piece_y_pos = piece.minos[i][1] + y_move
             
             # Check the piece isnt going to hit the floor
-            if (piece_y_pos >= bd.BOARD_HEIGHT):
+            if (piece_y_pos >= bc.BOARD_HEIGHT):
                 blocked = True
             else:
                 # Check if piece is in the board
@@ -164,7 +172,7 @@ class PieceController():
             
             # Check for right input
             if (x_move > 0):
-                if (piece_pos + x_move <= bd.BOARD_WIDTH):
+                if (piece_pos + x_move <= bc.BOARD_WIDTH):
                     if (board_state[piece.minos[i][1]][piece_pos] != Board.EMPTY_PIECE_ID):
                         blocked = True
                 else:
@@ -193,6 +201,7 @@ class PieceController():
                 raise PiecePlacementError(x, y, piece.id, id)
             
         self.piece_holder.new_hold_available = True
+        self.board.occupied_spaces += bc.PIECE_COMPONENTS
         
     def hold_piece(self):
         piece = self.piece_holder.hold_piece(self.current_piece)

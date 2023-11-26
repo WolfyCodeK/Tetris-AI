@@ -161,3 +161,7 @@ cython_debug/
 
 # Local Machine Notes
 tempcode.txt
+
+# ML Folder
+logs/
+models/

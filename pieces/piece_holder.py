@@ -1,8 +1,8 @@
 from pieces.i_piece import IPiece
 from pieces.o_piece import OPiece
 from pieces.piece import Piece
-import board.board_definitions as bd
-import board.board_utils as bu
+import utils.board_constants as bc
+import utils.window_utils as win_utils
 
 class PieceHolder():
     def __init__(self) -> None:
@@ -13,15 +13,15 @@ class PieceHolder():
         if (self.held_piece != None):
             
             for i in range(len(self.held_piece.shape)):
-                x_adjust = bd.HELD_PIECE_X_POS
-                y_adjust = bd.HELD_PIECE_Y_POS
+                x_adjust = bc.HELD_PIECE_X_POS
+                y_adjust = bc.HELD_PIECE_Y_POS
                 
                 if (self.held_piece.id == OPiece.ID):
                     x_adjust += 1
                 if (self.held_piece.id == IPiece.ID):
                     y_adjust -= 1
                     
-                bu.draw_rect(self.held_piece.DEFAULT_SHAPE[i][0] + x_adjust, self.held_piece.DEFAULT_SHAPE[i][1] + y_adjust, self.held_piece.colour, surface)
+                win_utils.draw_rect(self.held_piece.DEFAULT_SHAPE[i][0] + x_adjust, self.held_piece.DEFAULT_SHAPE[i][1] + y_adjust, self.held_piece.colour, surface)
     
     def hold_piece(self, current_piece: Piece) -> Piece:
         """Holds current piece and returns previously held piece if one is available.

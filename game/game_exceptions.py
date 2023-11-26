@@ -11,3 +11,15 @@ class RevertRotationError(Exception):
         self.id = id
         self.message = f"{id} - rotation has already been reverted, cannot revert rotation again without completing a new rotation."
         super().__init__(self.message)
+        
+class DrawException(Exception):
+    def __init__(self):
+        self.message = "Window cannot be drawn before running init_window()."
+        super().__init__(self.message)
+        
+class ShapeStateMissing(Exception):
+    def __init__(self, id: chr, shape) -> None:
+        self.id = id
+        self.shape = shape
+        self.message = f"{shape}\n\n ^^^ is not a valid shape for {id}."
+        super().__init__(self.message)
