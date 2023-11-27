@@ -3,7 +3,7 @@ import pygame
 from controllers.game_controller import GameController
 import utils.board_constants as bc 
 from controllers.window import Window
-from tetris_env import ScreenSizes
+from gym_tetris_env import ScreenSizes
 
 def occupied_spaces_to_average_height_ratio_reward(prev_gaps, prev_height_difference):
     occupied_spaces = game.get_occupied_spaces_on_board()
@@ -17,24 +17,20 @@ def occupied_spaces_to_average_height_ratio_reward(prev_gaps, prev_height_differ
     # ranges from 1-9 where 9 = best, 1 = worst
     # pieces_max_height_ratio = reduced_occupied_spaces / max_height
 
-    gaps_multiplyer = 1 - (game.get_num_of_gaps() - prev_gaps)
+    diff = (5 - board_height_difference)
         
-    if (gaps_multiplyer < 0):
-        gaps_multiplyer = 0
+    if diff < 0:
+        diff = 0
 
-    diff_reward = (5 - board_height_difference)
+    gaps = 1
     
-    if (diff_reward < 0):
-        diff_reward = 0
-    else:
-        diff_reward = diff_reward ** 4
+    if occupied_spaces > 4:
+        gaps =  1 - (game.get_num_of_gaps() - prev_gaps)
         
-    if gaps_multiplyer < 1:
-        gaps_multiplyer = 0
-    
-    reward = gaps_multiplyer * diff_reward
-
-    return int(reward / 10)
+        if gaps < 0:
+            gaps = 0
+            
+    return diff * gaps
 
 if __name__ == '__main__':    
     game = GameController()
@@ -75,7 +71,7 @@ if __name__ == '__main__':
         prev_height_difference = max_height - second_min_height
         
         game.take_player_inputs(event_list)
-        done, gained_score = game.run_logic()
+        done = game.run_logic()
         window.draw()
 
         if (game.get_num_of_pieces_dropped() - previous_pieces_dropped) > 0:
@@ -87,6 +83,8 @@ if __name__ == '__main__':
                     done = True
                 else:
                     gaps = game.get_num_of_gaps()
+        
+        print(game.piece_manager.piece_queue.get_visible_piece_queue_id_list())
         
         if done:             
             print(reward)

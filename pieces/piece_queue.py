@@ -12,13 +12,14 @@ class PieceQueue():
         self.NUM_OF_PIECES = len(self.PIECE_LIST)
         self.LIST_OF_PIECE_NUMBERS = list(range(0, self.NUM_OF_PIECES))
         
+        self.NUM_OF_PIECES_TO_SHOW = GameSettings.num_of_queue_to_show
         self.first_bag_numbers = self._create_random_piece_bag()
         self.second_bag_numbers = self._create_random_piece_bag()
         
         self.queue = self._init_piece_queue()
     
     def draw(self, surface):
-        for i in range(GameSettings.num_of_queue_to_show):
+        for i in range(self.NUM_OF_PIECES_TO_SHOW):
             # Get piece in queue
             piece = self.queue[i]
             
@@ -53,6 +54,13 @@ class PieceQueue():
         self._add_piece_to_queue()
         
         return piece
+    
+    def get_visible_piece_queue_id_list(self) -> list:
+        queue_id_list  = [int(piece.id) for piece in self.queue]
+        queue_id_list.pop()
+        queue_id_list.pop()
+        
+        return queue_id_list
         
     def _add_piece_to_queue(self) -> None:
         if (len(self.second_bag_numbers) <= 0):

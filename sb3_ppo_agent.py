@@ -1,5 +1,5 @@
 from gym_tetris_env import TetrisEnv, ScreenSizes
-from stable_baselines3 import PPO, A2C
+from stable_baselines3 import PPO
 import os
 from datetime import datetime
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # env.seed(0)
 
     model = PPO('MlpPolicy', env, verbose=0, tensorboard_log=logs_directory, learning_rate=0.00003)
-    # model = PPO.load("models/2023-11-24---15-35-56/960000.zip", env=env)
+    # model = PPO.load("models/2023-11-26---04-30-15/460000.zip", env=env)
     model.verbose = 0
 
     STEPS = 20000

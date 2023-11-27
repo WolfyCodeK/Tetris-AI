@@ -1,5 +1,5 @@
-from tetris_env import TetrisEnv, ScreenSizes
-from stable_baselines3 import PPO, A2C
+from gym_tetris_env import TetrisEnv, ScreenSizes
+from stable_baselines3 import PPO
 import os
 
 if __name__ == '__main__':
@@ -7,7 +7,7 @@ if __name__ == '__main__':
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
     env.seed()
 
-    model = PPO.load("models/2023-11-25---19-39-14/4700000.zip", env=env)
+    model = PPO.load("models/2023-11-26---06-05-02/9660000.zip", env=env)
     
     episode = 1
     highest_score = 0

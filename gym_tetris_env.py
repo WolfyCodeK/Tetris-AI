@@ -34,8 +34,15 @@ class TetrisEnv(Env):
         low, high = self._game.get_piece_value_bounds()
 
         self.action_space = Discrete(len(Actions))
-        size = (6 * bc.BOARD_COLUMNS) + 1
-        self.observation_space = Box(low=low, high=high, shape=(size,), dtype=np.int32)
+        
+        self.observation_space = Dict({
+            "additional": Box(low, high, shape=(len(self._get_additional_obs()),), dtype=np.uint32),
+            "board": Box(low, high, shape=(bc.BOARD_ROWS, bc.BOARD_COLUMNS), dtype=np.uint32)
+        })
+        
+        # self._board_view_range = bc.BOARD_ROWS
+        # size = (self._board_view_range * bc.BOARD_COLUMNS) + len(self._get_additional_obs(reset=True))
+        # self.observation_space = Box(low=low, high=high, shape=(size,), dtype=np.int32)
         
     def _update_window(self):
         if (pygame.event.get(pygame.QUIT)):
@@ -60,41 +67,51 @@ class TetrisEnv(Env):
         
         self._game.perform_action(action)
         
-        self.done, b2b = self._game.run_logic()
+        self.done = self._game.run_logic()
         
         if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
-            self.reward += self.flat_stack_reward(prev_gaps)
+            self.reward += self.flat_stack_reward_method(prev_gaps)
+        
+        # if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
+        #     self.reward += self.line_clear_reward_method()
         
         if self._window is not None:
             self._update_window()
         
         self.game_steps += 1
         
-        gaps = self._game.get_num_of_gaps()
+        # gaps = self._game.get_num_of_gaps()
         
-        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (gaps > 2) or (self._game.actions_per_piece > 20):
+        # if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (gaps > 2) or (self._game.actions_per_piece > 20):
+        #     self.done = True
+        #     self.reward += b2b * 1000
+        
+        if (self._game.actions_per_piece > 20):
             self.done = True
-            self.reward += b2b * 1000
-
-        max_height = self._game.get_max_piece_height_on_board()
-        current_piece_id = self._game.piece_manager.current_piece.id
         
-        self.observation = self._game.get_board_state_range_removed(0, min(bc.BOARD_HEIGHT - max_height, bc.BOARD_HEIGHT - 6), 6)
-        self.observation = self.observation.flatten()
-        self.observation = np.insert(self.observation, 0, current_piece_id)
+        if self.done:
+            self.reward += self._game.score * (self._game.b2b + 1)
+        
+        # self.observation = np.concatenate((
+        #     self._get_additional_obs(), 
+        #     self._get_board_obs(min(
+        #         bc.BOARD_HEIGHT - self._game.get_max_piece_height_on_board(), 
+        #         bc.BOARD_HEIGHT - self._board_view_range))
+        #     )
+        # )
+        
+        self.observation = self._get_observation()
 
         info = {}
         
         return self.observation, self.reward, self.done, info
     
-    def flat_stack_reward(self, prev_gaps):
+    def flat_stack_reward_method(self, prev_gaps):
         occupied_spaces = self._game.get_occupied_spaces_on_board()
-        max_height = self._game.get_max_piece_height_on_board()
-        second_min_height = self._game.get_second_min_piece_height_on_board()
-        board_height_difference = max_height - second_min_height
+        board_height_difference = self._game.get_board_height_difference()
 
-        nine_piece_row_reduction = math.floor(occupied_spaces / bc.BOARD_COLUMNS)
-        reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
+        # nine_piece_row_reduction = math.floor(occupied_spaces / bc.BOARD_COLUMNS)
+        # reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
 
         # ranges from 1-9 where 9 = best, 1 = worst
         # pieces_max_height_ratio = reduced_occupied_spaces / max_height
@@ -112,7 +129,17 @@ class TetrisEnv(Env):
             if gaps < 0:
                 gaps = 0
                 
-        return occupied_spaces * diff * gaps
+        return diff * gaps
+    
+    def line_clear_reward_method(self):
+        board_height_difference = self._game.get_board_height_difference()
+        
+        diff = (5 - board_height_difference)
+        
+        if diff < 0:
+            diff = 0
+        
+        return diff
     
     def render(self, screen_size: ScreenSizes|int, show_fps: bool, show_score: bool):
         # Initial pygame setup
@@ -129,18 +156,60 @@ class TetrisEnv(Env):
     def reset(self):
         self._game.reset_game()
         
-        current_piece_id = self._game.piece_manager.current_piece.id
+        # Reset values
         self.game_steps = 0
         self.game_score = self._game.score
-
         self.done = False
         self.reward = 0
         
-        self.observation = self._game.get_board_state_range_removed(0, bc.BOARD_HEIGHT - 6, 6)
-        self.observation = self.observation.flatten()
-        self.observation = np.insert(self.observation, 0, current_piece_id)
+        # self.observation = np.concatenate((
+        #     self._get_additional_obs(reset = True), 
+        #     self._get_board_obs(bc.BOARD_HEIGHT - self._board_view_range))
+        # )
+        
+        self.observation = self._get_observation(reset=True)
         
         return self.observation
+    
+    def _get_observation(self, reset: bool = False):
+        observation = self.observation_space.sample()
+        
+        observation["additional"] = self._get_additional_obs(reset)
+        observation["board"] = self._game.get_board_state()
+        
+        return observation
+    
+    def _get_board_obs(self, height: int) -> np.ndarray:
+        board_obs = self._game.get_board_state_range_removed(0, height, self._board_view_range)
+        board_obs = board_obs.flatten()
+        board_obs = np.where(board_obs == 0, 0, 1)
+        
+        return board_obs
+    
+    def _get_additional_obs(self, reset: bool = False) -> np.ndarray:
+        current_piece_id = self._game.piece_manager.current_piece.id    
+        held_piece = self._game.piece_manager.piece_holder.held_piece
+        
+        if held_piece != None:
+            held_piece_id = held_piece.id
+        else:
+            held_piece_id = 0
+        
+        additional_obs = [
+            self._game.get_board_height_difference(),
+            self._game.get_max_piece_height_on_board(), 
+            self._game.get_num_of_gaps(), 
+            held_piece_id, 
+            current_piece_id
+        ]
+
+        if reset:
+            for i in range(len(additional_obs) - 1):
+                additional_obs[i] = 0
+                
+        additional_obs = additional_obs + self._game.get_visible_piece_queue_id_list()
+            
+        return np.array(additional_obs)
     
     def close(self):
         print("Enviroment closed.")

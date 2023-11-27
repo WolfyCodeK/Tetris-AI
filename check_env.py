@@ -1,5 +1,5 @@
 from stable_baselines3.common.env_checker import check_env
-from tetris_env import TetrisEnv, ScreenSizes
+from gym_tetris_env import TetrisEnv, ScreenSizes
 
 if __name__ == '__main__':
     env = TetrisEnv()

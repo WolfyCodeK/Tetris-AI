@@ -11,6 +11,8 @@ class PieceManager():
         # Create game board
         self.board = Board()
         
+        self.previous_piece = None
+        self.current_piece = None
         self.num_of_pieces_dropped = 0
         
         self.reset()
@@ -26,6 +28,7 @@ class PieceManager():
         self.next_piece()
         
     def next_piece(self) -> None:
+        self.previous_piece = self.current_piece
         self.current_piece = self.piece_queue.get_next_piece()
         
     def draw_board_pieces(self, surface):

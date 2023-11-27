@@ -25,6 +25,7 @@ class GameController():
         self.frames = 0
         self.last_fps_recorded = 0
         
+        self.lines_cleared = 0
         self.actions_per_piece = 0
         
         # Scores
@@ -88,31 +89,35 @@ class GameController():
         self.piece_manager.draw_queued_pieces(surface)
         
     def clear_lines_and_add_score(self):
-        lines_cleared = self.piece_manager.perform_line_clears()
+        new_lines_cleared = self.piece_manager.perform_line_clears()
+        self.lines_cleared += new_lines_cleared
         
         # Award points
-        if (lines_cleared != 0):
-            if (lines_cleared == 1):
+        match new_lines_cleared:
+            case 1:
                 self.score += 40
+                self.b2b = 0
             
-            if (lines_cleared == 2):
+            case 2:
                 self.score += 100
+                self.b2b = 0
             
-            if (lines_cleared == 3):
-                self.score += 300
+            case 3:
+                # T-spin triple
+                if (self.piece_manager.previous_piece.id == PieceTypeID.T_PIECE):
+                    self.score += 2400
+                    self.b2b += 1
+                else:
+                    self.score += 300
+                    self.b2b = 0
                 
-            if (lines_cleared == 4):
+            case 4:
                 self.score += 1200
                 self.b2b += 1
-            else:
-                self.b2b = 0
-                
-        return self.b2b
     
     def reset_scores(self):
         self.score = 0
         self.b2b = 0
-        self.actions_per_piece = 0
         
     def get_board_state(self):
         return self.piece_manager.board.get_minimal_board_state()
@@ -179,7 +184,9 @@ class GameController():
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
             
-        return self.check_game_over(), self.clear_lines_and_add_score()
+        self.clear_lines_and_add_score()    
+            
+        return self.check_game_over()
     
     def check_game_over(self) -> bool:
         return self.piece_manager.board.check_game_over()
@@ -187,6 +194,8 @@ class GameController():
     def reset_game(self):
         self.piece_manager.reset()
         self.reset_scores()
+        self.lines_cleared = 0
+        self.actions_per_piece = 0
         
     def new_piece_and_timer(self):
         self.piece_manager.deactivate_piece()
@@ -242,7 +251,8 @@ class GameController():
                     self.piece_manager.hold_piece()
                     
                 self.actions_per_piece += 1
-                    
+    
+    # Game Analysis Functions
     def get_board_peaks_list(self):
         return self.piece_manager.board.get_max_height_column_list()
         
@@ -251,6 +261,9 @@ class GameController():
     
     def get_second_min_piece_height_on_board(self):
         return sorted(self.piece_manager.board.get_min_height_column_list())[1]
+    
+    def get_board_height_difference(self):
+        return self.get_max_piece_height_on_board() - self.get_second_min_piece_height_on_board()
     
     def get_occupied_spaces_on_board(self):
         return self.piece_manager.board.occupied_spaces
@@ -263,3 +276,6 @@ class GameController():
     
     def get_board_state_range_removed(self, low, high, area):
         return self.piece_manager.board.get_board_state_range_removed(low, high, area)
+    
+    def get_visible_piece_queue_id_list(self):
+        return self.piece_manager.piece_queue.get_visible_piece_queue_id_list()

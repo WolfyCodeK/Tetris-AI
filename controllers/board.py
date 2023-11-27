@@ -106,7 +106,7 @@ class Board():
             if self.board_state[row, i] > 0:
                 filled_count += 1
                 
-        if filled_count == 9:
+        if filled_count == bc.BOARD_ROWS - 1:
             return True
         else:
             return False
