@@ -16,18 +16,18 @@ if __name__ == '__main__':
     env = TetrisEnv()
     env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True)
     env.reset()
-    # env.seed(0)
+    env.seed(0)
 
-    model = DQN('MlpPolicy', env, verbose=0, tensorboard_log=logs_directory, learning_rate=0.00003)
-    # model = PPO.load("models/2023-11-26---04-30-15/460000.zip", env=env)
-    model.verbose = 0
+    model = DQN('MultiInputPolicy', env, verbose=0, tensorboard_log=logs_directory, learning_rate=0.0001)
+    LAST_STEP_NUM = 0
+    # model = DQN.load(f"models\\2023-11-27---19-50-19\\{LAST_STEP_NUM}.zip", env=env)
 
-    STEPS = 20000
+    STEPS = 20_000
     count = 0
     
     print("Training agent...")
     
     while True:
         count += 1
-        model.learn(total_timesteps=STEPS, reset_num_timesteps=False, tb_log_name=f"PPO")
-        model.save(f"{models_directory}/{STEPS*count}")
+        model.learn(total_timesteps=STEPS, reset_num_timesteps=False, tb_log_name=f"DQN", progress_bar=True)
+        model.save(f"{models_directory}/{(STEPS*count) + LAST_STEP_NUM}")

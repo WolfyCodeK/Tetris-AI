@@ -2,6 +2,8 @@ import math
 from time import sleep
 import pygame
 
+from pieces.piece_type_id import PieceTypeID
+
 from controllers.game_controller import GameController
 from controllers.window import Window
 
@@ -35,14 +37,12 @@ class TetrisEnv(Env):
 
         self.action_space = Discrete(len(Actions))
         
-        self.observation_space = Dict({
-            "additional": Box(low, high, shape=(len(self._get_additional_obs()),), dtype=np.uint32),
-            "board": Box(low, high, shape=(bc.BOARD_ROWS, bc.BOARD_COLUMNS), dtype=np.uint32)
-        })
+        self._board_view_range = 6
         
-        # self._board_view_range = bc.BOARD_ROWS
-        # size = (self._board_view_range * bc.BOARD_COLUMNS) + len(self._get_additional_obs(reset=True))
-        # self.observation_space = Box(low=low, high=high, shape=(size,), dtype=np.int32)
+        self.observation_space = Dict({
+            "additional": Box(low, high, shape=(len(self._get_additional_obs()),), dtype=np.int16),
+            "board": Box(low, high, shape=(self._board_view_range, bc.BOARD_COLUMNS), dtype=np.int8)
+        })
         
     def _update_window(self):
         if (pygame.event.get(pygame.QUIT)):
@@ -61,7 +61,10 @@ class TetrisEnv(Env):
             sleep(1 / actions_per_second)
         
         last_num_of_pieces_dropped = self._game.get_num_of_pieces_dropped()
-        prev_gaps = self._game.get_num_of_gaps()
+        prev_top_gaps = self._game.get_num_of_top_gaps()
+        prev_full_gaps = self._game.get_num_of_full_gaps()
+        prev_piece_id = self._game.piece_manager.current_piece.id 
+        action_per_piece = self._game.actions_per_piece + 1
         
         self._game.cycle_game_clock()
         
@@ -70,35 +73,27 @@ class TetrisEnv(Env):
         self.done = self._game.run_logic()
         
         if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
-            self.reward += self.flat_stack_reward_method(prev_gaps)
-        
-        # if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
-        #     self.reward += self.line_clear_reward_method()
+            self.reward += self.flat_stack_reward_method(prev_top_gaps, prev_full_gaps, prev_piece_id)
         
         if self._window is not None:
             self._update_window()
         
         self.game_steps += 1
         
-        # gaps = self._game.get_num_of_gaps()
+        full_gaps = self._game.get_num_of_full_gaps()
         
-        # if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (gaps > 2) or (self._game.actions_per_piece > 20):
-        #     self.done = True
-        #     self.reward += b2b * 1000
+        over_action_limit = False
         
-        if (self._game.actions_per_piece > 20):
+        if (action_per_piece > 10):
+            over_action_limit = True
+            self.reward += -5000
+
+        
+        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (full_gaps > 0) or over_action_limit or (self._game.get_board_height_difference() >= 6):
             self.done = True
         
         if self.done:
             self.reward += self._game.score * (self._game.b2b + 1)
-        
-        # self.observation = np.concatenate((
-        #     self._get_additional_obs(), 
-        #     self._get_board_obs(min(
-        #         bc.BOARD_HEIGHT - self._game.get_max_piece_height_on_board(), 
-        #         bc.BOARD_HEIGHT - self._board_view_range))
-        #     )
-        # )
         
         self.observation = self._get_observation()
 
@@ -106,30 +101,37 @@ class TetrisEnv(Env):
         
         return self.observation, self.reward, self.done, info
     
-    def flat_stack_reward_method(self, prev_gaps):
+    def flat_stack_reward_method(self, prev_top_gaps, prev_full_gaps, previous_piece_id):
         occupied_spaces = self._game.get_occupied_spaces_on_board()
         board_height_difference = self._game.get_board_height_difference()
 
-        # nine_piece_row_reduction = math.floor(occupied_spaces / bc.BOARD_COLUMNS)
-        # reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
+        if board_height_difference < 6:
+            diff = 1
+        else: 
+            diff = -20
 
-        # ranges from 1-9 where 9 = best, 1 = worst
-        # pieces_max_height_ratio = reduced_occupied_spaces / max_height
-
-        diff = (5 - board_height_difference)
-        
-        if diff < 0:
-            diff = 0
-
-        gaps = 1
-        
-        if occupied_spaces > 4:
-            gaps =  1 - (self._game.get_num_of_gaps() - prev_gaps)
-            
-            if gaps < 0:
-                gaps = 0
+        top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
+        full_gaps = self._game.get_num_of_full_gaps() - prev_full_gaps
+        gaps_reward = 1
+    
+        if (full_gaps == 0):
+            if top_gaps <= 0:
+                gaps_reward = (1 - top_gaps)
+            else:
+                gaps_reward = -5 * top_gaps
                 
-        return diff * gaps
+            if occupied_spaces == 4 and (previous_piece_id == PieceTypeID.S_PIECE or previous_piece_id == PieceTypeID.Z_PIECE):
+                gaps_reward = 1
+                
+        elif full_gaps > 0:
+            gaps_reward = -20
+        else:
+            raise ValueError(f"Full gaps cannot be negative when calculating reward!: full_gap: {full_gaps}, prev_full_gaps: {prev_full_gaps}")
+        
+        if (gaps_reward < 0):
+            return gaps_reward
+        else:
+            return diff + gaps_reward
     
     def line_clear_reward_method(self):
         board_height_difference = self._game.get_board_height_difference()
@@ -162,11 +164,6 @@ class TetrisEnv(Env):
         self.done = False
         self.reward = 0
         
-        # self.observation = np.concatenate((
-        #     self._get_additional_obs(reset = True), 
-        #     self._get_board_obs(bc.BOARD_HEIGHT - self._board_view_range))
-        # )
-        
         self.observation = self._get_observation(reset=True)
         
         return self.observation
@@ -175,13 +172,12 @@ class TetrisEnv(Env):
         observation = self.observation_space.sample()
         
         observation["additional"] = self._get_additional_obs(reset)
-        observation["board"] = self._game.get_board_state()
+        observation["board"] = self._get_board_obs()
         
         return observation
     
-    def _get_board_obs(self, height: int) -> np.ndarray:
-        board_obs = self._game.get_board_state_range_removed(0, height, self._board_view_range)
-        board_obs = board_obs.flatten()
+    def _get_board_obs(self) -> np.ndarray:
+        board_obs = self._game.get_board_state_range_removed(self._board_view_range)
         board_obs = np.where(board_obs == 0, 0, 1)
         
         return board_obs
@@ -196,9 +192,10 @@ class TetrisEnv(Env):
             held_piece_id = 0
         
         additional_obs = [
+            self._game.piece_manager.actions_per_piece,
             self._game.get_board_height_difference(),
-            self._game.get_max_piece_height_on_board(), 
-            self._game.get_num_of_gaps(), 
+            self._game.get_num_of_top_gaps(), 
+            self._game.get_num_of_full_gaps(),
             held_piece_id, 
             current_piece_id
         ]

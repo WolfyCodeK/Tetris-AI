@@ -84,20 +84,78 @@ class Board():
     def get_min_height(self):
         return min(self.get_min_height_column_list())
     
-    def get_num_of_gaps(self):
+    def get_num_of_top_gaps(self):
         max_height_list = self.get_max_height_column_list()
         gaps = 0
         
         # Horizontal loop
         for i in range(bc.BOARD_COLUMNS):
             column = self.board_state[:, i]
+            left_wall = False
+            right_wall = False
+            
+            if i > 0:
+                left = self.board_state[:, i - 1]
+            else:
+                left_wall = True
+                
+            if i < bc.BOARD_COLUMNS - 1:   
+                right = self.board_state[:, i + 1]
+            else:
+                right_wall = True
 
             # Vertical loop
             for j in range(bc.BOARD_HEIGHT - max_height_list[i], bc.BOARD_HEIGHT):
-                if (column[j] == 0) and (column[j - 1] > 0):
+                if (column[j] == 0) and (column[j - 1] > 0) and ((not((left_wall == True) or (left[j] > 0))) or (not((right_wall == True) or (right[j] > 0)))):
                     gaps += 1
                     
-        return gaps         
+        return gaps      
+    
+    def get_num_of_full_gaps(self):
+        max_height = self.get_max_height()
+        gaps = 0
+        
+        # Vertical loop
+        for i in range(bc.BOARD_HEIGHT - max_height, bc.BOARD_HEIGHT):
+            middle_row = self.board_state[i, :]
+            
+            if (i > 0):
+                top_row = self.board_state[i - 1, :]
+            else:
+                top_row = None
+            
+            # Horizontal loop
+            for j in range(bc.BOARD_COLUMNS):
+                if (middle_row[j] == 0) and (top_row[j] > 0) and ((j == 0) or (middle_row[j - 1] > 0)):
+                    if (j == bc.BOARD_COLUMNS - 1) or (middle_row[j + 1] > 0):
+                        added_gaps = 1
+                    else:
+                        check_finished = False
+                        
+                        added_gaps = 1
+                        
+                        while not check_finished:
+                            j += 1
+                            
+                            if (j < bc.BOARD_COLUMNS):
+                                next_pos_right = middle_row[j] == 0
+                                next_pos_top = top_row[j] > 0
+                                
+                                if next_pos_right and not next_pos_top:
+                                    check_finished = True
+                                    added_gaps = 0
+                                    
+                                elif next_pos_right and next_pos_top:
+                                    added_gaps += 1
+                                    
+                                elif not next_pos_right:
+                                    check_finished = True
+                            else:
+                                check_finished = True
+                                
+                    gaps += added_gaps
+
+        return gaps      
     
     def check_row_filled(self, row):
         filled_count = 0
@@ -152,15 +210,15 @@ class Board():
         min_board_state = np.delete(min_board_state, range(0, bc.BOARD_HEIGHT_BUFFER), axis=0)
         
         return min_board_state
-    
-    def get_board_state_range_removed(self, low, high, area):
+
+    def get_board_state_range_removed(self, area):
         board_state_range = self.board_state.copy()
         
         # Remove top of board
-        board_state_range = np.delete(board_state_range, range(low, high), axis=0)
+        board_state_range = np.delete(board_state_range, range(bc.BOARD_HEIGHT - area), axis=0)
         
-        # Remove remaining bottom of board
-        if high < (bc.BOARD_HEIGHT - area):
-            board_state_range = np.delete(board_state_range, range(area, len(board_state_range)), axis=0)
+        # # Remove remaining bottom of board
+        # if high < (bc.BOARD_HEIGHT - area):
+        #     board_state_range = np.delete(board_state_range, range(area, len(board_state_range)), axis=0)
         
         return board_state_range

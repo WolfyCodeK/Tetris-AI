@@ -26,7 +26,6 @@ class GameController():
         self.last_fps_recorded = 0
         
         self.lines_cleared = 0
-        self.actions_per_piece = 0
         
         # Scores
         self.score = 0
@@ -249,8 +248,6 @@ class GameController():
                     
                 if event.key == pygame.K_LSHIFT:
                     self.piece_manager.hold_piece()
-                    
-                self.actions_per_piece += 1
     
     # Game Analysis Functions
     def get_board_peaks_list(self):
@@ -271,11 +268,14 @@ class GameController():
     def get_num_of_pieces_dropped(self):
         return self.piece_manager.num_of_pieces_dropped
     
-    def get_num_of_gaps(self):
-        return self.piece_manager.board.get_num_of_gaps()
+    def get_num_of_top_gaps(self):
+        return self.piece_manager.board.get_num_of_top_gaps()
     
-    def get_board_state_range_removed(self, low, high, area):
-        return self.piece_manager.board.get_board_state_range_removed(low, high, area)
+    def get_num_of_full_gaps(self):
+        return self.piece_manager.board.get_num_of_full_gaps()
+    
+    def get_board_state_range_removed(self, area):
+        return self.piece_manager.board.get_board_state_range_removed(area)
     
     def get_visible_piece_queue_id_list(self):
         return self.piece_manager.piece_queue.get_visible_piece_queue_id_list()

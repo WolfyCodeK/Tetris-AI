@@ -14,6 +14,7 @@ class PieceManager():
         self.previous_piece = None
         self.current_piece = None
         self.num_of_pieces_dropped = 0
+        self.actions_per_piece = 0
         
         self.reset()
         
@@ -212,9 +213,11 @@ class PieceManager():
         # The first time the hold has been used
         if piece == self.current_piece:
             self.next_piece()
+            self.actions_per_piece = 0
         # No new hold was allowed
         elif piece == None:
             pass
         # Piece was switched with held piece
         else:
             self.current_piece = piece
+            self.actions_per_piece = 0
