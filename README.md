@@ -7,5 +7,5 @@ tensorboard --logdir ./logs
 ```
 or 
 ```bash
-python tensorboard.main --logdir=/logs
+python tensorboard.main --logdir=./logs
 ```
