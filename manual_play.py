@@ -43,7 +43,7 @@ if __name__ == '__main__':
     pygame.display.init()
     pygame.font.init()
     
-    window = Window(game, screen_size=ScreenSizes.MEDIUM)
+    window = Window(game, screen_size=ScreenSizes.XXLARGE, show_fps=False)
     
     pygame.display.set_caption("Tetris - Pygame")
 

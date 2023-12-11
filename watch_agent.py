@@ -7,7 +7,7 @@ if __name__ == '__main__':
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
     env.seed()
 
-    model = PPO.load("models/2023-11-25---19-39-14/4700000.zip", env=env)
+    model = PPO.load("models\Best 10 piece same seed.zip", env=env)
     
     episode = 1
     highest_score = 0
