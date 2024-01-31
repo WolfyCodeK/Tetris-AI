@@ -1,6 +1,7 @@
-wheel==0.38.0
-setuptools==65.5.0
-gym==0.21.0
-numpy==1.26.2
 pygame==2.1.2
-stable_baselines3==1.7.0
+numpy==1.26.2
+gym==0.21.0
+stable-baselines3==2.2.1
+torch==1.13.1
+wheel==0.38.4
+setuptools==65.5.0

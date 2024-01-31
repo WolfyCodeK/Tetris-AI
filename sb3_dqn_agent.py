@@ -18,9 +18,9 @@ if __name__ == '__main__':
     env.reset()
     env.seed(0)
 
-    model = DQN('MultiInputPolicy', env, verbose=0, tensorboard_log=logs_directory, learning_rate=0.0001)
+    model = DQN('MultiInputPolicy', env, verbose=0, tensorboard_log=logs_directory, learning_rate=0.001)
     LAST_STEP_NUM = 0
-    # model = DQN.load(f"models\\2023-11-27---19-50-19\\{LAST_STEP_NUM}.zip", env=env)
+    #model = DQN.load(f"models\\2023-11-29---18-25-28\\{LAST_STEP_NUM}.zip", env=env)
 
     STEPS = 20_000
     count = 0

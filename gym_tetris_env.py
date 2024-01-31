@@ -44,6 +44,9 @@ class TetrisEnv(Env):
             "board": Box(low, high, shape=(self._board_view_range, bc.BOARD_COLUMNS), dtype=np.int8)
         })
         
+    def _window_exits(self):
+        return self._window is not None
+        
     def _update_window(self):
         if (pygame.event.get(pygame.QUIT)):
             pygame.quit()
@@ -56,7 +59,7 @@ class TetrisEnv(Env):
                 self._window.draw()
             
     def step(self, action, actions_per_second: int = 0):
-        # Delay action - for analysing purposes
+        # Delay action - for debugging purposes
         if (actions_per_second > 0):
             sleep(1 / actions_per_second)
         
@@ -66,16 +69,17 @@ class TetrisEnv(Env):
         prev_piece_id = self._game.piece_manager.current_piece.id 
         action_per_piece = self._game.actions_per_piece + 1
         
+        # Run game cycle methods
         self._game.cycle_game_clock()
-        
         self._game.perform_action(action)
-        
         self.done = self._game.run_logic()
         
+        # Check if a piece was dropped
         if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
             self.reward += self.flat_stack_reward_method(prev_top_gaps, prev_full_gaps, prev_piece_id)
         
-        if self._window is not None:
+        # Update the window if it is being rendered
+        if self._window_exits():
             self._update_window()
         
         self.game_steps += 1
@@ -98,6 +102,8 @@ class TetrisEnv(Env):
         self.observation = self._get_observation()
 
         info = {}
+        
+        #print(f"Action Reward -> {self.reward}")
         
         return self.observation, self.reward, self.done, info
     

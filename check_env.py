@@ -3,9 +3,10 @@ from gym_tetris_env import TetrisEnv, ScreenSizes
 
 if __name__ == '__main__':
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
     
-    # check_env(env, skip_render_check=True)
+    check_env(env, skip_render_check=True)
+    
+    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
 
     episode = 1
     highest_score = 0

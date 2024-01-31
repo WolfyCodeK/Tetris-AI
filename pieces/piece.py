@@ -64,7 +64,7 @@ class Piece(ABC):
         return rotation_state    
     
     def decrement_rotation_state(self, rotation_state) -> int:
-        # Mirror clockwise transformations by incrementing rotation state - uses modulo operator to wrap around value    
+        # Mirror clockwise transformations by decrementing rotation state - uses modulo operator to wrap around value    
         rotation_state = (rotation_state + self.NUM_OF_ROTATION_STATES - 1) % self.NUM_OF_ROTATION_STATES
         
         return rotation_state  
