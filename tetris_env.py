@@ -12,7 +12,7 @@ from utils.screen_sizes import ScreenSizes
 
 
 class TetrisEnv(gym.Env):
-    def __init__(self, render_mode=None, window_size=ScreenSizes.MEDIUM) -> None:
+    def __init__(self) -> None:
         # Init game controller
         self._game = GameController()
 
@@ -31,17 +31,24 @@ class TetrisEnv(gym.Env):
         })
         
         self._window = None
-        self.window_size = window_size
-        
-        self.clock = None
 
     def step(self, action):
         terminated = self._game.run(action) 
         
+        reward = 0
+        
         observation = self._get_obs()
         info = self._get_info()
 
-        reward = 0
+        if self._game.piece_manager.actions_per_piece > 10:
+            terminated = True
+            reward += -10
+
+        reward =+ 1
+        
+        # Update the window if it is being rendered
+        if self._window_exists():
+            self._update_window()
         
         return observation, reward, terminated, False, info
         
@@ -55,7 +62,7 @@ class TetrisEnv(gym.Env):
         
         return observation, info
     
-    def render(self, screen_size: ScreenSizes|int, show_fps: bool, show_score: bool):
+    def render(self, screen_size: ScreenSizes|int=ScreenSizes.MEDIUM, show_fps: bool=False, show_score: bool=False):
         # Initial pygame setup
         pygame.display.init()
         pygame.font.init()
@@ -77,8 +84,8 @@ class TetrisEnv(gym.Env):
             if (pygame.display.get_active()):
                 self._window.draw()
 
-    def _get_obs(self, reset: bool=False):
-        return {"board": self._get_board_obs(), "additional": self._get_additional_obs(reset)}
+    def _get_obs(self):
+        return {"board": self._get_board_obs(), "additional": self._get_additional_obs()}
     
     def _get_info(self):
         pass 

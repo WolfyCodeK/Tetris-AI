@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
-        "./sb3_models"
+        "./sb3_models",
+        "./gymnansium_env"
     ]
 }

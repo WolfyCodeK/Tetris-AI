@@ -1,4 +1,3 @@
-import math
 import pygame
 from controllers.game_controller import GameController
 from controllers.window import Window

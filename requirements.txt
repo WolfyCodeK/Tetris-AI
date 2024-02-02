@@ -5,3 +5,4 @@ stable-baselines3==2.2.1
 torch==1.13.1
 wheel==0.38.4
 setuptools==65.5.0
+gymnasium==0.29.1

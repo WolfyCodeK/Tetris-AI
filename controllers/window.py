@@ -9,7 +9,7 @@ from controllers.game_controller import GameController
 class Window():
     def __init__(self, game: GameController, screen_size: int, show_fps: bool = True, show_score: bool = True) -> None:
         # Set window position
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(100, 100)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(900, 400)
         
         # Configure window settings
         GameSettings.show_fps = show_fps
