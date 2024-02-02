@@ -36,7 +36,7 @@ class TetrisEnv(Env):
             "board": Box(low, high, shape=(self._board_view_range, bc.BOARD_COLUMNS), dtype=np.int8)
         })
         
-    def _window_exits(self):
+    def _window_exists(self):
         return self._window is not None
         
     def _update_window(self):
@@ -61,9 +61,9 @@ class TetrisEnv(Env):
         prev_piece_id = self._game.piece_manager.current_piece.id 
         
         # Run game cycle methods
-        self._game.cycle_game_clock()
-        self._game.perform_action(action)
-        self.done = self._game.run_logic()
+        self._game._cycle_game_clock()
+        self._game._perform_action(action)
+        self.done = self._game._run_logic()
         
         # Check if a piece was dropped
         if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
@@ -72,7 +72,7 @@ class TetrisEnv(Env):
             self.reward += self._game.piece_manager.board.do_left_side_test() * 1000
         
         # Update the window if it is being rendered
-        if self._window_exits():
+        if self._window_exists():
             self._update_window()
         
         self.game_steps += 1

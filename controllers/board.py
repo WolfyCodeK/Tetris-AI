@@ -210,21 +210,3 @@ class Board():
         min_board_state = np.delete(min_board_state, range(0, bc.BOARD_HEIGHT_BUFFER), axis=0)
         
         return min_board_state
-
-    def get_board_state_range_removed(self, area):
-        board_state_range = self.board_state.copy()
-        
-        # Remove top of board
-        board_state_range = np.delete(board_state_range, range(bc.BOARD_HEIGHT - area), axis=0)
-        
-        # # Remove remaining bottom of board
-        # if high < (bc.BOARD_HEIGHT - area):
-        #     board_state_range = np.delete(board_state_range, range(area, len(board_state_range)), axis=0)
-        
-        return board_state_range
-    
-    def do_left_side_test(self):
-        test_state = self.board_state.copy()
-        test_state = test_state[:, 0]
-        test_state = np.where(test_state == 0, 0, 1)
-        return test_state.sum()

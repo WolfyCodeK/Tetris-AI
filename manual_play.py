@@ -28,12 +28,12 @@ if __name__ == '__main__':
         if (pygame.event.get(pygame.QUIT)):
             running = False
             
-        game.cycle_game_clock()
+        game._cycle_game_clock()
         
         event_list = pygame.event.get()
         
         game.take_player_inputs(event_list)
-        done = game.run_logic()
+        done = game._run_logic()
         window.draw()
 
         for event in event_list:     

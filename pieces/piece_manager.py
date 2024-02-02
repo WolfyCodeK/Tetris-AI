@@ -221,3 +221,12 @@ class PieceManager():
         else:
             self.current_piece = piece
             self.actions_per_piece = 0
+            
+    def get_held_piece_id(self):
+        return self.piece_holder.held_piece.id if self.piece_holder.held_piece is not None else 0
+    
+    def get_current_piece_id(self):
+        return self.current_piece.id
+    
+    def get_actions_per_piece(self):
+        return self.actions_per_piece
