@@ -1,4 +1,3 @@
-import math
 from time import sleep
 import pygame
 
@@ -19,14 +18,7 @@ from gym import Env
 
 import numpy as np
 
-class ScreenSizes(IntEnum):
-    XXSMALL = 6,
-    XSMALL = 8,
-    SMALL = 10,
-    MEDIUM = 12,
-    LARGE = 14,
-    XLARGE = 16,
-    XXLARGE = 18
+from utils.screen_sizes import ScreenSizes
 
 class TetrisEnv(Env):
     def __init__(self) -> None:
@@ -67,7 +59,6 @@ class TetrisEnv(Env):
         prev_top_gaps = self._game.get_num_of_top_gaps()
         prev_full_gaps = self._game.get_num_of_full_gaps()
         prev_piece_id = self._game.piece_manager.current_piece.id 
-        action_per_piece = self._game.actions_per_piece + 1
         
         # Run game cycle methods
         self._game.cycle_game_clock()
@@ -76,7 +67,9 @@ class TetrisEnv(Env):
         
         # Check if a piece was dropped
         if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
-            self.reward += self.flat_stack_reward_method(prev_top_gaps, prev_full_gaps, prev_piece_id)
+            #self.reward += self.flat_stack_reward_method(prev_top_gaps, prev_full_gaps, prev_piece_id)
+            #self.reward += self.line_clear_reward_method()
+            self.reward += self._game.piece_manager.board.do_left_side_test() * 1000
         
         # Update the window if it is being rendered
         if self._window_exits():
@@ -86,24 +79,18 @@ class TetrisEnv(Env):
         
         full_gaps = self._game.get_num_of_full_gaps()
         
-        over_action_limit = False
-        
-        if (action_per_piece > 10):
-            over_action_limit = True
-            self.reward += -5000
-
-        
-        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (full_gaps > 0) or over_action_limit or (self._game.get_board_height_difference() >= 6):
+        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (full_gaps > 0) or (self._game.piece_manager.actions_per_piece > 10) or (self._game.get_board_height_difference() >= 6):
             self.done = True
         
-        if self.done:
-            self.reward += self._game.score * (self._game.b2b + 1)
+        # if self.done:
+        #     self.reward += self._game.score * (self._game.b2b + 1)
         
         self.observation = self._get_observation()
 
         info = {}
         
         #print(f"Action Reward -> {self.reward}")
+        #print(f"Step -> {self.game_steps}, obs ->{self.observation}")
         
         return self.observation, self.reward, self.done, info
     
@@ -199,9 +186,6 @@ class TetrisEnv(Env):
         
         additional_obs = [
             self._game.piece_manager.actions_per_piece,
-            self._game.get_board_height_difference(),
-            self._game.get_num_of_top_gaps(), 
-            self._game.get_num_of_full_gaps(),
             held_piece_id, 
             current_piece_id
         ]

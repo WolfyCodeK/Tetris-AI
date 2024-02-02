@@ -123,7 +123,6 @@ class GameController():
     
     def get_piece_value_bounds(self):
         return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
-        
     
     def perform_action(self, action: int):
         match(action):
@@ -152,7 +151,7 @@ class GameController():
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
             
-        self.actions_per_piece += 1
+        self.piece_manager.actions_per_piece += 1
     
     def update_fps_counter(self):
         """Update the fps counter with the current number of frames.
@@ -194,13 +193,13 @@ class GameController():
         self.piece_manager.reset()
         self.reset_scores()
         self.lines_cleared = 0
-        self.actions_per_piece = 0
+        self.piece_manager.actions_per_piece = 0
         
     def new_piece_and_timer(self):
         self.piece_manager.deactivate_piece()
         self.piece_manager.next_piece()
         self.piece_manager.num_of_pieces_dropped += 1
-        self.actions_per_piece = 0
+        self.piece_manager.actions_per_piece = 0
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
         self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3

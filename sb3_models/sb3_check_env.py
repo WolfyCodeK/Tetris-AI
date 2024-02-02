@@ -4,9 +4,9 @@ from gym_tetris_env import TetrisEnv, ScreenSizes
 if __name__ == '__main__':
     env = TetrisEnv()
     
-    check_env(env, skip_render_check=True)
+    # check_env(env, skip_render_check=True)
     
-    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True)
 
     episode = 1
     highest_score = 0
@@ -17,7 +17,7 @@ if __name__ == '__main__':
         
         while not done:
             action = env.action_space.sample()  
-            obs, reward, done, info = env.step(action)
+            obs, reward, done, info = env.step(action, actions_per_second=2)
         
         print(f"Episode: {episode}, Score: {env.game_score}, Reward: {env.reward}")
         episode += 1

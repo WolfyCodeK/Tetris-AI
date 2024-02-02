@@ -222,3 +222,9 @@ class Board():
         #     board_state_range = np.delete(board_state_range, range(area, len(board_state_range)), axis=0)
         
         return board_state_range
+    
+    def do_left_side_test(self):
+        test_state = self.board_state.copy()
+        test_state = test_state[:, 0]
+        test_state = np.where(test_state == 0, 0, 1)
+        return test_state.sum()
