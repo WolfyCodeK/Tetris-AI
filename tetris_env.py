@@ -9,6 +9,7 @@ from controllers.window import Window
 from game.actions import Actions
 import utils.board_constants as bc
 from utils.screen_sizes import ScreenSizes
+import game.agent_actions as aa
 
 
 class TetrisEnv(gym.Env):
@@ -37,9 +38,6 @@ class TetrisEnv(gym.Env):
         
         reward = 0
         
-        observation = self._get_obs()
-        info = self._get_info()
-
         if self._game.piece_manager.actions_per_piece > 10:
             terminated = True
             reward += -10
@@ -49,6 +47,17 @@ class TetrisEnv(gym.Env):
         # Update the window if it is being rendered
         if self._window_exists():
             self._update_window()
+            
+        observation = self._get_obs()
+        info = self._get_info()
+        
+        """
+        Adjust action space after sending new observation:
+            Each Piece has its own action space corresponding to all the legal
+            and sensible places it can place the current piece.
+        """
+        
+        self.action_space
         
         return observation, reward, terminated, False, info
         
@@ -69,6 +78,28 @@ class TetrisEnv(gym.Env):
         
         # Create window Object
         self._window = Window(self._game, screen_size, show_fps, show_score)
+        
+    def close(self):
+        print("Enviroment closed.")
+        
+    def _update_action_space(self, current_piece_id: int):
+        if current_piece_id == 1:
+            return aa.i_movements
+        
+        if current_piece_id == 2:
+            return aa.o_movements
+        
+        if current_piece_id == 3 or 4:
+            return aa.sz_movements
+        
+        if current_piece_id == 5 or 6:
+            return aa.lj_movements
+        
+        if current_piece_id == 7:
+            return aa.t_movements
+        
+        if (current_piece_id < 1) or (current_piece_id > 7):
+            raise ValueError(f"Invalid piece id: {current_piece_id}")
         
     def _window_exists(self):
         return self._window is not None
@@ -103,6 +134,3 @@ class TetrisEnv(gym.Env):
             
             + self._game.get_visible_piece_queue_id_list()
         )
-        
-    def close(self):
-        print("Enviroment closed.")
