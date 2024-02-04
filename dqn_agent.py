@@ -68,26 +68,24 @@ def select_action(state):
     else:
         return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long)
 
+episode_durations = []
 
-episode_rewards = []
-
-
-def plot_mean_rewards(show_result=False):
+def plot_durations(show_result=False):
     plt.figure(1)
-    rewards_t = torch.tensor(episode_rewards, dtype=torch.float)
+    durations_t = torch.tensor(episode_durations, dtype=torch.float)
     if show_result:
         plt.title('Result')
     else:
         plt.clf()
         plt.title('Training...')
     plt.xlabel('Episode')
-    plt.ylabel('Mean Reward')
-
-    # Plot individual episode rewards
-    plt.plot(rewards_t.numpy(), label='Episode Rewards')
-
-    # Add a legend
-    plt.legend()
+    plt.ylabel('Duration')
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
 
     plt.pause(0.001)  # pause a bit so that plots are updated
     if is_ipython:
@@ -95,53 +93,8 @@ def plot_mean_rewards(show_result=False):
             display.display(plt.gcf())
             display.clear_output(wait=True)
         else:
-            display.display(plt.gcf())    
-    
-class DQN(nn.Module):
-    def __init__(self, n_observations, n_actions):
-        super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, n_actions)
-
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
-    def forward(self, x):
-        x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        return self.layer3(x)
-    
-# BATCH_SIZE is the number of transitions sampled from the replay buffer
-# GAMMA is the discount factor as mentioned in the previous section
-# EPS_START is the starting value of epsilon
-# EPS_END is the final value of epsilon
-# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-# TAU is the update rate of the target network
-# LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 128
-GAMMA = 0.99
-EPS_START = 0.9
-EPS_END = 0.05
-EPS_DECAY = 1000
-TAU = 0.005
-LR = 1e-4
-
-# Get number of actions from gym action space
-n_actions = env.action_space.n
-# Get the number of state observations
-state, info = env.reset()
-n_observations = len(get_flatterned_obs(state))
-
-policy_net = DQN(n_observations, n_actions).to(device)
-target_net = DQN(n_observations, n_actions).to(device)
-target_net.load_state_dict(policy_net.state_dict())
-
-optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-memory = ReplayMemory(10000)
-
-
-steps_done = 0
-
+            display.display(plt.gcf())
+            
 # Save model function
 def save_model(model, optimizer, episode):
     folder_path = os.path.join('torch_models', f'model_checkpoints')
@@ -157,10 +110,66 @@ def save_model(model, optimizer, episode):
 
 # Load model function
 def load_model(model, optimizer, episode):
-    checkpoint = torch.load(f'model_checkpoint_{episode}.pth')
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    return model, optimizer
+    folder_path = os.path.join('torch_models', f'model_checkpoints')
+    file_path = os.path.join(folder_path, f'model_checkpoint_{episode}.pth')
+    
+    if os.path.exists(file_path):
+        checkpoint = torch.load(file_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        return model, optimizer
+    else:
+        print(f"No checkpoint found for episode {episode}. Training from scratch.")
+        return model, optimizer    
+    
+class DQN(nn.Module):
+    def __init__(self, n_observations, n_actions):
+        super(DQN, self).__init__()
+        self.layer1 = nn.Linear(n_observations, 256)
+        self.layer2 = nn.Linear(256, 256)
+        self.layer3 = nn.Linear(256, 256)
+        self.layer4 = nn.Linear(256, n_actions)
+
+    # Called with either one element to determine next action, or a batch
+    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+    def forward(self, x):
+        x = F.relu(self.layer1(x))
+        x = F.relu(self.layer2(x))
+        x = F.relu(self.layer3(x))
+        return self.layer4(x)
+    
+# BATCH_SIZE is the number of transitions sampled from the replay buffer
+# GAMMA is the discount factor as mentioned in the previous section
+# EPS_START is the starting value of epsilon
+# EPS_END is the final value of epsilon
+# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
+# TAU is the update rate of the target network
+# LR is the learning rate of the ``AdamW`` optimizer
+BATCH_SIZE = 256
+GAMMA = 0.99
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 50000
+TAU = 0.005
+LR = 5e-5
+
+# Get number of actions from gym action space
+n_actions = env.action_space.n
+# Get the number of state observations
+state, info = env.reset()
+n_observations = len(get_flatterned_obs(state))
+
+policy_net = DQN(n_observations, n_actions).to(device)
+target_net = DQN(n_observations, n_actions).to(device)
+target_net.load_state_dict(policy_net.state_dict())
+
+optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
+memory = ReplayMemory(50000)
+
+start_episode = 19000
+policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
+
+steps_done = 0
 
 def optimize_model():
     if len(memory) < BATCH_SIZE:
@@ -211,9 +220,9 @@ def optimize_model():
 if torch.cuda.is_available():
     num_episodes = 6_000_000
 else:
-    num_episodes = 100_000
+    num_episodes = 500_000
 
-save_frequency = 1000
+save_frequency = 5000
 
 for i_episode in range(num_episodes):
     # Initialize the environment and get its state
@@ -248,9 +257,10 @@ for i_episode in range(num_episodes):
             target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
         target_net.load_state_dict(target_net_state_dict)
 
-        if done:
-            episode_rewards.append(t + 1)
-            plot_mean_rewards()
+        if done:     
+            if i_episode % 5000 == 0:
+                episode_durations.append(t + 1)
+                plot_durations()
             
             # Save the model every 'save_frequency' episodes
             if i_episode % save_frequency == 0:
@@ -258,6 +268,6 @@ for i_episode in range(num_episodes):
             break
 
 print('Complete')
-plot_mean_rewards(show_result=True)
-plt.ioff()
-plt.show()
+# plot_mean_rewards(show_result=True)
+# plt.ioff()
+# plt.show()
