@@ -20,22 +20,50 @@ class TetrisEnv(gym.Env):
         self._game = GameController()
 
         # The indexs relating to the ID's of the tetris pieces i.e. (0-7)
-        low, high = self._game.get_piece_value_bounds()
-
-        # self.action_lists = self._update_action_space(self._game.piece_manager.get_current_piece_id)
+        self.low, self.high = self._game.get_piece_value_bounds()
         
-        # All available actions as described in the 'game\actions.py' file
+        # Reward consts
+        self.LOSS_REWARD = -50
+        
+        self.MAX_BOARD_OBS_HEIGHT = 8
+        
+        # All available actions as described in the 'game\agent_actions.py' file
         self.action_space = spaces.Discrete(len(aa.movements))
 
         """
         Dictionary containing the tetris board information and any additional information about the game that the agent needs to know. e.g. the held piece, the pieces in the queue
         """
         self.observation_space = spaces.Dict({
-            "board": spaces.Box(low, high, shape=(bc.BOARD_ROWS, bc.BOARD_COLUMNS), dtype=np.int8),
-            "additional": spaces.Box(low, high, shape=(len(self._get_additional_obs()),), dtype=np.int16)
+            "board": spaces.Box(self.low, self.high, shape=(self.MAX_BOARD_OBS_HEIGHT, bc.BOARD_COLUMNS), dtype=np.int8),
+            "additional": spaces.Box(self.low, self.high, shape=(len(self._get_additional_obs()),), dtype=np.int16)
         })
         
         self._window = None
+        
+    def _reward_calculation(self, prev_top_gaps, previous_piece_id) -> int:
+        occupied_spaces = self._game.get_occupied_spaces_on_board()
+        board_height_difference = self._game.get_board_height_difference()
+
+        if board_height_difference < 8:
+            diff = 8 - board_height_difference
+        else: 
+            diff = 0
+
+        # Get the change in top gaps and full gaps
+        top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
+            
+        if occupied_spaces == 4 and (previous_piece_id == PieceTypeID.S_PIECE or previous_piece_id == PieceTypeID.Z_PIECE):
+            gaps_reward = 5
+        else:
+            if top_gaps <= 0:
+                gaps_reward = 5
+            else:
+                gaps_reward = -10
+        
+        if (gaps_reward < 0):
+            return gaps_reward
+        else:
+            return diff + gaps_reward
         
     def seed(self, seed=None):
         GameSettings.seed = seed
@@ -46,12 +74,11 @@ class TetrisEnv(gym.Env):
         action_list = list(aa.movements[action])
         
         # Add final hard drop at end of action list
-        action_list.append(5)
+        action_list.append(int(Actions.HARD_DROP))
         
-        #TODO: add piece hold event and soft drop events
+        #TODO: add piece hold event
         
         prev_top_gaps = self._game.get_num_of_top_gaps()
-        prev_full_gaps = self._game.get_num_of_full_gaps()
         prev_piece_id = self._game.piece_manager.current_piece.id 
         
         for i in range(len(action_list)):
@@ -61,11 +88,11 @@ class TetrisEnv(gym.Env):
                 break
         
         # Calculate reward
-        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (self._game.get_num_of_full_gaps() > 0) or (self._game.get_board_height_difference() >= 8):
+        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (self._game.get_num_of_full_gaps() > 0) or (self._game.get_board_height_difference() >= self.MAX_BOARD_OBS_HEIGHT):
             terminated = True    
-            reward = -50
+            reward = self.LOSS_REWARD
         else:
-            reward = self.flat_stack_reward_method(prev_top_gaps, prev_full_gaps, prev_piece_id)
+            reward = self._reward_calculation(prev_top_gaps, prev_piece_id)
         
         # Update the window if it is being rendered
         if self._window_exists():
@@ -73,14 +100,6 @@ class TetrisEnv(gym.Env):
             
         observation = self._get_obs()
         info = self._get_info()
-        
-        # """
-        # Adjust action space after sending new observation:
-        #     Each Piece has its own action space corresponding to all the legal
-        #     and sensible places it can place the current piece.
-        # """
-        # self.action_lists = self._update_action_space(self._game.piece_manager.get_current_piece_id)
-        # self._set_action_space(len(self.action_lists))
         
         return observation, reward, terminated, False, info
         
@@ -105,58 +124,26 @@ class TetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
-    def flat_stack_reward_method(self, prev_top_gaps, prev_full_gaps, previous_piece_id):
-        occupied_spaces = self._game.get_occupied_spaces_on_board()
-        board_height_difference = self._game.get_board_height_difference()
-
-        if board_height_difference < 8:
-            diff = 1
-        else: 
-            diff = -20
-
-        top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
-        full_gaps = self._game.get_num_of_full_gaps() - prev_full_gaps
-        gaps_reward = 1
-    
-        if (full_gaps == 0):
-            if top_gaps <= 0:
-                gaps_reward = (1 - top_gaps)
-            else:
-                gaps_reward = -5 * top_gaps
-                
-            if occupied_spaces == 4 and (previous_piece_id == PieceTypeID.S_PIECE or previous_piece_id == PieceTypeID.Z_PIECE):
-                gaps_reward = 1
-                
-        elif full_gaps > 0:
-            gaps_reward = -20
-        else:
-            raise ValueError(f"Full gaps cannot be negative when calculating reward!: full_gap: {full_gaps}, prev_full_gaps: {prev_full_gaps}")
-        
-        if (gaps_reward < 0):
-            return gaps_reward
-        else:
-            return diff + gaps_reward
-        
     def _set_action_space(self, size):
         self.action_space = spaces.Discrete(size)
         
     def _update_action_space(self, current_piece_id: int) -> list:
-        if current_piece_id == 1:
+        if current_piece_id == int(PieceTypeID.I_PIECE):
             return aa.i_movements
         
-        if current_piece_id == 2:
+        if current_piece_id == int(PieceTypeID.O_PIECE):
             return aa.o_movements
         
-        if current_piece_id == 3 or 4:
+        if current_piece_id == int(PieceTypeID.S_PIECE) or int(PieceTypeID.Z_PIECE):
             return aa.sz_movements
         
-        if current_piece_id == 5 or 6:
+        if current_piece_id == int(PieceTypeID.L_PIECE) or int(PieceTypeID.J_PIECE):
             return aa.lj_movements
         
-        if current_piece_id == 7:
+        if current_piece_id == int(PieceTypeID.T_PIECE):
             return aa.t_movements
         
-        if (current_piece_id < 1) or (current_piece_id > 7):
+        if (current_piece_id <= self.low) or (current_piece_id > self.high):
             raise ValueError(f"Invalid piece id: {current_piece_id}")
         
     def _window_exists(self):
@@ -180,15 +167,15 @@ class TetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        return np.where(self._game.get_minimal_board_state() == 0, 0, 1)
+        reduced_board = self._game.get_minimal_board_state()
+        reduced_board = np.delete(reduced_board, obj=range(0, bc.BOARD_ROWS-self.MAX_BOARD_OBS_HEIGHT), axis=0)
+        
+        return np.where(reduced_board == 0, 0, 1)
     
     def _get_additional_obs(self) -> np.ndarray: 
         return np.array(
             [
-                self._game.piece_manager.get_actions_per_piece(),
-                self._game.piece_manager.get_held_piece_id(), 
-                self._game.piece_manager.get_current_piece_id()  
+                self._game.piece_manager.get_current_piece_id(),
+                self._game.get_next_piece_id()
             ] 
-            
-            + self._game.get_visible_piece_queue_id_list()
         )

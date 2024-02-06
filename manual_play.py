@@ -87,5 +87,4 @@ if __name__ == '__main__':
         
         if done:
             game.reset_game()
-            print(reward)
             reward = 0          

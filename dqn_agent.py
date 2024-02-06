@@ -13,8 +13,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 # Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+
+writer = SummaryWriter()
 
 env = TetrisEnv()
 env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True)
@@ -149,7 +152,7 @@ BATCH_SIZE = 256
 GAMMA = 0.99
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 50000
+EPS_DECAY = 25000
 TAU = 0.005
 LR = 5e-5
 
@@ -166,7 +169,7 @@ target_net.load_state_dict(policy_net.state_dict())
 optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
 memory = ReplayMemory(50000)
 
-start_episode = 19000
+start_episode = 50000
 policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
 
 steps_done = 0
@@ -224,14 +227,22 @@ else:
 
 save_frequency = 5000
 
+total_rewards_list = []
+
+first_run = True
+
 for i_episode in range(num_episodes):
     # Initialize the environment and get its state
     state, info = env.reset()
     
     state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
+    
+    total_reward = 0
+    
     for t in count():
         action = select_action(state)
         observation, reward, terminated, truncated, _ = env.step(action.item())
+        total_reward += reward
         reward = torch.tensor([reward], device=device)
         done = terminated or truncated
 
@@ -258,9 +269,20 @@ for i_episode in range(num_episodes):
         target_net.load_state_dict(target_net_state_dict)
 
         if done:     
-            if i_episode % 5000 == 0:
-                episode_durations.append(t + 1)
-                plot_durations()
+            if i_episode % 250 == 0 and (not first_run):
+                writer.add_scalar('Mean Duration', (sum(episode_durations) / len(episode_durations)), i_episode)
+                writer.add_scalar('Mean Reward', (sum(total_rewards_list) / len(total_rewards_list)), i_episode)
+                
+                episode_durations = []
+                total_rewards_list = []
+                first_run = True
+                # plot_durations()
+                
+            if first_run:
+                first_run = False
+                
+            episode_durations.append(t + 1)
+            total_rewards_list.append(total_reward)
             
             # Save the model every 'save_frequency' episodes
             if i_episode % save_frequency == 0:
@@ -268,6 +290,7 @@ for i_episode in range(num_episodes):
             break
 
 print('Complete')
+writer.close()
 # plot_mean_rewards(show_result=True)
 # plt.ioff()
 # plt.show()
