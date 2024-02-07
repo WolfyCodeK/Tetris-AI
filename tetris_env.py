@@ -7,7 +7,6 @@ from gymnasium import spaces
 from controllers.game_controller import GameController
 from controllers.window import Window
 from game.actions import Actions
-from game.game_settings import GameSettings
 from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc
 from utils.screen_sizes import ScreenSizes
@@ -27,7 +26,7 @@ class TetrisEnv(gym.Env):
         self.PIECE_PUNISH = -10
         self.LINE_CLEAR_REWARD = 25
         
-        self.MAX_BOARD_OBS_HEIGHT = 6
+        self.MAX_BOARD_OBS_HEIGHT = 7
         
         self.unstrict_piece_ids = [int(PieceTypeID.S_PIECE), int(PieceTypeID.Z_PIECE)]
         
@@ -69,12 +68,12 @@ class TetrisEnv(gym.Env):
                 break
         
         # Calculate reward
-        if (self._game.get_board_height_difference() > self.MAX_BOARD_OBS_HEIGHT):
+        if (self._game.get_board_height_difference() >= self.MAX_BOARD_OBS_HEIGHT):
             terminated = True    
             reward = self.GAME_OVER_PUNISH
         else:
             reward = self._overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
-            
+        
         observation = self._get_obs()
         info = self._get_info()
         
@@ -114,9 +113,8 @@ class TetrisEnv(gym.Env):
         reward_gain = self.MAX_BOARD_OBS_HEIGHT - board_height_difference + (lines_cleared * self.LINE_CLEAR_REWARD)
         
         if top_gaps > 0 or full_gaps > 0:
-            reward = self.PIECE_PUNISH * (top_gaps + full_gaps)
-            
-        elif board_height_difference <= self.MAX_BOARD_OBS_HEIGHT:
+            reward = int(((self.PIECE_PUNISH / 2)  * top_gaps) + (self.PIECE_PUNISH * full_gaps))
+        elif board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
             reward = reward_gain
             
         if held_performed:

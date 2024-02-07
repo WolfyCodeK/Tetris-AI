@@ -83,11 +83,11 @@ class GameController():
     def get_max_piece_height_on_board(self):
         return self.piece_manager.board.get_max_height()
     
-    def get_second_min_piece_height_on_board(self):
-        return sorted(self.piece_manager.board.get_min_height_column_list())[1]
+    def get_second_lowest_gap(self):
+        return sorted(self.piece_manager.board.get_first_gap_list())[1]
     
     def get_board_height_difference(self):
-        return self.get_max_piece_height_on_board() - self.get_second_min_piece_height_on_board()
+        return self.get_max_piece_height_on_board() - self.get_second_lowest_gap()
     
     def get_occupied_spaces_on_board(self):
         return self.piece_manager.board.occupied_spaces

@@ -84,6 +84,21 @@ class Board():
     def get_min_height(self):
         return min(self.get_min_height_column_list())
     
+    def get_first_gap_list(self):
+        first_gap_list = []
+        
+        # Horizontal loop
+        for i in range(bc.BOARD_COLUMNS):
+            column = self.board_state[:, i]
+            
+            # Vertical loop
+            for j in range(bc.BOARD_HEIGHT - 1, bc.BOARD_HEIGHT_BUFFER, -1):
+                if (column[j] == 0):
+                    first_gap_list.append((bc.BOARD_HEIGHT - 1) - j)
+                    break
+        
+        return first_gap_list
+    
     def get_num_of_top_gaps(self):
         max_height_list = self.get_max_height_column_list()
         gaps = 0

@@ -15,7 +15,7 @@ for i_episode in range(num_episodes):
     state, info = env.reset()
     
     for t in count():
-        time.sleep(4)
+        time.sleep(1)
         action = env.action_space.sample()
         observation, reward, terminated, truncated, _ = env.step(action.item())
         print("###################################")

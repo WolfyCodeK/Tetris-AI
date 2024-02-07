@@ -1,6 +1,5 @@
 from enum import IntEnum
 
-
 class PieceTypeID(IntEnum): 
     I_PIECE = 1,
     O_PIECE = 2,
