@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
 from utils.screen_sizes import ScreenSizes
+import datetime
 
 import torch
 import torch.nn as nn
@@ -169,7 +170,7 @@ target_net.load_state_dict(policy_net.state_dict())
 optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
 memory = ReplayMemory(50000)
 
-start_episode = 50000
+start_episode = -1
 policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
 
 steps_done = 0

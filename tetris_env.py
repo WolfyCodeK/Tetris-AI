@@ -22,10 +22,14 @@ class TetrisEnv(gym.Env):
         # The indexs relating to the ID's of the tetris pieces i.e. (0-7)
         self.low, self.high = self._game.get_piece_value_bounds()
         
-        # Reward consts
-        self.LOSS_REWARD = -50
+        # Reward constants
+        self.GAME_OVER_REWARD = -50
+        self.LOSS_REWARD = -10
+        self.LINE_CLEAR_REWARD = 25
         
         self.MAX_BOARD_OBS_HEIGHT = 8
+        
+        self.unstrict_piece_ids = [int(PieceTypeID.S_PIECE), int(PieceTypeID.Z_PIECE)]
         
         # All available actions as described in the 'game\agent_actions.py' file
         self.action_space = spaces.Discrete(len(aa.movements))
@@ -39,35 +43,6 @@ class TetrisEnv(gym.Env):
         })
         
         self._window = None
-        
-    def _reward_calculation(self, prev_top_gaps, previous_piece_id) -> int:
-        occupied_spaces = self._game.get_occupied_spaces_on_board()
-        board_height_difference = self._game.get_board_height_difference()
-
-        if board_height_difference < 8:
-            diff = 8 - board_height_difference
-        else: 
-            diff = 0
-
-        # Get the change in top gaps and full gaps
-        top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
-            
-        if occupied_spaces == 4 and (previous_piece_id == PieceTypeID.S_PIECE or previous_piece_id == PieceTypeID.Z_PIECE):
-            gaps_reward = 5
-        else:
-            if top_gaps <= 0:
-                gaps_reward = 5
-            else:
-                gaps_reward = -10
-        
-        if (gaps_reward < 0):
-            return gaps_reward
-        else:
-            return diff + gaps_reward
-        
-    def seed(self, seed=None):
-        GameSettings.seed = seed
-        return GameSettings.seed   
 
     def step(self, action):
         # action_list = list(self.action_lists[action])
@@ -78,8 +53,8 @@ class TetrisEnv(gym.Env):
         
         #TODO: add piece hold event
         
-        prev_top_gaps = self._game.get_num_of_top_gaps()
-        prev_piece_id = self._game.piece_manager.current_piece.id 
+        prev_piece_id = self._game.get_current_piece_id()
+        prev_line_clears = self._game.lines_cleared
         
         for i in range(len(action_list)):
             terminated = self._game.run(action_list[i]) 
@@ -92,7 +67,7 @@ class TetrisEnv(gym.Env):
             terminated = True    
             reward = self.LOSS_REWARD
         else:
-            reward = self._reward_calculation(prev_top_gaps, prev_piece_id)
+            reward = self._overfit_reward_calculation(prev_piece_id, prev_line_clears)
         
         # Update the window if it is being rendered
         if self._window_exists():
@@ -123,6 +98,51 @@ class TetrisEnv(gym.Env):
         
     def close(self):
         print("Enviroment closed.")
+        
+    def _underfit_reward_calculation(self, prev_top_gaps, prev_piece_id) -> int:
+        occupied_spaces = self._game.get_occupied_spaces_on_board()
+        board_height_difference = self._game.get_board_height_difference()
+
+        if board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
+            diff = self.MAX_BOARD_OBS_HEIGHT - board_height_difference
+        else: 
+            diff = 0
+
+        # Get the change in top gaps and full gaps
+        top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
+            
+        if occupied_spaces == bc.PIECE_COMPONENTS and (prev_piece_id == PieceTypeID.S_PIECE or prev_piece_id == PieceTypeID.Z_PIECE):
+            gaps_reward = 5
+        else:
+            if top_gaps <= 0:
+                gaps_reward = 5
+            else:
+                gaps_reward = -10
+        
+        if (gaps_reward < 0):
+            return gaps_reward
+        else:
+            return diff + gaps_reward
+        
+    def _overfit_reward_calculation(self, prev_piece_id, prev_line_clears):
+        occupied_spaces = self._game.get_occupied_spaces_on_board()
+        board_height_difference = self._game.get_board_height_difference()
+        current_piece_id = self._game.get_current_piece_id()
+
+        lines_cleared = self._game.lines_cleared - prev_line_clears
+        reward_gain = self.MAX_BOARD_OBS_HEIGHT - board_height_difference + (lines_cleared * self.LINE_CLEAR_REWARD)
+        
+        reward = self.LOSS_REWARD
+
+        if occupied_spaces == 0 and current_piece_id in self.unstrict_piece_ids:
+            reward = reward_gain
+        
+        if self._game.get_num_of_top_gaps() < 1 and board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
+            reward = reward_gain
+        elif occupied_spaces == bc.PIECE_COMPONENTS and prev_piece_id in self.unstrict_piece_ids:
+            reward = reward_gain
+
+        return reward
         
     def _set_action_space(self, size):
         self.action_space = spaces.Discrete(size)
@@ -175,7 +195,7 @@ class TetrisEnv(gym.Env):
     def _get_additional_obs(self) -> np.ndarray: 
         return np.array(
             [
-                self._game.piece_manager.get_current_piece_id(),
+                self._game.get_current_piece_id(),
                 self._game.get_next_piece_id()
             ] 
         )

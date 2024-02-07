@@ -20,7 +20,7 @@ for i_episode in range(num_episodes):
         observation, reward, terminated, truncated, _ = env.step(action.item())
         print("###################################")
         print(f"Reward:  {reward}")
-        print(f"Observation:  {observation}")
+        print(f"Observation:\n  {observation}")
         done = terminated or truncated
         state = observation
 

@@ -106,6 +106,9 @@ class GameController():
     def get_next_piece_id(self):
         return self.piece_manager.piece_queue.get_next_piece_id()
     
+    def get_current_piece_id(self):
+        return self.piece_manager.get_current_piece_id()
+    
     def get_minimal_board_state(self):
         return self.piece_manager.board.get_minimal_board_state()
     
