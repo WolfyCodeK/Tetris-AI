@@ -22,10 +22,12 @@ class TetrisEnv(gym.Env):
         self.low, self.high = self._game.get_piece_value_bounds()
         
         # Reward constants
-        self.GAME_OVER_PUNISH = -50
-        self.PIECE_PUNISH = -10
+        self.GAME_OVER_PUNISH = -100
+        self.PIECE_PUNISH = 4
         self.LINE_CLEAR_REWARD = 25
+        self.REWARD_MULTIPLYER = 2
         
+        self.MAX_BOARD_DIFF = 6
         self.MAX_BOARD_OBS_HEIGHT = 7
         
         self.unstrict_piece_ids = [int(PieceTypeID.S_PIECE), int(PieceTypeID.Z_PIECE)]
@@ -68,11 +70,18 @@ class TetrisEnv(gym.Env):
                 break
         
         # Calculate reward
-        if (self._game.get_board_height_difference() >= self.MAX_BOARD_OBS_HEIGHT):
+        # if (self._game.get_board_height_difference() > self.MAX_BOARD_DIFF):
+        #     terminated = True    
+        #     reward = self.GAME_OVER_PUNISH
+        # else:
+        #     reward = self._overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
+        
+        # Calculate reward
+        if self._game.get_num_of_full_gaps() > 0 or self._game.get_num_of_top_gaps() > 0:
             terminated = True    
             reward = self.GAME_OVER_PUNISH
         else:
-            reward = self._overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
+            reward = self._perfect_stacking_reward(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
         
         observation = self._get_obs()
         info = self._get_info()
@@ -104,25 +113,50 @@ class TetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
+    def _perfect_stacking_reward(self, held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):      
+        if held_performed:
+            if prev_action == int(Actions.HOLD_PIECE):
+                reward = self.GAME_OVER_PUNISH
+            else:
+                reward = 0
+        else:
+            relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
+            reward = (bc.BOARD_ROWS - relative_piece_height) + (prev_line_clears * self.LINE_CLEAR_REWARD)
+                
+        return reward
+    
     def _overfit_reward_calculation(self, held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):
         board_height_difference = self._game.get_board_height_difference()
+        
+        min_height = self._game.get_second_lowest_gap()
+        
         top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
         full_gaps = self._game.get_num_of_full_gaps() - prev_full_gaps
 
         lines_cleared = self._game.lines_cleared - prev_line_clears
-        reward_gain = self.MAX_BOARD_OBS_HEIGHT - board_height_difference + (lines_cleared * self.LINE_CLEAR_REWARD)
         
-        if top_gaps > 0 or full_gaps > 0:
-            reward = int(((self.PIECE_PUNISH / 2)  * top_gaps) + (self.PIECE_PUNISH * full_gaps))
-        elif board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
-            reward = reward_gain
-            
         if held_performed:
             if prev_action == int(Actions.HOLD_PIECE):
-                reward = self.PIECE_PUNISH
+                reward = self.GAME_OVER_PUNISH
             else:
                 reward = 0
-
+        else:
+            relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
+            reward_gain = ((self.MAX_BOARD_OBS_HEIGHT - relative_piece_height) * self.REWARD_MULTIPLYER) + (lines_cleared * self.LINE_CLEAR_REWARD)  
+            
+            if lines_cleared == 0:
+                if full_gaps > 0:   
+                    reward = -int(2 ** relative_piece_height)
+                elif top_gaps > 0:
+                    reward = -int(2 ** relative_piece_height)
+                elif board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
+                    reward = reward_gain
+            else:
+                reward = reward_gain
+                
+        if reward < self.GAME_OVER_PUNISH:
+            reward = self.GAME_OVER_PUNISH
+                
         return reward
         
     def _window_exists(self):

@@ -12,6 +12,7 @@ class PieceManager():
         self.board = Board()
         
         self.previous_piece = None
+        self.placed_piece_max_height = None
         self.current_piece = None
         self.num_of_pieces_dropped = 0
         self.actions_per_piece = 0
@@ -204,6 +205,7 @@ class PieceManager():
             else:
                 raise PiecePlacementError(x, y, piece.id, id)
             
+        self.placed_piece_max_height = piece.get_max_mino_height()
         self.piece_holder.new_hold_available = True
         self.board.occupied_spaces += bc.PIECE_COMPONENTS
         

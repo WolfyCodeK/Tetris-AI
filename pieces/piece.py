@@ -49,6 +49,17 @@ class Piece(ABC):
         self.y_pos = y
         self.minos = self.convert_to_absolute_shape(self.shape)
     
+    def get_max_mino_height(self):
+        max_height = 0
+        
+        for i in range(len(self.minos)):
+            height = bc.BOARD_HEIGHT - self.minos[i][1]
+            
+            if height > max_height:
+                max_height = height
+                
+        return max_height
+    
     def draw(self, surface):
         for i in range(len(self.minos)):
             win_utils.draw_rect(self.minos[i][0], self.minos[i][1], self.colour, surface)

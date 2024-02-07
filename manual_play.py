@@ -7,24 +7,49 @@ import utils.board_constants as bc
 import numpy as np
 from utils.screen_sizes import ScreenSizes
 
+def _perfect_stacking_reward(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):      
+    if held_performed:
+        if prev_action == int(Actions.HOLD_PIECE):
+            reward = -100
+        else:
+            reward = 0
+    else:
+        relative_piece_height = game.piece_manager.placed_piece_max_height - game.get_min_piece_board_height()
+        reward = (bc.BOARD_ROWS - relative_piece_height) + prev_line_clears
+            
+    return reward
+
 def _overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):
     board_height_difference = game.get_board_height_difference()
+    
+    min_height = game.get_second_lowest_gap()
+    
     top_gaps = game.get_num_of_top_gaps() - prev_top_gaps
     full_gaps = game.get_num_of_full_gaps() - prev_full_gaps
 
     lines_cleared = game.lines_cleared - prev_line_clears
-    reward_gain = 7 - board_height_difference + (lines_cleared * 25)
     
-    if top_gaps > 0 or full_gaps > 0:
-        reward = int(((-10 / 2)  * top_gaps) + (-10 * full_gaps))
-    elif board_height_difference < 7:
-        reward = reward_gain
-        
     if held_performed:
         if prev_action == int(Actions.HOLD_PIECE):
-            reward = -10
+            reward = -100
         else:
             reward = 0
+    else:
+        relative_piece_height = game.piece_manager.placed_piece_max_height - game.get_min_piece_board_height()
+        reward_gain = ((7 - relative_piece_height) * 2) + (lines_cleared * 25)  
+        
+        if lines_cleared == 0:
+            if full_gaps > 0:   
+                reward = -int((full_gaps * 4) ** (relative_piece_height))
+            elif top_gaps > 0:
+                reward = -int((top_gaps * 2) ** (relative_piece_height))
+            elif board_height_difference < 7:
+                reward = reward_gain
+        else:
+            reward = reward_gain
+
+    if reward < -100:
+        reward = -100
 
     return reward
 
@@ -93,18 +118,16 @@ if __name__ == '__main__':
         
         if dropped_piece or held_performed:
             # Calculate reward
-            if (game.get_board_height_difference() >= 7):
+            if (game.get_num_of_full_gaps() > 0 or game.get_num_of_top_gaps() > 0):
                 done = True    
-                reward = -50
+                reward = -100
             else:
-                reward = _overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
+                reward = _perfect_stacking_reward(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
                         
             observation = _get_obs()
             
-            print(game.get_second_lowest_gap())
-            print(game.piece_manager.board.get_first_gap_list())
             print(f"Reward: {reward}")
-            print(f"Observation:\n{observation}")
+            # print(f"Observation:\n{observation}")
         
         for event in event_list:     
             if event.type == pygame.KEYDOWN:
