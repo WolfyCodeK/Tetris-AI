@@ -26,6 +26,7 @@ class GameController():
         self.last_fps_recorded = 0
         
         self.lines_cleared = 0
+        self.previous_action = None
         
         # Scores
         self.score = 0
@@ -204,6 +205,7 @@ class GameController():
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
             
+        self.previous_action = action
         self.piece_manager.actions_per_piece += 1
     
     def _update_fps_counter(self):

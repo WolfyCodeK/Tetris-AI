@@ -23,11 +23,11 @@ class TetrisEnv(gym.Env):
         self.low, self.high = self._game.get_piece_value_bounds()
         
         # Reward constants
-        self.GAME_OVER_REWARD = -50
-        self.LOSS_REWARD = -10
+        self.GAME_OVER_PUNISH = -50
+        self.PIECE_PUNISH = -10
         self.LINE_CLEAR_REWARD = 25
         
-        self.MAX_BOARD_OBS_HEIGHT = 8
+        self.MAX_BOARD_OBS_HEIGHT = 6
         
         self.unstrict_piece_ids = [int(PieceTypeID.S_PIECE), int(PieceTypeID.Z_PIECE)]
         
@@ -48,13 +48,19 @@ class TetrisEnv(gym.Env):
         # action_list = list(self.action_lists[action])
         action_list = list(aa.movements[action])
         
-        # Add final hard drop at end of action list
-        action_list.append(int(Actions.HARD_DROP))
+        # Add final hard drop at end of action list if not holding
+        if action_list[0] != int(Actions.HOLD_PIECE):
+            held_performed = False
+            action_list.append(int(Actions.HARD_DROP))
+        else:
+            held_performed = True   
         
         #TODO: add piece hold event
         
-        prev_piece_id = self._game.get_current_piece_id()
+        prev_action = self._game.previous_action
         prev_line_clears = self._game.lines_cleared
+        prev_top_gaps = self._game.get_num_of_top_gaps()
+        prev_full_gaps = self._game.get_num_of_full_gaps()
         
         for i in range(len(action_list)):
             terminated = self._game.run(action_list[i]) 
@@ -63,18 +69,18 @@ class TetrisEnv(gym.Env):
                 break
         
         # Calculate reward
-        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (self._game.get_num_of_full_gaps() > 0) or (self._game.get_board_height_difference() >= self.MAX_BOARD_OBS_HEIGHT):
+        if (self._game.get_board_height_difference() > self.MAX_BOARD_OBS_HEIGHT):
             terminated = True    
-            reward = self.LOSS_REWARD
+            reward = self.GAME_OVER_PUNISH
         else:
-            reward = self._overfit_reward_calculation(prev_piece_id, prev_line_clears)
+            reward = self._overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
+            
+        observation = self._get_obs()
+        info = self._get_info()
         
         # Update the window if it is being rendered
         if self._window_exists():
             self._update_window()
-            
-        observation = self._get_obs()
-        info = self._get_info()
         
         return observation, reward, terminated, False, info
         
@@ -99,72 +105,27 @@ class TetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
-    def _underfit_reward_calculation(self, prev_top_gaps, prev_piece_id) -> int:
-        occupied_spaces = self._game.get_occupied_spaces_on_board()
+    def _overfit_reward_calculation(self, held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):
         board_height_difference = self._game.get_board_height_difference()
-
-        if board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
-            diff = self.MAX_BOARD_OBS_HEIGHT - board_height_difference
-        else: 
-            diff = 0
-
-        # Get the change in top gaps and full gaps
         top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
-            
-        if occupied_spaces == bc.PIECE_COMPONENTS and (prev_piece_id == PieceTypeID.S_PIECE or prev_piece_id == PieceTypeID.Z_PIECE):
-            gaps_reward = 5
-        else:
-            if top_gaps <= 0:
-                gaps_reward = 5
-            else:
-                gaps_reward = -10
-        
-        if (gaps_reward < 0):
-            return gaps_reward
-        else:
-            return diff + gaps_reward
-        
-    def _overfit_reward_calculation(self, prev_piece_id, prev_line_clears):
-        occupied_spaces = self._game.get_occupied_spaces_on_board()
-        board_height_difference = self._game.get_board_height_difference()
-        current_piece_id = self._game.get_current_piece_id()
+        full_gaps = self._game.get_num_of_full_gaps() - prev_full_gaps
 
         lines_cleared = self._game.lines_cleared - prev_line_clears
         reward_gain = self.MAX_BOARD_OBS_HEIGHT - board_height_difference + (lines_cleared * self.LINE_CLEAR_REWARD)
         
-        reward = self.LOSS_REWARD
-
-        if occupied_spaces == 0 and current_piece_id in self.unstrict_piece_ids:
+        if top_gaps > 0 or full_gaps > 0:
+            reward = self.PIECE_PUNISH * (top_gaps + full_gaps)
+            
+        elif board_height_difference <= self.MAX_BOARD_OBS_HEIGHT:
             reward = reward_gain
-        
-        if self._game.get_num_of_top_gaps() < 1 and board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
-            reward = reward_gain
-        elif occupied_spaces == bc.PIECE_COMPONENTS and prev_piece_id in self.unstrict_piece_ids:
-            reward = reward_gain
+            
+        if held_performed:
+            if prev_action == int(Actions.HOLD_PIECE):
+                reward = self.PIECE_PUNISH
+            else:
+                reward = 0
 
         return reward
-        
-    def _set_action_space(self, size):
-        self.action_space = spaces.Discrete(size)
-        
-    def _update_action_space(self, current_piece_id: int) -> list:
-        if current_piece_id == int(PieceTypeID.I_PIECE):
-            return aa.i_movements
-        
-        if current_piece_id == int(PieceTypeID.O_PIECE):
-            return aa.o_movements
-        
-        if current_piece_id == int(PieceTypeID.S_PIECE) or int(PieceTypeID.Z_PIECE):
-            return aa.sz_movements
-        
-        if current_piece_id == int(PieceTypeID.L_PIECE) or int(PieceTypeID.J_PIECE):
-            return aa.lj_movements
-        
-        if current_piece_id == int(PieceTypeID.T_PIECE):
-            return aa.t_movements
-        
-        if (current_piece_id <= self.low) or (current_piece_id > self.high):
-            raise ValueError(f"Invalid piece id: {current_piece_id}")
         
     def _window_exists(self):
         return self._window is not None

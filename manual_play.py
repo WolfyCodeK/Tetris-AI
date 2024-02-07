@@ -2,39 +2,44 @@ import pygame
 from controllers.game_controller import GameController
 from controllers.window import Window
 from pieces.piece_type_id import PieceTypeID
+import utils.board_constants as bc
+import numpy as np
 from utils.screen_sizes import ScreenSizes
 
-def flat_stack_reward_method(prev_top_gaps, prev_full_gaps, previous_piece_id):
-    occupied_spaces = game.get_occupied_spaces_on_board()
+def _overfit_reward_calculation(held_performed, prev_top_gaps, prev_line_clears):
     board_height_difference = game.get_board_height_difference()
-
-    if board_height_difference < 8:
-        diff = 1
-    else: 
-        diff = -20
-
     top_gaps = game.get_num_of_top_gaps() - prev_top_gaps
-    full_gaps = game.get_num_of_full_gaps() - prev_full_gaps
-    gaps_reward = 1
 
-    if (full_gaps == 0):
-        if top_gaps <= 0:
-            gaps_reward = (1 - top_gaps)
-        else:
-            gaps_reward = -5 * top_gaps
-            
-        if occupied_spaces == 4 and (previous_piece_id == PieceTypeID.S_PIECE or previous_piece_id == PieceTypeID.Z_PIECE):
-            gaps_reward = 1
-            
-    elif full_gaps > 0:
-        gaps_reward = -20
-    else:
-        raise ValueError(f"Full gaps cannot be negative when calculating reward!: full_gap: {full_gaps}, prev_full_gaps: {prev_full_gaps}")
+    lines_cleared = game.lines_cleared - prev_line_clears
+    reward_gain = 6 - board_height_difference + (lines_cleared * 25)
     
-    if (gaps_reward < 0):
-        return gaps_reward
-    else:
-        return diff + gaps_reward
+    if top_gaps > 0:
+        reward = -10 * top_gaps
+        
+    elif board_height_difference <= 6:
+        reward = reward_gain
+        
+    if held_performed:
+        reward = 0
+
+    return reward
+
+def _get_obs():
+    return {"board": _get_board_obs(), "additional": _get_additional_obs()}
+
+def _get_board_obs() -> np.ndarray:
+    reduced_board = game.get_minimal_board_state()
+    reduced_board = np.delete(reduced_board, obj=range(0, bc.BOARD_ROWS-6), axis=0)
+    
+    return np.where(reduced_board == 0, 0, 1)
+
+def _get_additional_obs() -> np.ndarray: 
+    return np.array(
+        [
+            game.get_current_piece_id(),
+            game.get_next_piece_id()
+        ] 
+    )
 
 if __name__ == '__main__':    
     game = GameController()
@@ -64,26 +69,41 @@ if __name__ == '__main__':
             
         event_list = pygame.event.get()
         
+        prev_line_clears = game.lines_cleared
         prev_top_gaps = game.get_num_of_top_gaps()
-        prev_full_gaps = game.get_num_of_full_gaps()
-        prev_piece_id = game.piece_manager.current_piece.id 
         
         game.take_player_inputs(event_list)
         done = game._run_logic()
         
-        # Calculate reward
-        if (not game.piece_manager.board.check_all_previous_rows_filled()) or (game.get_num_of_full_gaps() > 0) or (game.get_board_height_difference() >= 8):
-            done = True    
-            reward = -50
-        else:
-            reward = flat_stack_reward_method(prev_top_gaps, prev_full_gaps, prev_piece_id)
+        held_performed = False
+        dropped_piece = False
         
-        window.draw()
-
+        for event in event_list:          
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    dropped_piece = True
+                if event.key == pygame.K_LSHIFT:
+                    held_performed = True
+        
+        if dropped_piece or held_performed:
+            # Calculate reward
+            if (game.get_board_height_difference() >= 6):
+                done = True    
+                reward = -50
+            else:
+                reward = _overfit_reward_calculation(held_performed, prev_top_gaps, prev_line_clears)
+                        
+            observation = _get_obs()
+            
+            print(f"Reward: {reward}")
+            print(f"Observation:\n{observation}")
+        
         for event in event_list:     
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     done = True
+                    
+        window.draw()
         
         if done:
             game.reset_game()
