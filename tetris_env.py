@@ -39,7 +39,7 @@ class TetrisEnv(gym.Env):
         Dictionary containing the tetris board information and any additional information about the game that the agent needs to know. e.g. the held piece, the pieces in the queue
         """
         self.observation_space = spaces.Dict({
-            "board": spaces.Box(self.low, self.high, shape=(self.MAX_BOARD_OBS_HEIGHT, bc.BOARD_COLUMNS), dtype=np.int8),
+            "board": spaces.Box(self.low, self.high, shape=(bc.BOARD_COLUMNS,), dtype=np.int8),
             "additional": spaces.Box(self.low, self.high, shape=(len(self._get_additional_obs()),), dtype=np.int16)
         })
         
@@ -180,14 +180,18 @@ class TetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        reduced_board = self._game.get_minimal_board_state()
-        reduced_board = np.delete(reduced_board, obj=range(0, bc.BOARD_ROWS-self.MAX_BOARD_OBS_HEIGHT), axis=0)
-        
-        return np.where(reduced_board == 0, 0, 1)
+        return np.array(self._game.get_board_peaks_list())
     
     def _get_additional_obs(self) -> np.ndarray: 
+        gaps = self._game.get_num_of_full_gaps() + self._game.get_num_of_top_gaps()
+        
+        if gaps > 0:
+            gaps = 1
+        
         return np.array(
             [
+                gaps,
+                self._game.piece_manager.get_held_piece_id(),
                 self._game.get_current_piece_id(),
                 self._game.get_next_piece_id()
             ] 
