@@ -7,13 +7,14 @@ import utils.window_utils as win_utils
 from controllers.game_controller import GameController
 
 class Window():
-    def __init__(self, game: GameController, screen_size: int, show_fps: bool = True, show_score: bool = True) -> None:
+    def __init__(self, game: GameController, screen_size: int, show_fps: bool = True, show_score: bool = True, show_queue = True) -> None:
         # Set window position
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(900, 400)
         
         # Configure window settings
         GameSettings.show_fps = show_fps
         GameSettings.show_score = show_score
+        GameSettings.show_queue = show_queue
         GameSettings.set_screen_size(screen_size)
         
         # Set Icon and title
@@ -63,7 +64,7 @@ class Window():
         win_utils.draw_grids(self.board_surface)
 
         # Draw all pieces
-        self.game.draw_pieces(self.board_surface)
+        self.game.draw_pieces(self.board_surface, GameSettings.show_queue)
 
         # Draw fps counter
         if GameSettings.show_fps:

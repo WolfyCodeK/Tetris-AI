@@ -1,4 +1,5 @@
 import random
+from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc
 import utils.window_utils as win_utils
 from game.game_settings import GameSettings
@@ -10,7 +11,11 @@ class PieceQueue():
     def __init__(self, piece_list: list[Piece]) -> None:
         self.PIECE_LIST = piece_list
         self.NUM_OF_PIECES = len(self.PIECE_LIST)
-        self.LIST_OF_PIECE_NUMBERS = list(range(0, self.NUM_OF_PIECES))
+        self.LIST_OF_PIECE_NUMBERS = list(range(self.NUM_OF_PIECES))
+        self.NONE_STARTING_PIECE_IDS = [(int(pid) - 1) for pid in [PieceTypeID.O_PIECE, PieceTypeID.Z_PIECE, PieceTypeID.S_PIECE]]
+        """
+        (int(pid) - 1), this is because LIST_OF_PIECE_NUMBERS starts from 0, whereas the piece ids start from 1
+        """ 
         
         self.NUM_OF_PIECES_TO_SHOW = GameSettings.num_of_queue_to_show
         self.first_bag_numbers = self._create_random_piece_bag()
@@ -47,6 +52,9 @@ class PieceQueue():
         random.seed(GameSettings.seed)
         random.shuffle(bag)
         
+        while any([bag[0] == int(pid) for pid in self.NONE_STARTING_PIECE_IDS]) and any([bag[1] == int(pid) for pid in self.NONE_STARTING_PIECE_IDS]):
+            random.shuffle(bag)
+        
         return bag
     
     def get_next_piece(self) -> Piece:
@@ -67,6 +75,14 @@ class PieceQueue():
         queue_copy.reverse()
         
         return int(queue_copy.pop().id)
+    
+    def get_truncated_piece_queue(self, first_n_pieces) -> list:
+        queue_id_list = [int(piece.id) for piece in self.queue]
+        
+        for _ in range(self.NUM_OF_PIECES - first_n_pieces):
+            queue_id_list.pop()
+            
+        return queue_id_list
         
     def _add_piece_to_queue(self) -> None:
         if (len(self.second_bag_numbers) <= 0):

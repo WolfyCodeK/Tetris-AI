@@ -58,7 +58,7 @@ class GameController():
         self._perform_action(action)
         return self._run_logic()    
     
-    def draw_pieces(self, surface):
+    def draw_pieces(self, surface, draw_queue: bool = True):
         """Draws the peices to the parsed surface.
 
         Args:
@@ -68,7 +68,9 @@ class GameController():
         self.piece_manager.draw_ghost_pieces(surface)
         self.piece_manager.draw_current_piece(surface)
         self.piece_manager.draw_held_piece(surface)
-        self.piece_manager.draw_queued_pieces(surface)
+        
+        if draw_queue:
+            self.piece_manager.draw_queued_pieces(surface)
         
     def reset_game(self):
         self.piece_manager.reset()
@@ -86,8 +88,17 @@ class GameController():
     def get_second_lowest_gap(self):
         return sorted(self.piece_manager.board.get_first_gap_list())[1]
     
+    def get_first_gap_list(self):
+        return self.piece_manager.board.get_first_gap_list()
+    
     def get_min_piece_board_height(self):
         return self.piece_manager.board.get_min_height()
+    
+    def get_board_height_difference_with_well(self):
+        gap_list = self.get_first_gap_list().copy()
+        gap_list.pop()
+        
+        return self.get_max_piece_height_on_board() - sorted(gap_list)[0]
     
     def get_board_height_difference(self):
         return self.get_max_piece_height_on_board() - self.get_second_lowest_gap()
@@ -104,8 +115,8 @@ class GameController():
     def get_num_of_full_gaps(self):
         return self.piece_manager.board.get_num_of_full_gaps()
     
-    def get_visible_piece_queue_id_list(self):
-        return self.piece_manager.piece_queue.get_visible_piece_queue_id_list()
+    def get_truncated_piece_queue(self, first_n_pieces):
+        return self.piece_manager.piece_queue.get_truncated_piece_queue(first_n_pieces)
     
     def get_next_piece_id(self):
         return self.piece_manager.piece_queue.get_next_piece_id()
@@ -118,6 +129,12 @@ class GameController():
     
     def get_piece_value_bounds(self):
         return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
+    
+    def is_well_valid(self):
+        return self.piece_manager.board.is_well_valid()
+    
+    def is_tetris_ready(self):
+        return self.piece_manager.board.is_tetris_ready()
         
     def _increment_frames_passed(self):
         """Increase number of frames that have passed by 1.

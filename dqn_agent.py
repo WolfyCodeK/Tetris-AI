@@ -21,7 +21,7 @@ from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter()
 
 env = TetrisEnv()
-env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True)
+env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
@@ -71,33 +71,6 @@ def select_action(state):
             return policy_net(state).max(1).indices.view(1, 1)
     else:
         return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long)
-
-episode_durations = []
-
-def plot_durations(show_result=False):
-    plt.figure(1)
-    durations_t = torch.tensor(episode_durations, dtype=torch.float)
-    if show_result:
-        plt.title('Result')
-    else:
-        plt.clf()
-        plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Duration')
-    plt.plot(durations_t.numpy())
-    # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
-        means = torch.cat((torch.zeros(99), means))
-        plt.plot(means.numpy())
-
-    plt.pause(0.001)  # pause a bit so that plots are updated
-    if is_ipython:
-        if not show_result:
-            display.display(plt.gcf())
-            display.clear_output(wait=True)
-        else:
-            display.display(plt.gcf())
             
 # Save model function
 def save_model(model, optimizer, episode):
@@ -153,9 +126,9 @@ BATCH_SIZE = 128
 GAMMA = 0.99
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 25000
+EPS_DECAY = 50000
 TAU = 0.005
-LR = 5e-5
+LR = 1e-5
 
 # Get number of actions from gym action space
 n_actions = env.action_space.n
@@ -168,7 +141,7 @@ target_net = DQN(n_observations, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 
 optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-memory = ReplayMemory(25000)
+memory = ReplayMemory(10000)
 
 start_episode = -1
 policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
@@ -229,6 +202,8 @@ else:
 save_frequency = 5000
 
 total_rewards_list = []
+episode_durations = []
+tick_speed_list = []
 
 first_run = True
 
@@ -270,20 +245,22 @@ for i_episode in range(num_episodes):
         target_net.load_state_dict(target_net_state_dict)
 
         if done:     
+            episode_durations.append(t + 1)
+            total_rewards_list.append(total_reward)
+            tick_speed_list.append(env.tick_speed)
+            
             if i_episode % 250 == 0 and (not first_run):
                 writer.add_scalar('Mean Duration', (sum(episode_durations) / len(episode_durations)), i_episode)
                 writer.add_scalar('Mean Reward', (sum(total_rewards_list) / len(total_rewards_list)), i_episode)
+                writer.add_scalar('Tick Speed', (sum(tick_speed_list) / len(tick_speed_list)), i_episode)
                 
                 episode_durations = []
                 total_rewards_list = []
+                tick_speed_list = []
                 first_run = True
-                # plot_durations()
                 
             if first_run:
                 first_run = False
-                
-            episode_durations.append(t + 1)
-            total_rewards_list.append(total_reward)
             
             # Save the model every 'save_frequency' episodes
             if i_episode % save_frequency == 0:
@@ -292,6 +269,3 @@ for i_episode in range(num_episodes):
 
 print('Complete')
 writer.close()
-# plot_mean_rewards(show_result=True)
-# plt.ioff()
-# plt.show()

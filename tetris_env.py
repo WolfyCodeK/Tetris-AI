@@ -24,13 +24,13 @@ class TetrisEnv(gym.Env):
         # Reward constants
         self.GAME_OVER_PUNISH = -100
         self.PIECE_PUNISH = 4
-        self.LINE_CLEAR_REWARD = 25
+        self.LINE_CLEAR_REWARD = 15
         self.REWARD_MULTIPLYER = 2
         
-        self.MAX_BOARD_DIFF = 6
-        self.MAX_BOARD_OBS_HEIGHT = 7
+        self.MAX_BOARD_DIFF = 7
         
-        self.unstrict_piece_ids = [int(PieceTypeID.S_PIECE), int(PieceTypeID.Z_PIECE)]
+        # The first x number of pieces in the queue the agent can observe
+        self.QUEUE_OBS_NUM = 5
         
         # All available actions as described in the 'game\agent_actions.py' file
         self.action_space = spaces.Discrete(len(aa.movements))
@@ -44,11 +44,15 @@ class TetrisEnv(gym.Env):
         })
         
         self._window = None
+        self.tick_speed = 0
 
     def step(self, action):
-        # action_list = list(self.action_lists[action])
-        action_list = list(aa.movements[action])
+        prev_action = self._game.previous_action
+        prev_lines_cleared = self._game.lines_cleared
+        was_tetris_ready = self._game.is_tetris_ready()
         
+        action_list = list(aa.movements[action])
+            
         # Add final hard drop at end of action list if not holding
         if action_list[0] != int(Actions.HOLD_PIECE):
             held_performed = False
@@ -56,33 +60,43 @@ class TetrisEnv(gym.Env):
         else:
             held_performed = True   
         
-        #TODO: add piece hold event
-        
-        prev_action = self._game.previous_action
-        prev_line_clears = self._game.lines_cleared
-        prev_top_gaps = self._game.get_num_of_top_gaps()
-        prev_full_gaps = self._game.get_num_of_full_gaps()
-        
+        # Perform all actions in action list
         for i in range(len(action_list)):
             terminated = self._game.run(action_list[i]) 
             
             if terminated:
                 break
         
-        # Calculate reward
-        # if (self._game.get_board_height_difference() > self.MAX_BOARD_DIFF):
-        #     terminated = True    
-        #     reward = self.GAME_OVER_PUNISH
-        # else:
-        #     reward = self._overfit_reward_calculation(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
+        # Check how many lines were cleared after performing actions
+        lines_cleared = self._game.lines_cleared - prev_lines_cleared
         
-        # Calculate reward
+        ###############################
+        # Strict game over conditions #
+        ###############################
+        
+        # Terminate if tetris ready and able to tetris but didn't
+        if was_tetris_ready and self._game.is_tetris_ready():
+            if (self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE) or self._game.piece_manager.get_held_piece_id() == int(PieceTypeID.I_PIECE)):
+                terminated = True    
+
+        # Terminate if gap created on board
         if self._game.get_num_of_full_gaps() > 0 or self._game.get_num_of_top_gaps() > 0:
+            terminated = True
+        
+        # Terminate if height difference violated of board well incorrectly filled
+        if self._game.get_board_height_difference_with_well() > self.MAX_BOARD_DIFF or (not self._game.is_well_valid()):
             terminated = True    
+
+        ####################
+        # Calculate reward #
+        ####################
+        
+        if terminated:
             reward = self.GAME_OVER_PUNISH
         else:
-            reward = self._perfect_stacking_reward(held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears)
+            reward = self._perfect_stacking_reward(held_performed, prev_action, lines_cleared)
         
+        # Get observations 
         observation = self._get_obs()
         info = self._get_info()
         
@@ -102,61 +116,30 @@ class TetrisEnv(gym.Env):
         
         return observation, info
     
-    def render(self, screen_size: ScreenSizes|int=ScreenSizes.MEDIUM, show_fps: bool=False, show_score: bool=False):
+    def render(self, screen_size: ScreenSizes|int = ScreenSizes.MEDIUM, show_fps: bool = False, show_score: bool = False, show_queue: bool = True):
         # Initial pygame setup
         pygame.display.init()
         pygame.font.init()
         
         # Create window Object
-        self._window = Window(self._game, screen_size, show_fps, show_score)
+        self._window = Window(self._game, screen_size, show_fps, show_score, show_queue)
         
     def close(self):
         print("Enviroment closed.")
         
-    def _perfect_stacking_reward(self, held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):      
-        if held_performed:
-            if prev_action == int(Actions.HOLD_PIECE):
-                reward = self.GAME_OVER_PUNISH
-            else:
-                reward = 0
-        else:
-            relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
-            reward = (bc.BOARD_ROWS - relative_piece_height) + (prev_line_clears * self.LINE_CLEAR_REWARD)
-                
-        return reward
-    
-    def _overfit_reward_calculation(self, held_performed, prev_action, prev_full_gaps, prev_top_gaps, prev_line_clears):
-        board_height_difference = self._game.get_board_height_difference()
-        
-        min_height = self._game.get_second_lowest_gap()
-        
-        top_gaps = self._game.get_num_of_top_gaps() - prev_top_gaps
-        full_gaps = self._game.get_num_of_full_gaps() - prev_full_gaps
-
-        lines_cleared = self._game.lines_cleared - prev_line_clears
-        
-        if held_performed:
-            if prev_action == int(Actions.HOLD_PIECE):
-                reward = self.GAME_OVER_PUNISH
-            else:
-                reward = 0
-        else:
-            relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
-            reward_gain = ((self.MAX_BOARD_OBS_HEIGHT - relative_piece_height) * self.REWARD_MULTIPLYER) + (lines_cleared * self.LINE_CLEAR_REWARD)  
-            
-            if lines_cleared == 0:
-                if full_gaps > 0:   
-                    reward = -int(2 ** relative_piece_height)
-                elif top_gaps > 0:
-                    reward = -int(2 ** relative_piece_height)
-                elif board_height_difference < self.MAX_BOARD_OBS_HEIGHT:
-                    reward = reward_gain
-            else:
-                reward = reward_gain
-                
-        if reward < self.GAME_OVER_PUNISH:
+    def _perfect_stacking_reward(self, held_performed, prev_action, lines_cleared):      
+        if held_performed and prev_action == int(Actions.HOLD_PIECE):
             reward = self.GAME_OVER_PUNISH
+        else:
+            relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
+            
+            if lines_cleared > 0:
+                lines_cleared_reward = self.REWARD_MULTIPLYER ** lines_cleared * self.LINE_CLEAR_REWARD
+            else:
+                lines_cleared_reward = 0
                 
+            reward = (bc.BOARD_ROWS - relative_piece_height) + lines_cleared_reward     
+
         return reward
         
     def _window_exists(self):
@@ -172,6 +155,7 @@ class TetrisEnv(gym.Env):
         else:
             if (pygame.display.get_active()):
                 self._window.draw()
+                self.tick_speed = self._game.frames
 
     def _get_obs(self):
         return {"board": self._get_board_obs(), "additional": self._get_additional_obs()}
@@ -192,7 +176,7 @@ class TetrisEnv(gym.Env):
             [
                 gaps,
                 self._game.piece_manager.get_held_piece_id(),
-                self._game.get_current_piece_id(),
-                self._game.get_next_piece_id()
-            ] 
+                self._game.get_current_piece_id()
+                
+            ] + self._game.get_truncated_piece_queue(self.QUEUE_OBS_NUM)
         )

@@ -1,4 +1,5 @@
 import numpy as np
+from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc
 
 import utils.window_utils as win_utils
@@ -8,7 +9,7 @@ from pieces.three_wide_pieces import (JPiece, LPiece, SPiece, TPiece, ZPiece)
 
 class Board():
     # All the available pieces to the piece controller
-    PIECE_LIST = [ZPiece, SPiece, JPiece, LPiece, TPiece, IPiece, OPiece]
+    PIECE_LIST = [IPiece, OPiece, ZPiece, SPiece, JPiece, LPiece, TPiece]
     
     EMPTY_PIECE_ID = 0
     
@@ -225,3 +226,26 @@ class Board():
         min_board_state = np.delete(min_board_state, range(0, bc.BOARD_HEIGHT_BUFFER), axis=0)
         
         return min_board_state
+    
+    def is_tetris_ready(self):
+        max_list = self.get_max_height_column_list().copy()
+        max_list.pop()
+        
+        return not any([height < 4 for height in max_list])
+    
+    def is_well_valid(self):
+        valid = True
+        
+        max_list = self.get_max_height_column_list().copy()
+        max_list.pop()
+        
+        # Vertical loop
+        for i in bc.BOARD_HEIGHT_RANGE_INCR:
+            last_column_id = self.board_state[i, bc.BOARD_COLUMNS - 1]
+            
+            if last_column_id != PieceTypeID.I_PIECE and last_column_id != PieceTypeID.EMPTY:
+                valid = False
+            elif last_column_id == PieceTypeID.I_PIECE and not self.is_tetris_ready(): 
+                valid = False
+            
+        return valid

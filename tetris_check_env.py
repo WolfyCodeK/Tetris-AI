@@ -6,7 +6,7 @@ from utils.screen_sizes import ScreenSizes
 # Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
 env = TetrisEnv()
-env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True)
+env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=True)
     
 num_episodes = 500_000
 
