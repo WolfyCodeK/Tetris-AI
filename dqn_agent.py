@@ -128,7 +128,7 @@ EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 50000
 TAU = 0.005
-LR = 1e-5
+LR = 1e-3
 
 # Get number of actions from gym action space
 n_actions = env.action_space.n

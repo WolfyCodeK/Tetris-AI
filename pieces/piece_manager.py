@@ -12,7 +12,7 @@ class PieceManager():
         self.board = Board()
         
         self.previous_piece = None
-        self.placed_piece_max_height = None
+        self.placed_piece_max_height = 0
         self.current_piece = None
         self.num_of_pieces_dropped = 0
         self.actions_per_piece = 0

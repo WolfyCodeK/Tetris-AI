@@ -65,6 +65,7 @@ class TetrisEnv(gym.Env):
             terminated = self._game.run(action_list[i]) 
             
             if terminated:
+                reward = self.GAME_OVER_PUNISH
                 break
         
         # Check how many lines were cleared after performing actions
@@ -78,22 +79,36 @@ class TetrisEnv(gym.Env):
         if was_tetris_ready and self._game.is_tetris_ready():
             if (self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE) or self._game.piece_manager.get_held_piece_id() == int(PieceTypeID.I_PIECE)):
                 terminated = True    
+                reward = self.GAME_OVER_PUNISH
+                print(f"Failed Tetris: {action_list}")
 
         # Terminate if gap created on board
         if self._game.get_num_of_full_gaps() > 0 or self._game.get_num_of_top_gaps() > 0:
             terminated = True
+            reward = self.GAME_OVER_PUNISH
         
         # Terminate if height difference violated of board well incorrectly filled
-        if self._game.get_board_height_difference_with_well() > self.MAX_BOARD_DIFF or (not self._game.is_well_valid()):
-            terminated = True    
+        if self._game.get_board_height_difference_with_well() > self.MAX_BOARD_DIFF:
+            terminated = True
+            reward = self.GAME_OVER_PUNISH    
+            
+        if not self._game.is_well_valid():
+            terminated = True
+            
+            if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
+                reward = 0
+            else:
+                reward = self.GAME_OVER_PUNISH    
+                
+        if held_performed and prev_action == int(Actions.HOLD_PIECE):
+            terminated = True
+            reward = self.GAME_OVER_PUNISH
 
         ####################
         # Calculate reward #
         ####################
         
-        if terminated:
-            reward = self.GAME_OVER_PUNISH
-        else:
+        if not terminated:
             reward = self._perfect_stacking_reward(held_performed, prev_action, lines_cleared)
         
         # Get observations 
@@ -128,17 +143,17 @@ class TetrisEnv(gym.Env):
         print("Enviroment closed.")
         
     def _perfect_stacking_reward(self, held_performed, prev_action, lines_cleared):      
-        if held_performed and prev_action == int(Actions.HOLD_PIECE):
-            reward = self.GAME_OVER_PUNISH
-        else:
-            relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
+        relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
+        
+        if lines_cleared > 0:
+            lines_cleared_reward = self.REWARD_MULTIPLYER ** lines_cleared * self.LINE_CLEAR_REWARD
             
-            if lines_cleared > 0:
-                lines_cleared_reward = self.REWARD_MULTIPLYER ** lines_cleared * self.LINE_CLEAR_REWARD
-            else:
-                lines_cleared_reward = 0
-                
-            reward = (bc.BOARD_ROWS - relative_piece_height) + lines_cleared_reward     
+            if lines_cleared == 4:
+                print("Tetris!")
+        else:
+            lines_cleared_reward = 0
+            
+        reward = (bc.BOARD_ROWS - relative_piece_height) + lines_cleared_reward     
 
         return reward
         
@@ -152,8 +167,7 @@ class TetrisEnv(gym.Env):
             # Delete window object
             self._window = None
             print("Stopped rendering window.")
-        else:
-            if (pygame.display.get_active()):
+        elif (pygame.display.get_active()):
                 self._window.draw()
                 self.tick_speed = self._game.frames
 
