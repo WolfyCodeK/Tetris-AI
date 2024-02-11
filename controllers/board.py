@@ -249,3 +249,10 @@ class Board():
                 valid = False
             
         return valid
+    
+    def does_I_dependency_exist(self):
+        ...
+        
+    def does_none_central_I_piece_exist(self):
+        ...
+        

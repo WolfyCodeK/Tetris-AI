@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pygame
 
@@ -46,7 +47,7 @@ class TetrisEnv(gym.Env):
         self._window = None
         self.tick_speed = 0
 
-    def step(self, action):
+    def step(self, action, playback: bool = False):
         prev_action = self._game.previous_action
         prev_lines_cleared = self._game.lines_cleared
         was_tetris_ready = self._game.is_tetris_ready()
@@ -62,6 +63,14 @@ class TetrisEnv(gym.Env):
         
         # Perform all actions in action list
         for i in range(len(action_list)):
+            if playback and self._game.rendering_enabled:
+                time.sleep(0.1)
+                
+                # Update the window if it is being rendered
+                if self._window_exists():
+                    self._update_window()
+            
+            self._game.take_admin_inputs()
             terminated = self._game.run(action_list[i]) 
             
             if terminated:
@@ -70,6 +79,9 @@ class TetrisEnv(gym.Env):
         
         # Check how many lines were cleared after performing actions
         lines_cleared = self._game.lines_cleared - prev_lines_cleared
+        
+        if lines_cleared == 4:
+            print(f"Tetris!: {action_list}")
         
         ###############################
         # Strict game over conditions #
@@ -101,23 +113,24 @@ class TetrisEnv(gym.Env):
                 reward = self.GAME_OVER_PUNISH    
                 
         if held_performed and prev_action == int(Actions.HOLD_PIECE):
-            terminated = True
-            reward = self.GAME_OVER_PUNISH
+            reward = self.GAME_OVER_PUNISH * 10
+            print("Held Twice!")
 
         ####################
         # Calculate reward #
         ####################
         
         if not terminated:
-            reward = self._perfect_stacking_reward(held_performed, prev_action, lines_cleared)
+            reward = self._perfect_stacking_reward(lines_cleared)
         
         # Get observations 
         observation = self._get_obs()
         info = self._get_info()
         
-        # Update the window if it is being rendered
-        if self._window_exists():
-            self._update_window()
+        if not playback and self._game.rendering_enabled:
+            # Update the window if it is being rendered
+            if self._window_exists():
+                self._update_window()
         
         return observation, reward, terminated, False, info
         
@@ -142,14 +155,11 @@ class TetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
-    def _perfect_stacking_reward(self, held_performed, prev_action, lines_cleared):      
+    def _perfect_stacking_reward(self, lines_cleared):      
         relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
         
-        if lines_cleared > 0:
+        if lines_cleared == 4:
             lines_cleared_reward = self.REWARD_MULTIPLYER ** lines_cleared * self.LINE_CLEAR_REWARD
-            
-            if lines_cleared == 4:
-                print("Tetris!")
         else:
             lines_cleared_reward = 0
             
@@ -186,9 +196,21 @@ class TetrisEnv(gym.Env):
         if gaps > 0:
             gaps = 1
         
+        if self._game.is_tetris_ready():
+            tetris_ready = True
+        else:
+            tetris_ready = False
+            
+        if self._game.previous_action == int(Actions.HOLD_PIECE):
+            holds_used += 1
+        else:
+            holds_used = 0
+        
         return np.array(
             [
                 gaps,
+                tetris_ready,
+                holds_used,
                 self._game.piece_manager.get_held_piece_id(),
                 self._game.get_current_piece_id()
                 

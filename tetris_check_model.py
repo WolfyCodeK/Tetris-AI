@@ -1,33 +1,32 @@
 from itertools import count
 import os
-import time
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import game.agent_actions as aa
 from tetris_env import TetrisEnv
 from utils.screen_sizes import ScreenSizes
 
 env = TetrisEnv()
-env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=True)
+env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
 
 # if GPU is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model function
-def load_model(model, optimizer, episode):
-    file_path = os.path.join('torch_models', f'model_checkpoint_{episode}.pth')
+def load_model(model, episode):
+    file_path = f'model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
         checkpoint = torch.load(file_path)
         model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        return model, optimizer
+        return model
     else:
         print(f"No checkpoint found for episode {episode}. Training from scratch.")
-        return model, optimizer    
+        exit() 
 
 def get_flatterned_obs(state):
     # Extract numerical values from the dictionary
@@ -37,8 +36,6 @@ def get_flatterned_obs(state):
     return np.concatenate(numerical_values)
 
 def select_action(state):
-    global steps_done
-
     with torch.no_grad():
         return policy_net(state).max(1).indices.view(1, 1)
 
@@ -65,29 +62,21 @@ state, info = env.reset()
 n_observations = len(get_flatterned_obs(state))
 
 policy_net = DQN(n_observations, n_actions).to(device)
-target_net = DQN(n_observations, n_actions).to(device)
-target_net.load_state_dict(policy_net.state_dict())
 
-LR = 1e-3
-
-optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-
-start_episode = 200000
-policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
+start_episode = 260000
+policy_net = load_model(policy_net, start_episode)
+policy_net.eval()
 
 while(1):
     # Initialize the environment and get its state
     state, info = env.reset()
-    
     state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
     
-    total_reward = 0
-    
     for t in count():
-        time.sleep(0.5)
         action = select_action(state)
-        print(action.item())
-        observation, reward, terminated, truncated, _ = env.step(action.item())
+        print(aa.movements[action.item()])
+        
+        observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
         done = terminated or truncated
 
         if terminated:

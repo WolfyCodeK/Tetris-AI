@@ -26,7 +26,10 @@ class GameController():
         self.last_fps_recorded = 0
         
         self.lines_cleared = 0
+        self.holds_used_in_a_row = 0
         self.previous_action = None
+        
+        self.rendering_enabled = True
         
         # Scores
         self.score = 0
@@ -225,6 +228,11 @@ class GameController():
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
             
+        if (action == int(Actions.HOLD_PIECE)):
+            self.holds_used_in_a_row += 1
+        else:
+            self.holds_used_in_a_row = 0
+        
         self.previous_action = action
         self.piece_manager.actions_per_piece += 1
     
@@ -282,6 +290,17 @@ class GameController():
         self.piece_deactivate_timer = self.piece_deactivate_delay
         self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
         
+    def take_admin_inputs(self):
+        key = pygame.key.get_pressed()
+        
+        if key[pygame.K_UP] == True:
+            print("ENABLE RENDERING")
+            self.rendering_enabled = True
+            
+        if key[pygame.K_DOWN] == True:
+            print("DISABLED RENDERING")
+            self.rendering_enabled = False
+    
     # DEBUGGING FUNCTION FOR MANUAL PLAY - CAN SAFELY BE DELETED
     def take_player_inputs(self, event_list):
         # Take player input
