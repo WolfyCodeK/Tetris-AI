@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from tetris_env import TetrisEnv
+from env import TetrisEnv
 import math
 import random
 import matplotlib

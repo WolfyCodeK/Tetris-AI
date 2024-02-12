@@ -80,69 +80,6 @@ class GameController():
         self._reset_scores()
         self.lines_cleared = 0
         self.piece_manager.actions_per_piece = 0
-    
-    # Game Analysis Functions
-    def get_board_peaks_list(self):
-        return self.piece_manager.board.get_max_height_column_list()
-        
-    def get_max_piece_height_on_board(self):
-        return self.piece_manager.board.get_max_height()
-    
-    def get_second_lowest_gap(self):
-        return sorted(self.piece_manager.board.get_first_gap_list())[1]
-    
-    def get_first_gap_list(self):
-        return self.piece_manager.board.get_first_gap_list()
-    
-    def get_min_piece_board_height(self):
-        return self.piece_manager.board.get_min_height()
-    
-    def get_board_height_difference_with_well(self):
-        return self.get_max_piece_height_on_board() - self.get_min_gap_height_exluding_well()
-    
-    def get_min_gap_height_exluding_well(self):
-        gap_list = self.get_first_gap_list().copy()
-        
-        # Remove well value
-        gap_list.pop()
-        
-        return sorted(gap_list)[0]
-    
-    def get_board_height_difference(self):
-        return self.get_max_piece_height_on_board() - self.get_second_lowest_gap()
-    
-    def get_occupied_spaces_on_board(self):
-        return self.piece_manager.board.occupied_spaces
-    
-    def get_num_of_pieces_dropped(self):
-        return self.piece_manager.num_of_pieces_dropped
-    
-    def get_num_of_top_gaps(self):
-        return self.piece_manager.board.get_num_of_top_gaps()
-    
-    def get_num_of_full_gaps(self):
-        return self.piece_manager.board.get_num_of_full_gaps()
-    
-    def get_truncated_piece_queue(self, first_n_pieces):
-        return self.piece_manager.piece_queue.get_truncated_piece_queue(first_n_pieces)
-    
-    def get_next_piece_id(self):
-        return self.piece_manager.piece_queue.get_next_piece_id()
-    
-    def get_current_piece_id(self):
-        return self.piece_manager.get_current_piece_id()
-    
-    def get_minimal_board_state(self):
-        return self.piece_manager.board.get_minimal_board_state()
-    
-    def get_piece_value_bounds(self):
-        return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
-    
-    def is_well_valid(self):
-        return self.piece_manager.board.is_well_valid()
-    
-    def is_tetris_ready(self):
-        return self.piece_manager.board.is_tetris_ready()
         
     def _increment_frames_passed(self):
         """Increase number of frames that have passed by 1.

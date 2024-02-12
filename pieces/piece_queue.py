@@ -63,19 +63,6 @@ class PieceQueue():
         
         return piece
     
-    def get_visible_piece_queue_id_list(self) -> list:
-        queue_id_list = [int(piece.id) for piece in self.queue]
-        queue_id_list.pop()
-        queue_id_list.pop()
-        
-        return queue_id_list
-    
-    def get_next_piece_id(self) -> int:
-        queue_copy = self.queue.copy()
-        queue_copy.reverse()
-        
-        return int(queue_copy.pop().id)
-    
     def get_truncated_piece_queue(self, first_n_pieces) -> list:
         queue_id_list = [int(piece.id) for piece in self.queue]
         

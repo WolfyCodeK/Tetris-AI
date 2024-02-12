@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 import game.agent_actions as aa
-from tetris_env import TetrisEnv
+from env import TetrisEnv
 from utils.screen_sizes import ScreenSizes
 
 env = TetrisEnv()
