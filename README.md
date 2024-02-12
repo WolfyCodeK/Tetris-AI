@@ -3,9 +3,9 @@
 View agent learning progress with bash command:
 
 ```bash
-tensorboard --logdir ./logs
+tensorboard --logdir=runs
 ```
 or 
 ```bash
-python tensorboard.main --logdir=./logs
+python tensorboard.main --logdir=runs
 ```
