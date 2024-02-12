@@ -24,6 +24,7 @@ class Window():
         
         # Set logic controller
         self.game = game
+        self.render_game = True
         
         # Colour values
         self.fps_colour = (0, 255, 0)
@@ -57,14 +58,16 @@ class Window():
         # Draw board background
         self.window.blit(self.board_surface, (0, 0))
         self.board_surface.fill(0)
-        _, left_buf, top_buf, _ = win_utils.get_board_buffers()
-        self.board_surface.fill((0, 0, 0, bc.BACKGROUND_ALPHA), pygame.Rect(left_buf, top_buf, self.scr_width, self.scr_height))
+        
+        if self.render_game:
+            _, left_buf, top_buf, _ = win_utils.get_board_buffers()
+            self.board_surface.fill((0, 0, 0, bc.BACKGROUND_ALPHA), pygame.Rect(left_buf, top_buf, self.scr_width, self.scr_height))
 
-        # Draw board grids 
-        win_utils.draw_grids(self.board_surface)
+            # Draw board grids 
+            win_utils.draw_grids(self.board_surface)
 
-        # Draw all pieces
-        self.game.draw_pieces(self.board_surface, GameSettings.show_queue)
+            # Draw all pieces
+            self.game.draw_pieces(self.board_surface, GameSettings.show_queue)
 
         # Draw fps counter
         if GameSettings.show_fps:

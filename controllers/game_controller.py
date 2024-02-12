@@ -29,7 +29,7 @@ class GameController():
         self.holds_used_in_a_row = 0
         self.previous_action = None
         
-        self.rendering_enabled = True
+        self.render_game = True
         
         # Scores
         self.score = 0
@@ -98,10 +98,15 @@ class GameController():
         return self.piece_manager.board.get_min_height()
     
     def get_board_height_difference_with_well(self):
+        return self.get_max_piece_height_on_board() - self.get_min_gap_height_exluding_well()
+    
+    def get_min_gap_height_exluding_well(self):
         gap_list = self.get_first_gap_list().copy()
+        
+        # Remove well value
         gap_list.pop()
         
-        return self.get_max_piece_height_on_board() - sorted(gap_list)[0]
+        return sorted(gap_list)[0]
     
     def get_board_height_difference(self):
         return self.get_max_piece_height_on_board() - self.get_second_lowest_gap()
@@ -290,16 +295,20 @@ class GameController():
         self.piece_deactivate_timer = self.piece_deactivate_delay
         self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
         
-    def take_admin_inputs(self):
+    def admin_render_input(self, event_list):
         key = pygame.key.get_pressed()
         
-        if key[pygame.K_UP] == True:
-            print("ENABLE RENDERING")
-            self.rendering_enabled = True
+        for event in event_list:          
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    print("ENABLE RENDERING")
+                    self.render_game = True
+                    
+                if event.key == pygame.K_DOWN:
+                    print("DISABLED RENDERING")
+                    self.render_game = False
             
-        if key[pygame.K_DOWN] == True:
-            print("DISABLED RENDERING")
-            self.rendering_enabled = False
+        return self.render_game
     
     # DEBUGGING FUNCTION FOR MANUAL PLAY - CAN SAFELY BE DELETED
     def take_player_inputs(self, event_list):

@@ -63,7 +63,12 @@ def _get_obs():
     return {"board": _get_board_obs(), "additional": _get_additional_obs()}
 
 def _get_board_obs() -> np.ndarray:
-    return np.array(game.get_board_peaks_list())
+        board = np.array(game.get_board_peaks_list())
+        board = board - game.get_min_gap_height_exluding_well()
+        
+        board = np.clip(board, a_min = 0, a_max = 20) 
+        
+        return board
 
 def _get_additional_obs() -> np.ndarray: 
     gaps = game.get_num_of_full_gaps() + game.get_num_of_top_gaps()
@@ -87,7 +92,7 @@ if __name__ == '__main__':
     pygame.display.init()
     pygame.font.init()
     
-    window = Window(game, screen_size=ScreenSizes.MEDIUM)
+    window = Window(game, ScreenSizes.MEDIUM)
     
     pygame.display.set_caption("Tetris - Pygame")
 
@@ -127,9 +132,9 @@ if __name__ == '__main__':
                 if event.key == pygame.K_LSHIFT:
                     held_performed = True
         
-        if dropped_piece or held_performed:
+        if dropped_piece or held_performed:         
             # Calculate reward
-            if game.get_num_of_full_gaps() > 0 or game.get_num_of_top_gaps() > 0 or game.get_board_height_difference() > 6 or (not game.is_well_valid()):
+            if game.get_num_of_full_gaps() > 0 or game.get_num_of_top_gaps() > 0 or game.get_board_height_difference_with_well() > 5 or (not game.is_well_valid()):
                 done = True    
                 reward = -100
             else:

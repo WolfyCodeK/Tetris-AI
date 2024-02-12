@@ -28,7 +28,7 @@ class TetrisEnv(gym.Env):
         self.LINE_CLEAR_REWARD = 15
         self.REWARD_MULTIPLYER = 2
         
-        self.MAX_BOARD_DIFF = 7
+        self.MAX_BOARD_DIFF = 5
         
         # The first x number of pieces in the queue the agent can observe
         self.QUEUE_OBS_NUM = 5
@@ -63,14 +63,15 @@ class TetrisEnv(gym.Env):
         
         # Perform all actions in action list
         for i in range(len(action_list)):
-            if playback and self._game.rendering_enabled:
+            if playback:
                 time.sleep(0.1)
                 
                 # Update the window if it is being rendered
                 if self._window_exists():
                     self._update_window()
+
+            self._window.render_game = self._game.admin_render_input(pygame.event.get())
             
-            self._game.take_admin_inputs()
             terminated = self._game.run(action_list[i]) 
             
             if terminated:
@@ -104,6 +105,7 @@ class TetrisEnv(gym.Env):
             terminated = True
             reward = self.GAME_OVER_PUNISH    
             
+        # Termiante if pieces placed in well
         if not self._game.is_well_valid():
             terminated = True
             
@@ -111,23 +113,20 @@ class TetrisEnv(gym.Env):
                 reward = 0
             else:
                 reward = self.GAME_OVER_PUNISH    
-                
+        
+        # Punish agent for using the hold action more than once in a row
         if held_performed and prev_action == int(Actions.HOLD_PIECE):
             reward = self.GAME_OVER_PUNISH * 10
             print("Held Twice!")
 
-        ####################
-        # Calculate reward #
-        ####################
-        
         if not terminated:
             reward = self._perfect_stacking_reward(lines_cleared)
-        
+
         # Get observations 
         observation = self._get_obs()
         info = self._get_info()
         
-        if not playback and self._game.rendering_enabled:
+        if not playback:
             # Update the window if it is being rendered
             if self._window_exists():
                 self._update_window()
@@ -146,7 +145,7 @@ class TetrisEnv(gym.Env):
     
     def render(self, screen_size: ScreenSizes|int = ScreenSizes.MEDIUM, show_fps: bool = False, show_score: bool = False, show_queue: bool = True):
         # Initial pygame setup
-        pygame.display.init()
+        pygame.display.init()   
         pygame.font.init()
         
         # Create window Object
@@ -164,7 +163,7 @@ class TetrisEnv(gym.Env):
             lines_cleared_reward = 0
             
         reward = (bc.BOARD_ROWS - relative_piece_height) + lines_cleared_reward     
-
+        
         return reward
         
     def _window_exists(self):
@@ -188,7 +187,12 @@ class TetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        return np.array(self._game.get_board_peaks_list())
+        board = np.array(self._game.get_board_peaks_list())
+        board = board - self._game.get_min_gap_height_exluding_well()
+        
+        board = np.clip(board, a_min = 0, a_max = 20) 
+        
+        return board
     
     def _get_additional_obs(self) -> np.ndarray: 
         gaps = self._game.get_num_of_full_gaps() + self._game.get_num_of_top_gaps()
@@ -199,18 +203,13 @@ class TetrisEnv(gym.Env):
         if self._game.is_tetris_ready():
             tetris_ready = True
         else:
-            tetris_ready = False
-            
-        if self._game.previous_action == int(Actions.HOLD_PIECE):
-            holds_used += 1
-        else:
-            holds_used = 0
-        
+            tetris_ready = False 
+
         return np.array(
             [
                 gaps,
                 tetris_ready,
-                holds_used,
+                self._game.holds_used_in_a_row,
                 self._game.piece_manager.get_held_piece_id(),
                 self._game.get_current_piece_id()
                 

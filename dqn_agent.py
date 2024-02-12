@@ -21,7 +21,7 @@ from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter()
 
 env = TetrisEnv()
-env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
+env.render(screen_size=ScreenSizes.XXSMALL, render_game=True, show_fps=True, show_score=False, show_queue=False)
 
 # set up matplotlib
 is_ipython = 'inline' in matplotlib.get_backend()
