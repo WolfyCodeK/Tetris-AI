@@ -1,13 +1,12 @@
-from tetris_env import TetrisEnv, ScreenSizes
-from stable_baselines3 import PPO, A2C
-import os
+from gym_tetris_env import TetrisEnv, ScreenSizes
+from stable_baselines3 import DQN
 
 if __name__ == '__main__':
     env = TetrisEnv()
     env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True)
     env.seed()
 
-    model = PPO.load("models\Best 10 piece same seed.zip", env=env)
+    model = DQN.load("models/2023-11-29---18-25-28/620000.zip", env=env)
     
     episode = 1
     highest_score = 0

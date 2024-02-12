@@ -1,49 +1,173 @@
-import math
-from time import sleep
+import time
+import numpy as np
 import pygame
+
+import gymnasium as gym
+from gymnasium import spaces
 
 from controllers.game_controller import GameController
 from controllers.window import Window
-
 from game.actions import Actions
-from game.game_settings import GameSettings
-
+from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc
+from utils.screen_sizes import ScreenSizes
+import game.agent_actions as aa
 
-from enum import IntEnum
 
-from gym.spaces import Discrete, Box, Dict, MultiDiscrete
-from gym import Env
-
-import numpy as np
-
-class ScreenSizes(IntEnum):
-    XXSMALL = 6,
-    XSMALL = 8,
-    SMALL = 10,
-    MEDIUM = 12,
-    LARGE = 14,
-    XLARGE = 16,
-    XXLARGE = 18
-
-class TetrisEnv(Env):
+class TetrisEnv(gym.Env):
     def __init__(self) -> None:
+        # Init game controller
         self._game = GameController()
-        self._window = None
-        
-        low, high = self._game.get_piece_value_bounds()
 
-        self.action_space = Discrete(len(Actions))
-        # self.observation_space = Dict(
-        #     {
-        #         "board": Box(low=low, high=high, shape=(BOARD_ROWS, BOARD_COLUMNS), dtype=np.int32),
-        #         "queue": MultiDiscrete([high, high, high, high, high]),
-        #         "hold": Discrete(high)
-        #     }   
-        # )
-        size = (6 * bc.BOARD_COLUMNS) + 1
-        self.observation_space = Box(low=low, high=high, shape=(size,), dtype=np.int32)
-        # print(f"init: {self.observation_space}")
+        # The indexs relating to the ID's of the tetris pieces i.e. (0-7)
+        self.low, self.high = self._game.get_piece_value_bounds()
+        
+        # Reward constants
+        self.GAME_OVER_PUNISH = -100
+        self.PIECE_PUNISH = 4
+        self.LINE_CLEAR_REWARD = 15
+        self.REWARD_MULTIPLYER = 2
+        
+        self.MAX_BOARD_DIFF = 5
+        
+        # The first x number of pieces in the queue the agent can observe
+        self.QUEUE_OBS_NUM = 5
+        
+        # All available actions as described in the 'game\agent_actions.py' file
+        self.action_space = spaces.Discrete(len(aa.movements))
+
+        """
+        Dictionary containing the tetris board information and any additional information about the game that the agent needs to know. e.g. the held piece, the pieces in the queue
+        """
+        self.observation_space = spaces.Dict({
+            "board": spaces.Box(self.low, self.high, shape=(bc.BOARD_COLUMNS,), dtype=np.int8),
+            "additional": spaces.Box(self.low, self.high, shape=(len(self._get_additional_obs()),), dtype=np.int16)
+        })
+        
+        self._window = None
+        self.tick_speed = 0
+
+    def step(self, action, playback: bool = False):
+        prev_action = self._game.previous_action
+        prev_lines_cleared = self._game.lines_cleared
+        was_tetris_ready = self._game.is_tetris_ready()
+        
+        action_list = list(aa.movements[action])
+            
+        # Add final hard drop at end of action list if not holding
+        if action_list[0] != int(Actions.HOLD_PIECE):
+            held_performed = False
+            action_list.append(int(Actions.HARD_DROP))
+        else:
+            held_performed = True   
+        
+        # Perform all actions in action list
+        for i in range(len(action_list)):
+            if playback:
+                time.sleep(0.1)
+                
+                # Update the window if it is being rendered
+                if self._window_exists():
+                    self._update_window()
+
+            self._window.render_game = self._game.admin_render_input(pygame.event.get())
+            
+            terminated = self._game.run(action_list[i]) 
+            
+            if terminated:
+                reward = self.GAME_OVER_PUNISH
+                break
+        
+        # Check how many lines were cleared after performing actions
+        lines_cleared = self._game.lines_cleared - prev_lines_cleared
+        
+        if lines_cleared == 4:
+            print(f"Tetris!: {action_list}")
+        
+        ###############################
+        # Strict game over conditions #
+        ###############################
+        
+        # Terminate if tetris ready and able to tetris but didn't
+        if was_tetris_ready and self._game.is_tetris_ready():
+            if (self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE) or self._game.piece_manager.get_held_piece_id() == int(PieceTypeID.I_PIECE)):
+                terminated = True    
+                reward = self.GAME_OVER_PUNISH
+                print(f"Failed Tetris: {action_list}")
+
+        # Terminate if gap created on board
+        if self._game.get_num_of_full_gaps() > 0 or self._game.get_num_of_top_gaps() > 0:
+            terminated = True
+            reward = self.GAME_OVER_PUNISH
+        
+        # Terminate if height difference violated of board well incorrectly filled
+        if self._game.get_board_height_difference_with_well() > self.MAX_BOARD_DIFF:
+            terminated = True
+            reward = self.GAME_OVER_PUNISH    
+            
+        # Termiante if pieces placed in well
+        if not self._game.is_well_valid():
+            terminated = True
+            
+            if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
+                reward = 0
+            else:
+                reward = self.GAME_OVER_PUNISH    
+        
+        # Punish agent for using the hold action more than once in a row
+        if held_performed and prev_action == int(Actions.HOLD_PIECE):
+            reward = self.GAME_OVER_PUNISH * 10
+            print("Held Twice!")
+
+        if not terminated:
+            reward = self._perfect_stacking_reward(lines_cleared)
+
+        # Get observations 
+        observation = self._get_obs()
+        info = self._get_info()
+        
+        if not playback:
+            # Update the window if it is being rendered
+            if self._window_exists():
+                self._update_window()
+        
+        return observation, reward, terminated, False, info
+        
+    def reset(self, seed=None):
+        super().reset(seed=seed)
+        
+        self._game.reset_game()
+        
+        observation = self._get_obs()
+        info = self._get_info()
+        
+        return observation, info
+    
+    def render(self, screen_size: ScreenSizes|int = ScreenSizes.MEDIUM, show_fps: bool = False, show_score: bool = False, show_queue: bool = True):
+        # Initial pygame setup
+        pygame.display.init()   
+        pygame.font.init()
+        
+        # Create window Object
+        self._window = Window(self._game, screen_size, show_fps, show_score, show_queue)
+        
+    def close(self):
+        print("Enviroment closed.")
+        
+    def _perfect_stacking_reward(self, lines_cleared):      
+        relative_piece_height = self._game.piece_manager.placed_piece_max_height - self._game.get_min_piece_board_height()
+        
+        if lines_cleared == 4:
+            lines_cleared_reward = self.REWARD_MULTIPLYER ** lines_cleared * self.LINE_CLEAR_REWARD
+        else:
+            lines_cleared_reward = 0
+            
+        reward = (bc.BOARD_ROWS - relative_piece_height) + lines_cleared_reward     
+        
+        return reward
+        
+    def _window_exists(self):
+        return self._window is not None
         
     def _update_window(self):
         if (pygame.event.get(pygame.QUIT)):
@@ -52,106 +176,42 @@ class TetrisEnv(Env):
             # Delete window object
             self._window = None
             print("Stopped rendering window.")
-        else:
-            if (pygame.display.get_active()):
+        elif (pygame.display.get_active()):
                 self._window.draw()
-            
-    def step(self, action, actions_per_second: int = 0):
-        # Delay action - for analysing purposes
-        if (actions_per_second > 0):
-            sleep(1 / actions_per_second)
-        
-        last_num_of_pieces_dropped = self._game.get_num_of_pieces_dropped()
-        prev_gaps = self._game.get_num_of_gaps()
-        
-        self._game.cycle_game_clock()
-        
-        self._game.perform_action(action)
-        
-        self.done, b2b = self._game.run_logic()
-        
-        if (self._game.get_num_of_pieces_dropped() - last_num_of_pieces_dropped) > 0:
-            self.reward += self.add_reward(prev_gaps)
-        
-        if self._window is not None:
-            self._update_window()
-        
-        self.game_steps += 1
-        
-        gaps = self._game.get_num_of_gaps()
-        
-        if (not self._game.piece_manager.board.check_all_previous_rows_filled()) or (gaps > 2) or (self._game.actions_per_piece > 20):
-            self.done = True
-            self.reward += b2b * 1000
-            # print(self.reward)
+                self.tick_speed = self._game.frames
 
-        max_height = self._game.get_max_piece_height_on_board()
-        current_piece_id = self._game.piece_manager.current_piece.id
-        
-        self.observation = self._game.get_board_state_range_removed(0, min(bc.BOARD_HEIGHT - max_height, bc.BOARD_HEIGHT - 6), 6)
-        self.observation = self.observation.flatten()
-        self.observation = np.insert(self.observation, 0, current_piece_id)
-        # print(f"step: {len(self.observation)}")
-
-        info = {}
-        
-        return self.observation, self.reward, self.done, info
+    def _get_obs(self):
+        return {"board": self._get_board_obs(), "additional": self._get_additional_obs()}
     
-    def add_reward(self, prev_gaps):
-        occupied_spaces = self._game.get_occupied_spaces_on_board()
-        max_height = self._game.get_max_piece_height_on_board()
-        second_min_height = self._game.get_second_min_piece_height_on_board()
-        board_height_difference = max_height - second_min_height
-
-        nine_piece_row_reduction = math.floor(occupied_spaces / bc.BOARD_COLUMNS)
-        reduced_occupied_spaces = occupied_spaces - nine_piece_row_reduction
-
-        # ranges from 1-9 where 9 = best, 1 = worst
-        # pieces_max_height_ratio = reduced_occupied_spaces / max_height
-
-        diff = (5 - board_height_difference)
+    def _get_info(self):
+        pass 
+    
+    def _get_board_obs(self) -> np.ndarray:
+        board = np.array(self._game.get_board_peaks_list())
+        board = board - self._game.get_min_gap_height_exluding_well()
         
-        if diff < 0:
-            diff = 0
-
-        gaps = 1
+        board = np.clip(board, a_min = 0, a_max = 20) 
         
-        if occupied_spaces > 4:
-            gaps =  1 - (self._game.get_num_of_gaps() - prev_gaps)
-            
-            if gaps < 0:
-                gaps = 0
+        return board
+    
+    def _get_additional_obs(self) -> np.ndarray: 
+        gaps = self._game.get_num_of_full_gaps() + self._game.get_num_of_top_gaps()
+        
+        if gaps > 0:
+            gaps = 1
+        
+        if self._game.is_tetris_ready():
+            tetris_ready = True
+        else:
+            tetris_ready = False 
+
+        return np.array(
+            [
+                gaps,
+                tetris_ready,
+                self._game.holds_used_in_a_row,
+                self._game.piece_manager.get_held_piece_id(),
+                self._game.get_current_piece_id()
                 
-        return occupied_spaces * diff * gaps
-    
-    def render(self, screen_size: ScreenSizes|int, show_fps: bool, show_score: bool):
-        # Initial pygame setup
-        pygame.display.init()
-        pygame.font.init()
-        
-        # Create window Object
-        self._window = Window(self._game, screen_size, show_fps, show_score)
-        
-    def seed(self, seed=None):
-        GameSettings.seed = seed
-        return GameSettings.seed   
-        
-    def reset(self):
-        self._game.reset_game()
-        
-        current_piece_id = self._game.piece_manager.current_piece.id
-        self.game_steps = 0
-        self.game_score = self._game.score
-
-        self.done = False
-        self.reward = 0
-        
-        self.observation = self._game.get_board_state_range_removed(0, bc.BOARD_HEIGHT - 6, 6)
-        self.observation = self.observation.flatten()
-        self.observation = np.insert(self.observation, 0, current_piece_id)
-        # print(f"reset: {len(self.observation)}")
-        
-        return self.observation
-    
-    def close(self):
-        print("Enviroment closed.")
+            ] + self._game.get_truncated_piece_queue(self.QUEUE_OBS_NUM)
+        )

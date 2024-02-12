@@ -25,6 +25,9 @@ class GameSettings():
     # If scores should be displayed in the top left corner of the window
     show_score = True
     
+    # If the piece queue should be displayed
+    show_queue = True
+    
     #########################################################
     #------------------- ERROR MESSAGES -------------------#
     #########################################################

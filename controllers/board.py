@@ -1,4 +1,5 @@
 import numpy as np
+from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc
 
 import utils.window_utils as win_utils
@@ -8,7 +9,7 @@ from pieces.three_wide_pieces import (JPiece, LPiece, SPiece, TPiece, ZPiece)
 
 class Board():
     # All the available pieces to the piece controller
-    PIECE_LIST = [ZPiece, SPiece, JPiece, LPiece, TPiece, IPiece, OPiece]
+    PIECE_LIST = [IPiece, OPiece, ZPiece, SPiece, JPiece, LPiece, TPiece]
     
     EMPTY_PIECE_ID = 0
     
@@ -84,20 +85,93 @@ class Board():
     def get_min_height(self):
         return min(self.get_min_height_column_list())
     
-    def get_num_of_gaps(self):
+    def get_first_gap_list(self):
+        first_gap_list = []
+        
+        # Horizontal loop
+        for i in range(bc.BOARD_COLUMNS):
+            column = self.board_state[:, i]
+            
+            # Vertical loop
+            for j in range(bc.BOARD_HEIGHT - 1, bc.BOARD_HEIGHT_BUFFER, -1):
+                if (column[j] == 0):
+                    first_gap_list.append((bc.BOARD_HEIGHT - 1) - j)
+                    break
+        
+        return first_gap_list
+    
+    def get_num_of_top_gaps(self):
         max_height_list = self.get_max_height_column_list()
         gaps = 0
         
         # Horizontal loop
         for i in range(bc.BOARD_COLUMNS):
             column = self.board_state[:, i]
+            left_wall = False
+            right_wall = False
+            
+            if i > 0:
+                left = self.board_state[:, i - 1]
+            else:
+                left_wall = True
+                
+            if i < bc.BOARD_COLUMNS - 1:   
+                right = self.board_state[:, i + 1]
+            else:
+                right_wall = True
 
             # Vertical loop
             for j in range(bc.BOARD_HEIGHT - max_height_list[i], bc.BOARD_HEIGHT):
-                if (column[j] == 0) and (column[j - 1] > 0):
+                if (column[j] == 0) and (column[j - 1] > 0) and ((not((left_wall == True) or (left[j] > 0))) or (not((right_wall == True) or (right[j] > 0)))):
                     gaps += 1
                     
-        return gaps         
+        return gaps      
+    
+    def get_num_of_full_gaps(self):
+        max_height = self.get_max_height()
+        gaps = 0
+        
+        # Vertical loop
+        for i in range(bc.BOARD_HEIGHT - max_height, bc.BOARD_HEIGHT):
+            middle_row = self.board_state[i, :]
+            
+            if (i > 0):
+                top_row = self.board_state[i - 1, :]
+            else:
+                top_row = None
+            
+            # Horizontal loop
+            for j in range(bc.BOARD_COLUMNS):
+                if (middle_row[j] == 0) and (top_row[j] > 0) and ((j == 0) or (middle_row[j - 1] > 0)):
+                    if (j == bc.BOARD_COLUMNS - 1) or (middle_row[j + 1] > 0):
+                        added_gaps = 1
+                    else:
+                        check_finished = False
+                        
+                        added_gaps = 1
+                        
+                        while not check_finished:
+                            j += 1
+                            
+                            if (j < bc.BOARD_COLUMNS):
+                                next_pos_right = middle_row[j] == 0
+                                next_pos_top = top_row[j] > 0
+                                
+                                if next_pos_right and not next_pos_top:
+                                    check_finished = True
+                                    added_gaps = 0
+                                    
+                                elif next_pos_right and next_pos_top:
+                                    added_gaps += 1
+                                    
+                                elif not next_pos_right:
+                                    check_finished = True
+                            else:
+                                check_finished = True
+                                
+                    gaps += added_gaps
+
+        return gaps      
     
     def check_row_filled(self, row):
         filled_count = 0
@@ -106,7 +180,7 @@ class Board():
             if self.board_state[row, i] > 0:
                 filled_count += 1
                 
-        if filled_count == 9:
+        if filled_count == bc.BOARD_ROWS - 1:
             return True
         else:
             return False
@@ -153,14 +227,32 @@ class Board():
         
         return min_board_state
     
-    def get_board_state_range_removed(self, low, high, area):
-        board_state_range = self.board_state.copy()
+    def is_tetris_ready(self):
+        max_list = self.get_max_height_column_list().copy()
+        max_list.pop()
         
-        # Remove top of board
-        board_state_range = np.delete(board_state_range, range(low, high), axis=0)
+        return not any([height < 4 for height in max_list])
+    
+    def is_well_valid(self):
+        valid = True
         
-        # Remove remaining bottom of board
-        if high < (bc.BOARD_HEIGHT - area):
-            board_state_range = np.delete(board_state_range, range(area, len(board_state_range)), axis=0)
+        max_list = self.get_max_height_column_list().copy()
+        max_list.pop()
         
-        return board_state_range
+        # Vertical loop
+        for i in bc.BOARD_HEIGHT_RANGE_INCR:
+            last_column_id = self.board_state[i, bc.BOARD_COLUMNS - 1]
+            
+            if last_column_id != PieceTypeID.I_PIECE and last_column_id != PieceTypeID.EMPTY:
+                valid = False
+            elif last_column_id == PieceTypeID.I_PIECE and not self.is_tetris_ready(): 
+                valid = False
+            
+        return valid
+    
+    def does_I_dependency_exist(self):
+        ...
+        
+    def does_none_central_I_piece_exist(self):
+        ...
+        

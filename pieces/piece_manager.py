@@ -11,7 +11,11 @@ class PieceManager():
         # Create game board
         self.board = Board()
         
+        self.previous_piece = None
+        self.placed_piece_max_height = 0
+        self.current_piece = None
         self.num_of_pieces_dropped = 0
+        self.actions_per_piece = 0
         
         self.reset()
         
@@ -26,6 +30,7 @@ class PieceManager():
         self.next_piece()
         
     def next_piece(self) -> None:
+        self.previous_piece = self.current_piece
         self.current_piece = self.piece_queue.get_next_piece()
         
     def draw_board_pieces(self, surface):
@@ -200,6 +205,7 @@ class PieceManager():
             else:
                 raise PiecePlacementError(x, y, piece.id, id)
             
+        self.placed_piece_max_height = piece.get_max_mino_height()
         self.piece_holder.new_hold_available = True
         self.board.occupied_spaces += bc.PIECE_COMPONENTS
         
@@ -209,9 +215,20 @@ class PieceManager():
         # The first time the hold has been used
         if piece == self.current_piece:
             self.next_piece()
+            self.actions_per_piece = 0
         # No new hold was allowed
         elif piece == None:
             pass
         # Piece was switched with held piece
         else:
             self.current_piece = piece
+            self.actions_per_piece = 0
+            
+    def get_held_piece_id(self):
+        return self.piece_holder.held_piece.id if self.piece_holder.held_piece is not None else 0
+    
+    def get_current_piece_id(self) -> int:
+        return int(self.current_piece.id)
+    
+    def get_actions_per_piece(self):
+        return self.actions_per_piece

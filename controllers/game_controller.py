@@ -25,7 +25,11 @@ class GameController():
         self.frames = 0
         self.last_fps_recorded = 0
         
-        self.actions_per_piece = 0
+        self.lines_cleared = 0
+        self.holds_used_in_a_row = 0
+        self.previous_action = None
+        
+        self.render_game = True
         
         # Scores
         self.score = 0
@@ -44,12 +48,108 @@ class GameController():
         self.piece_deactivate_timer = self.piece_deactivate_delay
         self.piece_global_deactivate_timer = self.piece_deactivate_delay
         
-    def increment_frames_passed(self):
+    def run(self, action: int) -> bool:
+        """Take in an action and run the game for a single cycle.
+
+        Args:
+            action (int): The action performed.
+
+        Returns:
+            bool: True if the game has finished after this cycle has run.
+        """
+        self._cycle_game_clock()
+        self._perform_action(action)
+        return self._run_logic()    
+    
+    def draw_pieces(self, surface, draw_queue: bool = True):
+        """Draws the peices to the parsed surface.
+
+        Args:
+            surface (Surface): The surface being drawn to.
+        """
+        self.piece_manager.draw_board_pieces(surface)
+        self.piece_manager.draw_ghost_pieces(surface)
+        self.piece_manager.draw_current_piece(surface)
+        self.piece_manager.draw_held_piece(surface)
+        
+        if draw_queue:
+            self.piece_manager.draw_queued_pieces(surface)
+        
+    def reset_game(self):
+        self.piece_manager.reset()
+        self._reset_scores()
+        self.lines_cleared = 0
+        self.piece_manager.actions_per_piece = 0
+    
+    # Game Analysis Functions
+    def get_board_peaks_list(self):
+        return self.piece_manager.board.get_max_height_column_list()
+        
+    def get_max_piece_height_on_board(self):
+        return self.piece_manager.board.get_max_height()
+    
+    def get_second_lowest_gap(self):
+        return sorted(self.piece_manager.board.get_first_gap_list())[1]
+    
+    def get_first_gap_list(self):
+        return self.piece_manager.board.get_first_gap_list()
+    
+    def get_min_piece_board_height(self):
+        return self.piece_manager.board.get_min_height()
+    
+    def get_board_height_difference_with_well(self):
+        return self.get_max_piece_height_on_board() - self.get_min_gap_height_exluding_well()
+    
+    def get_min_gap_height_exluding_well(self):
+        gap_list = self.get_first_gap_list().copy()
+        
+        # Remove well value
+        gap_list.pop()
+        
+        return sorted(gap_list)[0]
+    
+    def get_board_height_difference(self):
+        return self.get_max_piece_height_on_board() - self.get_second_lowest_gap()
+    
+    def get_occupied_spaces_on_board(self):
+        return self.piece_manager.board.occupied_spaces
+    
+    def get_num_of_pieces_dropped(self):
+        return self.piece_manager.num_of_pieces_dropped
+    
+    def get_num_of_top_gaps(self):
+        return self.piece_manager.board.get_num_of_top_gaps()
+    
+    def get_num_of_full_gaps(self):
+        return self.piece_manager.board.get_num_of_full_gaps()
+    
+    def get_truncated_piece_queue(self, first_n_pieces):
+        return self.piece_manager.piece_queue.get_truncated_piece_queue(first_n_pieces)
+    
+    def get_next_piece_id(self):
+        return self.piece_manager.piece_queue.get_next_piece_id()
+    
+    def get_current_piece_id(self):
+        return self.piece_manager.get_current_piece_id()
+    
+    def get_minimal_board_state(self):
+        return self.piece_manager.board.get_minimal_board_state()
+    
+    def get_piece_value_bounds(self):
+        return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
+    
+    def is_well_valid(self):
+        return self.piece_manager.board.is_well_valid()
+    
+    def is_tetris_ready(self):
+        return self.piece_manager.board.is_tetris_ready()
+        
+    def _increment_frames_passed(self):
         """Increase number of frames that have passed by 1.
         """
         self.frames += 1
         
-    def set_drop_speed(self, speed: int):
+    def _set_drop_speed(self, speed: int):
         """Set the drop speed of the pieces.
 
         Args:
@@ -61,12 +161,12 @@ class GameController():
         self.piece_deactivate_delay = self.drop_speed
         self.piece_deactivate_timer = self.piece_deactivate_delay * 3
     
-    def cycle_game_clock(self):
-        self.update_delta_time()
-        self.increment_frames_passed()
-        self.update_fps_counter()
+    def _cycle_game_clock(self):
+        self._update_delta_time()
+        self._increment_frames_passed()
+        self._update_fps_counter()
         
-    def update_delta_time(self):
+    def _update_delta_time(self):
         """Updates to the latest delta time value.
         """
         self.delta_time = time.time() - self.previous_time
@@ -74,54 +174,39 @@ class GameController():
 
         self.total_time += self.delta_time
         self.fps_time += self.delta_time
-    
-    def draw_pieces(self, surface):
-        """Draws the peices to the parsed surface.
-
-        Args:
-            surface (Surface): The surface being drawn to.
-        """
-        self.piece_manager.draw_board_pieces(surface)
-        self.piece_manager.draw_ghost_pieces(surface)
-        self.piece_manager.draw_current_piece(surface)
-        self.piece_manager.draw_held_piece(surface)
-        self.piece_manager.draw_queued_pieces(surface)
         
-    def clear_lines_and_add_score(self):
-        lines_cleared = self.piece_manager.perform_line_clears()
+    def _clear_lines_and_add_score(self):
+        new_lines_cleared = self.piece_manager.perform_line_clears()
+        self.lines_cleared += new_lines_cleared
         
         # Award points
-        if (lines_cleared != 0):
-            if (lines_cleared == 1):
+        match new_lines_cleared:
+            case 1:
                 self.score += 40
+                self.b2b = 0
             
-            if (lines_cleared == 2):
+            case 2:
                 self.score += 100
+                self.b2b = 0
             
-            if (lines_cleared == 3):
-                self.score += 300
+            case 3:
+                # T-spin triple
+                if (self.piece_manager.previous_piece.id == PieceTypeID.T_PIECE):
+                    self.score += 2400
+                    self.b2b += 1
+                else:
+                    self.score += 300
+                    self.b2b = 0
                 
-            if (lines_cleared == 4):
+            case 4:
                 self.score += 1200
                 self.b2b += 1
-            else:
-                self.b2b = 0
-                
-        return self.b2b
     
-    def reset_scores(self):
+    def _reset_scores(self):
         self.score = 0
         self.b2b = 0
-        self.actions_per_piece = 0
-        
-    def get_board_state(self):
-        return self.piece_manager.board.get_minimal_board_state()
     
-    def get_piece_value_bounds(self):
-        return self.piece_manager.board.EMPTY_PIECE_ID, len(PieceTypeID)
-        
-    
-    def perform_action(self, action: int):
+    def _perform_action(self, action: int):
         match(action):
             case Actions.MOVE_LEFT:
                 self.piece_manager.shift_piece_horizontally(-1)
@@ -140,7 +225,7 @@ class GameController():
                 
             case Actions.HARD_DROP:
                 self.piece_manager.hard_drop_piece()
-                self.new_piece_and_timer()
+                self._new_piece_and_timer()
                 
             case Actions.HOLD_PIECE:
                 self.piece_manager.hold_piece()
@@ -148,9 +233,15 @@ class GameController():
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
             
-        self.actions_per_piece += 1
+        if (action == int(Actions.HOLD_PIECE)):
+            self.holds_used_in_a_row += 1
+        else:
+            self.holds_used_in_a_row = 0
+        
+        self.previous_action = action
+        self.piece_manager.actions_per_piece += 1
     
-    def update_fps_counter(self):
+    def _update_fps_counter(self):
         """Update the fps counter with the current number of frames.
         """
         if (self.fps_time >= 1):
@@ -158,8 +249,12 @@ class GameController():
             self.last_fps_recorded = self.frames
             self.frames = 0
     
-    def run_logic(self):
-        """Runs the logic for the movement of the pieces over time.
+    def _run_logic(self) -> bool:
+        """
+        Runs the logic for the movement of the pieces over time.
+        
+        Returns: 
+            bool: True if the game is finished after the logic has been run and False otherwise
         """
         # Attempt Drop current piece every set amount of time
         if (self.total_time > self.drop_time):
@@ -174,29 +269,48 @@ class GameController():
                 
             # Create new piece and restart timer if piece has been touching ground for too long
             if (self.piece_deactivate_timer < 0) or (self.piece_global_deactivate_timer < 0):
-                self.new_piece_and_timer()
+                self._new_piece_and_timer()
 
             # Cycle total time
             self.total_time = self.total_time - self.drop_time
             
-        return self.check_game_over(), self.clear_lines_and_add_score()
+        self._clear_lines_and_add_score()    
+            
+        return self._check_game_over()
     
-    def check_game_over(self) -> bool:
+    def _check_game_over(self) -> bool:
+        """Checks if there is a game over.
+
+        Returns:
+            bool: True if the game has ended, false otherwise
+        """
         return self.piece_manager.board.check_game_over()
-    
-    def reset_game(self):
-        self.piece_manager.reset()
-        self.reset_scores()
         
-    def new_piece_and_timer(self):
+    def _new_piece_and_timer(self):
         self.piece_manager.deactivate_piece()
         self.piece_manager.next_piece()
         self.piece_manager.num_of_pieces_dropped += 1
-        self.actions_per_piece = 0
+        self.piece_manager.actions_per_piece = 0
         
         self.piece_deactivate_timer = self.piece_deactivate_delay
         self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
         
+    def admin_render_input(self, event_list):
+        key = pygame.key.get_pressed()
+        
+        for event in event_list:          
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    print("ENABLE RENDERING")
+                    self.render_game = True
+                    
+                if event.key == pygame.K_DOWN:
+                    print("DISABLED RENDERING")
+                    self.render_game = False
+            
+        return self.render_game
+    
+    # DEBUGGING FUNCTION FOR MANUAL PLAY - CAN SAFELY BE DELETED
     def take_player_inputs(self, event_list):
         # Take player input
         key = pygame.key.get_pressed()
@@ -221,16 +335,16 @@ class GameController():
         
         # DEBUG EVENTS
         if key[pygame.K_a] == True:
-            self.set_drop_speed(20)
+            self._set_drop_speed(20)
         
         if key[pygame.K_s] == True:
-            self.set_drop_speed(GameSettings.drop_speed)
+            self._set_drop_speed(GameSettings.drop_speed)
         
         for event in event_list:          
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     self.piece_manager.hard_drop_piece()
-                    self.new_piece_and_timer()
+                    self._new_piece_and_timer()
                     
                 if event.key == pygame.K_DOWN:
                     self.piece_manager.hard_drop_piece()
@@ -240,26 +354,3 @@ class GameController():
                     
                 if event.key == pygame.K_LSHIFT:
                     self.piece_manager.hold_piece()
-                    
-                self.actions_per_piece += 1
-                    
-    def get_board_peaks_list(self):
-        return self.piece_manager.board.get_max_height_column_list()
-        
-    def get_max_piece_height_on_board(self):
-        return self.piece_manager.board.get_max_height()
-    
-    def get_second_min_piece_height_on_board(self):
-        return sorted(self.piece_manager.board.get_min_height_column_list())[1]
-    
-    def get_occupied_spaces_on_board(self):
-        return self.piece_manager.board.occupied_spaces
-    
-    def get_num_of_pieces_dropped(self):
-        return self.piece_manager.num_of_pieces_dropped
-    
-    def get_num_of_gaps(self):
-        return self.piece_manager.board.get_num_of_gaps()
-    
-    def get_board_state_range_removed(self, low, high, area):
-        return self.piece_manager.board.get_board_state_range_removed(low, high, area)

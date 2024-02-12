@@ -7,13 +7,14 @@ import utils.window_utils as win_utils
 from controllers.game_controller import GameController
 
 class Window():
-    def __init__(self, game: GameController, screen_size: int, show_fps: bool = True, show_score: bool = True) -> None:
+    def __init__(self, game: GameController, screen_size: int, show_fps: bool = True, show_score: bool = True, show_queue = True) -> None:
         # Set window position
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(100, 100)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d, %d" %(900, 400)
         
         # Configure window settings
         GameSettings.show_fps = show_fps
         GameSettings.show_score = show_score
+        GameSettings.show_queue = show_queue
         GameSettings.set_screen_size(screen_size)
         
         # Set Icon and title
@@ -23,6 +24,7 @@ class Window():
         
         # Set logic controller
         self.game = game
+        self.render_game = True
         
         # Colour values
         self.fps_colour = (0, 255, 0)
@@ -56,14 +58,16 @@ class Window():
         # Draw board background
         self.window.blit(self.board_surface, (0, 0))
         self.board_surface.fill(0)
-        _, left_buf, top_buf, _ = win_utils.get_board_buffers()
-        self.board_surface.fill((0, 0, 0, bc.BACKGROUND_ALPHA), pygame.Rect(left_buf, top_buf, self.scr_width, self.scr_height))
+        
+        if self.render_game:
+            _, left_buf, top_buf, _ = win_utils.get_board_buffers()
+            self.board_surface.fill((0, 0, 0, bc.BACKGROUND_ALPHA), pygame.Rect(left_buf, top_buf, self.scr_width, self.scr_height))
 
-        # Draw board grids 
-        win_utils.draw_grids(self.board_surface)
+            # Draw board grids 
+            win_utils.draw_grids(self.board_surface)
 
-        # Draw all pieces
-        self.game.draw_pieces(self.board_surface)
+            # Draw all pieces
+            self.game.draw_pieces(self.board_surface, GameSettings.show_queue)
 
         # Draw fps counter
         if GameSettings.show_fps:
