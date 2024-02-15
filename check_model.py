@@ -10,12 +10,6 @@ import game.agent_actions as aa
 from env import TetrisEnv
 from utils.screen_sizes import ScreenSizes
 
-env = TetrisEnv()
-env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
-
-# if GPU is to be used
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 # Load model function
 def load_model(model, episode):
     file_path = f'model_checkpoint_{episode}.pth'
@@ -54,40 +48,47 @@ class DQN(nn.Module):
         x = F.relu(self.layer2(x))
         x = F.relu(self.layer3(x))
         return self.layer4(x)
-
-# Get number of actions from gym action space
-n_actions = env.action_space.n
-# Get the number of state observations
-state, info = env.reset()
-n_observations = len(get_flatterned_obs(state))
-
-policy_net = DQN(n_observations, n_actions).to(device)
-
-start_episode = 260000
-policy_net = load_model(policy_net, start_episode)
-policy_net.eval()
-
-while(1):
-    # Initialize the environment and get its state
-    state, info = env.reset()
-    state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
     
-    for t in count():
-        action = select_action(state)
-        print(aa.movements[action.item()])
+if __name__ == '__main__':
+    env = TetrisEnv()
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
+
+    # if GPU is to be used
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Get number of actions from gym action space
+    n_actions = env.action_space.n
+    # Get the number of state observations
+    state, info = env.reset()
+    n_observations = len(get_flatterned_obs(state))
+
+    policy_net = DQN(n_observations, n_actions).to(device)
+
+    start_episode = 260000
+    policy_net = load_model(policy_net, start_episode)
+    policy_net.eval()
+
+    while(1):
+        # Initialize the environment and get its state
+        state, info = env.reset()
+        state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
         
-        observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
-        done = terminated or truncated
+        for t in count():
+            action = select_action(state)
+            print(aa.movements[action.item()])
+            
+            observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
+            done = terminated or truncated
 
-        if terminated:
-            next_state = None
-        else:
-            next_state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
+            if terminated:
+                next_state = None
+            else:
+                next_state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
 
-        # Move to the next state
-        state = next_state
+            # Move to the next state
+            state = next_state
 
-        if done:     
-            break
+            if done:     
+                break
 
-print('Complete')
+    print('Complete')

@@ -18,30 +18,21 @@ from torch.utils.tensorboard import SummaryWriter
 
 # Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
-writer = SummaryWriter()
+class DQN(nn.Module):
+    def __init__(self, n_observations, n_actions):
+        super(DQN, self).__init__()
+        self.layer1 = nn.Linear(n_observations, 256)
+        self.layer2 = nn.Linear(256, 256)
+        self.layer3 = nn.Linear(256, 256)
+        self.layer4 = nn.Linear(256, n_actions)
 
-env = TetrisEnv()
-env.render(screen_size=ScreenSizes.XXSMALL, render_game=True, show_fps=True, show_score=False, show_queue=False)
-
-# set up matplotlib
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
-
-plt.ion()
-
-# if GPU is to be used
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
-
-def get_flatterned_obs(state):
-    # Extract numerical values from the dictionary
-    numerical_values = [state[key].flatten() for key in state]
-
-    # Concatenate the numerical values into a single array
-    return np.concatenate(numerical_values)
+    # Called with either one element to determine next action, or a batch
+    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+    def forward(self, x):
+        x = F.relu(self.layer1(x))
+        x = F.relu(self.layer2(x))
+        x = F.relu(self.layer3(x))
+        return self.layer4(x)
 
 class ReplayMemory(object):
     def __init__(self, capacity):
@@ -56,6 +47,13 @@ class ReplayMemory(object):
 
     def __len__(self):
         return len(self.memory)
+
+def get_flatterned_obs(state):
+    # Extract numerical values from the dictionary
+    numerical_values = [state[key].flatten() for key in state]
+
+    # Concatenate the numerical values into a single array
+    return np.concatenate(numerical_values)
     
 def select_action(state):
     global steps_done
@@ -98,55 +96,6 @@ def load_model(model, optimizer, episode):
     else:
         print(f"No checkpoint found for episode {episode}. Training from scratch.")
         return model, optimizer    
-    
-class DQN(nn.Module):
-    def __init__(self, n_observations, n_actions):
-        super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 256)
-        self.layer2 = nn.Linear(256, 256)
-        self.layer3 = nn.Linear(256, 256)
-        self.layer4 = nn.Linear(256, n_actions)
-
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
-    def forward(self, x):
-        x = F.relu(self.layer1(x))
-        x = F.relu(self.layer2(x))
-        x = F.relu(self.layer3(x))
-        return self.layer4(x)
-    
-# BATCH_SIZE is the number of transitions sampled from the replay buffer
-# GAMMA is the discount factor as mentioned in the previous section
-# EPS_START is the starting value of epsilon
-# EPS_END is the final value of epsilon
-# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-# TAU is the update rate of the target network
-# LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 128
-GAMMA = 0.99
-EPS_START = 0.9
-EPS_END = 0.01
-EPS_DECAY = 50000
-TAU = 0.005
-LR = 1e-3
-
-# Get number of actions from gym action space
-n_actions = env.action_space.n
-# Get the number of state observations
-state, info = env.reset()
-n_observations = len(get_flatterned_obs(state))
-
-policy_net = DQN(n_observations, n_actions).to(device)
-target_net = DQN(n_observations, n_actions).to(device)
-target_net.load_state_dict(policy_net.state_dict())
-
-optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-memory = ReplayMemory(10000)
-
-start_episode = -1
-policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
-
-steps_done = 0
 
 def optimize_model():
     if len(memory) < BATCH_SIZE:
@@ -193,79 +142,124 @@ def optimize_model():
     # In-place gradient clipping
     torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
     optimizer.step()
-    
-if torch.cuda.is_available():
-    num_episodes = 6_000_000
-else:
-    num_episodes = 500_000
 
-save_frequency = 5000
+if __name__ == '__main__':
+    writer = SummaryWriter()
 
-total_rewards_list = []
-episode_durations = []
-tick_speed_list = []
+    env = TetrisEnv()
+    env.render(screen_size=ScreenSizes.XXSMALL, render_game=True, show_fps=True, show_score=False, show_queue=False)
 
-first_run = True
+    # if GPU is to be used
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-for i_episode in range(num_episodes):
-    # Initialize the environment and get its state
+    Transition = namedtuple('Transition',
+                            ('state', 'action', 'next_state', 'reward'))    
+        
+    # BATCH_SIZE is the number of transitions sampled from the replay buffer
+    # GAMMA is the discount factor as mentioned in the previous section
+    # EPS_START is the starting value of epsilon
+    # EPS_END is the final value of epsilon
+    # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
+    # TAU is the update rate of the target network
+    # LR is the learning rate of the ``AdamW`` optimizer
+    BATCH_SIZE = 128
+    GAMMA = 0.99
+    EPS_START = 0.9
+    EPS_END = 0.1
+    EPS_DECAY = 50000
+    TAU = 0.005
+    LR = 1e-3
+
+    # Get number of actions from gym action space
+    n_actions = env.action_space.n
+    # Get the number of state observations
     state, info = env.reset()
-    
-    state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
-    
-    total_reward = 0
-    
-    for t in count():
-        action = select_action(state)
-        observation, reward, terminated, truncated, _ = env.step(action.item())
-        total_reward += reward
-        reward = torch.tensor([reward], device=device)
-        done = terminated or truncated
+    n_observations = len(get_flatterned_obs(state))
 
-        if terminated:
-            next_state = None
-        else:
-            next_state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
+    policy_net = DQN(n_observations, n_actions).to(device)
+    target_net = DQN(n_observations, n_actions).to(device)
+    target_net.load_state_dict(policy_net.state_dict())
 
-        # Store the transition in memory
-        memory.push(state, action, next_state, reward)
+    optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
+    memory = ReplayMemory(10000)
 
-        # Move to the next state
-        state = next_state
+    start_episode = -1
+    policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
 
-        # Perform one step of the optimization (on the policy network)
-        optimize_model()
+    steps_done = 0    
+        
+    if torch.cuda.is_available():
+        num_episodes = 6_000_000
+    else:
+        num_episodes = 500_000
 
-        # Soft update of the target network's weights
-        # θ′ ← τ θ + (1 −τ )θ′
-        target_net_state_dict = target_net.state_dict()
-        policy_net_state_dict = policy_net.state_dict()
-        for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
-        target_net.load_state_dict(target_net_state_dict)
+    save_frequency = 5000
 
-        if done:     
-            episode_durations.append(t + 1)
-            total_rewards_list.append(total_reward)
-            tick_speed_list.append(env.tick_speed)
-            
-            if i_episode % 250 == 0 and (not first_run):
-                writer.add_scalar('Mean Duration', (sum(episode_durations) / len(episode_durations)), i_episode)
-                writer.add_scalar('Mean Reward', (sum(total_rewards_list) / len(total_rewards_list)), i_episode)
-                writer.add_scalar('Tick Speed', (sum(tick_speed_list) / len(tick_speed_list)), i_episode)
+    total_rewards_list = []
+    episode_durations = []
+    fps_list = []
+
+    first_run = True
+
+    for i_episode in range(num_episodes):
+        # Initialize the environment and get its state
+        state, info = env.reset()
+        
+        state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
+        
+        total_reward = 0
+        
+        for t in count():
+            action = select_action(state)
+            observation, reward, terminated, truncated, _ = env.step(action.item())
+            total_reward += reward
+            reward = torch.tensor([reward], device=device)
+            done = terminated or truncated
+
+            if terminated:
+                next_state = None
+            else:
+                next_state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
+
+            # Store the transition in memory
+            memory.push(state, action, next_state, reward)
+
+            # Move to the next state
+            state = next_state
+
+            # Perform one step of the optimization (on the policy network)
+            optimize_model()
+
+            # Soft update of the target network's weights
+            # θ′ ← τ θ + (1 −τ )θ′
+            target_net_state_dict = target_net.state_dict()
+            policy_net_state_dict = policy_net.state_dict()
+            for key in policy_net_state_dict:
+                target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+            target_net.load_state_dict(target_net_state_dict)
+
+            if done:     
+                episode_durations.append(t + 1)
+                total_rewards_list.append(total_reward)
+                fps_list.append(env.fps)
                 
-                episode_durations = []
-                total_rewards_list = []
-                tick_speed_list = []
-                first_run = True
+                if i_episode % 250 == 0 and (not first_run):
+                    writer.add_scalar('Mean Duration', (sum(episode_durations) / len(episode_durations)), i_episode)
+                    writer.add_scalar('Mean Reward', (sum(total_rewards_list) / len(total_rewards_list)), i_episode)
+                    writer.add_scalar('Tick Speed', (sum(fps_list) / len(fps_list)), i_episode)
+                    
+                    episode_durations = []
+                    total_rewards_list = []
+                    fps_list = []
+                    first_run = True
+                    
+                if first_run:
+                    first_run = False
                 
-            if first_run:
-                first_run = False
-            
-            # Save the model every 'save_frequency' episodes
-            if i_episode % save_frequency == 0:
-                save_model(policy_net, optimizer, i_episode)
-            break
+                # Save the model every 'save_frequency' episodes
+                if i_episode % save_frequency == 0:
+                    save_model(policy_net, optimizer, i_episode)
+                break
 
-print('Complete')
-writer.close()
+    print('Complete')
+    writer.close()

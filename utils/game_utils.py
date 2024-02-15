@@ -4,6 +4,15 @@ import numpy as np
 
 from controllers.game_controller import GameController
 
+def get_bumpiness(game_controller: GameController):
+    ...
+    
+def does_I_dependency_exist(game_controller: GameController):
+    ...
+    
+def does_none_central_I_piece_exist(game_controller: GameController):
+    ...
+
 def get_max_height_column_list(game_controller: GameController):    
     board_state = game_controller.piece_manager.board.board_state
     
@@ -222,12 +231,6 @@ def is_well_valid(game_controller: GameController):
             valid = False
         
     return valid
-
-def does_I_dependency_exist():
-    ...
-    
-def does_none_central_I_piece_exist():
-    ...
     
 def get_second_lowest_gap(game_controller: GameController):
     return sorted(get_first_gap_list(game_controller))[1]    
@@ -237,14 +240,6 @@ def get_max_piece_height_on_board(game_controller: GameController):
 
 def get_board_height_difference_with_well(game_controller: GameController):
     return get_max_piece_height_on_board(game_controller) - get_min_gap_height_exluding_well(game_controller)
-
-def get_min_gap_height_exluding_well(game_controller: GameController) -> int:
-    gap_list = get_first_gap_list(game_controller).copy()
-    
-    # Remove well value
-    gap_list.pop()
-    
-    return sorted(gap_list)[0]
 
 def get_truncated_piece_queue(game_controller: GameController, first_n_pieces):
     return game_controller.piece_manager.piece_queue.get_truncated_piece_queue(first_n_pieces)
@@ -257,3 +252,11 @@ def get_piece_value_bounds(game_controller: GameController):
 
 def get_held_piece_id(game_controller: GameController) -> int:
     return game_controller.piece_manager.piece_holder.held_piece.id if game_controller.piece_manager.piece_holder.held_piece is not None else 0
+
+def get_min_gap_height_exluding_well(game_controller: GameController) -> int:
+    gap_list = get_first_gap_list(game_controller).copy()
+    
+    # Remove well value
+    gap_list.pop()
+    
+    return sorted(gap_list)[0]

@@ -49,7 +49,7 @@ class TetrisEnv(gym.Env):
         })
         
         self._window = None
-        self.tick_speed = 0
+        self.fps = 0
 
     def step(self, action, playback: bool = False):
         prev_action = self._game.previous_action
@@ -74,7 +74,7 @@ class TetrisEnv(gym.Env):
                 if self._window_exists():
                     self._update_window()
 
-            self._window.render_game = self._game.admin_render_input(pygame.event.get())
+            self._window.render_game = self._game.admin_render_toggle_input(pygame.event.get())
             
             terminated = self._game.run(action_list[i]) 
             
@@ -182,7 +182,7 @@ class TetrisEnv(gym.Env):
             print("Stopped rendering window.")
         elif (pygame.display.get_active()):
                 self._window.draw()
-                self.tick_speed = self._game.frames
+                self.fps = self._game.last_fps_recorded
 
     def _get_obs(self):
         return {"board": self._get_board_obs(), "additional": self._get_additional_obs()}

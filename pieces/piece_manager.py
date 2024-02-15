@@ -4,6 +4,7 @@ from .piece_holder import PieceHolder
 from .piece_queue import PieceQueue
 from pieces.piece import Piece
 from game.game_exceptions import PiecePlacementError
+from numpy import ndarray
 
 
 class PieceManager():    
@@ -11,9 +12,8 @@ class PieceManager():
         # Create game board
         self.board = Board()
         
-        self.previous_piece = None
+        # The height of the top of the piece that was last placed
         self.placed_piece_max_height = 0
-        self.current_piece = None
         self.num_of_pieces_dropped = 0
         self.actions_per_piece = 0
         
@@ -26,12 +26,16 @@ class PieceManager():
         self.piece_holder = PieceHolder()
         
         self.num_of_pieces_dropped = 0
+        self.actions_per_piece = 0
         
         self.next_piece()
         
     def next_piece(self) -> None:
-        self.previous_piece = self.current_piece
         self.current_piece = self.piece_queue.get_next_piece()
+        self.previous_piece = None
+        
+        self.num_of_pieces_dropped += 1
+        self.actions_per_piece = 0
         
     def draw_board_pieces(self, surface):
         self.board.draw(surface)
@@ -54,10 +58,8 @@ class PieceManager():
         Returns:
             bool: True if the piece was successfully dropped down one row
         """
-        DROP_AMOUNT = 1
-        
-        if (not self._piece_is_vertically_blocked(self.board.board_state, self.current_piece, DROP_AMOUNT)):
-            self.current_piece.transform(0, DROP_AMOUNT)
+        if (not self._piece_is_vertically_blocked(self.board.board_state, self.current_piece, 1)):
+            self.current_piece.transform(0, 1)
             return True
         else:
             return False
@@ -77,7 +79,7 @@ class PieceManager():
     def hard_drop_piece(self) -> None:
         self.current_piece.transform(0, self._calculate_max_drop_height())
         
-    def shift_piece_horizontally(self, x_move):
+    def shift_piece_horizontally(self, x_move: int):
         if (not self._piece_is_horizontally_blocked(self.board.board_state, self.current_piece, x_move)):
             self.current_piece.transform(x_move, 0)
             
@@ -96,13 +98,13 @@ class PieceManager():
         
         # Attempt to place piece using basic rotation
         for i in range(len(absolute_rotated_shape)):
-            if (not self.is_move_allowed(absolute_rotated_shape[i][0], absolute_rotated_shape[i][1])):
+            if not self.is_move_allowed(absolute_rotated_shape[i][0], absolute_rotated_shape[i][1]):
                 rotation_blocked = True
                 break
         
+        # If basic rotation didn't work, then attempt a kick
         kick_found = False
         
-        # If basic rotation didn't work, then attempt a kick
         if rotation_blocked:
             for i in range(len(piece.KICK_OPTIONS)):
                 kick_priority = piece.get_kick_priority()
@@ -149,7 +151,7 @@ class PieceManager():
     
         return lines_cleared
                     
-    def _piece_is_vertically_blocked(self, board_state, piece: Piece, y_move: int) -> bool:
+    def _piece_is_vertically_blocked(self, board_state: ndarray, piece: Piece, y_move: int) -> bool:
         blocked = False
 
         for i in range(len(piece.minos)):
@@ -169,7 +171,7 @@ class PieceManager():
                     
         return blocked
     
-    def _piece_is_horizontally_blocked(self, board_state, piece: Piece, x_move) -> bool:
+    def _piece_is_horizontally_blocked(self, board_state: ndarray, piece: Piece, x_move) -> bool:
         blocked = False
         
         for i in range(len(piece.minos)):
@@ -193,11 +195,11 @@ class PieceManager():
             
         return blocked
 
-    def _place_piece(self, board_state, piece: Piece):
+    def _place_piece(self, board_state: ndarray, piece: Piece):
         for i in range(len(piece.minos)):
             x = piece.minos[i][0]
             y = piece.minos[i][1]
-            
+
             id = board_state[y][x]
             
             if (id == Board.EMPTY_PIECE_ID):

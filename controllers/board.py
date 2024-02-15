@@ -22,6 +22,9 @@ class Board():
         self.occupied_spaces = 0
         self.reset_board_state()
     
+    def _init_board_state(self):
+        return np.full(shape=(bc.BOARD_HEIGHT, bc.BOARD_WIDTH), fill_value=self.EMPTY_PIECE_ID)
+    
     def draw(self, surface):
         for y in bc.BOARD_HEIGHT_RANGE_INCR:
             for x in range(bc.BOARD_WIDTH):
@@ -39,6 +42,3 @@ class Board():
     def reset_board_state(self):
         self.board_state = self.INITIAL_BOARD_STATE.copy()
         self.occupied_spaces = 0
-    
-    def _init_board_state(self):
-        return np.full(shape=(bc.BOARD_HEIGHT, bc.BOARD_WIDTH), fill_value=self.EMPTY_PIECE_ID)

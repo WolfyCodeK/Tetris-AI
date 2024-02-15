@@ -14,9 +14,6 @@ class GameController():
     def __init__(self) -> None:
         # Set Piece Controller
         self.piece_manager = PieceManager()
-        
-        # The seed being used for all random number generators
-        self.seed = 0
     
         # Initialise time recording variables
         self.previous_time = time.time()
@@ -45,8 +42,7 @@ class GameController():
         
         # How long the tetramino can move around before without dropping before being deativated
         self.piece_deactivate_delay = self.drop_speed
-        self.piece_deactivate_timer = self.piece_deactivate_delay
-        self.piece_global_deactivate_timer = self.piece_deactivate_delay
+        self._reset_piece_timers()
         
     def run(self, action: int) -> bool:
         """Take in an action and run the game for a single cycle.
@@ -59,6 +55,7 @@ class GameController():
         """
         self._cycle_game_clock()
         self._perform_action(action)
+        
         return self._run_logic()    
     
     def draw_pieces(self, surface, draw_queue: bool = True):
@@ -78,8 +75,8 @@ class GameController():
     def reset_game(self):
         self.piece_manager.reset()
         self._reset_scores()
+        
         self.lines_cleared = 0
-        self.piece_manager.actions_per_piece = 0
         
     def _increment_frames_passed(self):
         """Increase number of frames that have passed by 1.
@@ -142,6 +139,10 @@ class GameController():
     def _reset_scores(self):
         self.score = 0
         self.b2b = 0
+        
+    def _reset_piece_timers(self):
+        self.piece_deactivate_timer = self.piece_deactivate_delay
+        self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
     
     def _perform_action(self, action: int):
         match(action):
@@ -194,18 +195,21 @@ class GameController():
             bool: True if the game is finished after the logic has been run and False otherwise
         """
         # Attempt Drop current piece every set amount of time
-        if (self.total_time > self.drop_time):
-            if (self.piece_manager.gravity_drop_piece()):
-                # print(f"fps -> {self.last_fps_recorded}")
+        if self.total_time > self.drop_time:
+            
+            if self.piece_manager.gravity_drop_piece():
+
                 # If delay timer was running then restart it
                 if (self.piece_deactivate_timer < self.piece_deactivate_delay):
                     self.piece_deactivate_timer = self.piece_deactivate_delay
+                    
             else:
+                # Decrement piece timers
                 self.piece_deactivate_timer -= 1
                 self.piece_global_deactivate_timer -= 1
                 
             # Create new piece and restart timer if piece has been touching ground for too long
-            if (self.piece_deactivate_timer < 0) or (self.piece_global_deactivate_timer < 0):
+            if self.piece_deactivate_timer < 0 or self.piece_global_deactivate_timer < 0:
                 self._new_piece_and_timer()
 
             # Cycle total time
@@ -226,15 +230,10 @@ class GameController():
     def _new_piece_and_timer(self):
         self.piece_manager.deactivate_piece()
         self.piece_manager.next_piece()
-        self.piece_manager.num_of_pieces_dropped += 1
-        self.piece_manager.actions_per_piece = 0
         
-        self.piece_deactivate_timer = self.piece_deactivate_delay
-        self.piece_global_deactivate_timer = self.piece_deactivate_delay * 3
-        
-    def admin_render_input(self, event_list):
-        key = pygame.key.get_pressed()
-        
+        self._reset_piece_timers()
+
+    def admin_render_toggle_input(self, event_list):
         for event in event_list:          
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
