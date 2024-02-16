@@ -1,20 +1,44 @@
 from pieces.piece_type_id import PieceTypeID
 from utils.board_constants import *
-import numpy as np
-
 from controllers.game_controller import GameController
 
+def get_placed_piece_max_height(game_controller: GameController):
+    return game_controller.piece_manager.placed_piece_max_height
+
+def get_board_state(game_controller: GameController):
+    return game_controller.piece_manager.board.board_state
+
 def get_bumpiness(game_controller: GameController):
-    ...
+    max_height_list = get_max_height_column_list(game_controller)
+    
+    # len(max_height_list) - 2 because we dont count well at index 9
+    end_index = len(max_height_list) - 2
+    
+    total_bumpiness = 0
+    
+    for i, height in enumerate(max_height_list):
+        bumpiness = 0
+        
+        if i > 0 and i < end_index:
+            bumpiness += abs(height - max_height_list[i - 1])
+            bumpiness += abs(height - max_height_list[i + 1])
+        elif i == 0:
+            bumpiness += abs(height - max_height_list[i + 1])
+        elif i == end_index:
+            bumpiness += abs(height - max_height_list[i - 1])
+            
+        total_bumpiness += bumpiness
+        
+    return total_bumpiness
     
 def does_I_dependency_exist(game_controller: GameController):
-    ...
+    pass
     
 def does_none_central_I_piece_exist(game_controller: GameController):
-    ...
+    pass
 
 def get_max_height_column_list(game_controller: GameController):    
-    board_state = game_controller.piece_manager.board.board_state
+    board_state = get_board_state(game_controller)
     
     max_height_list = []
     
@@ -40,7 +64,7 @@ def get_max_height(game_controller: GameController):
     return max(get_max_height_column_list(game_controller))
 
 def get_min_height_column_list(game_controller: GameController):
-    board_state = game_controller.piece_manager.board.board_state
+    board_state = get_board_state(game_controller)
     
     min_height_list = []
     
@@ -66,7 +90,7 @@ def get_min_piece_height_on_board(game_controller: GameController):
     return min(get_min_height_column_list(game_controller))
 
 def get_first_gap_list(game_controller: GameController):
-    board_state = game_controller.piece_manager.board.board_state
+    board_state = get_board_state(game_controller)
     
     first_gap_list = []
     
@@ -83,7 +107,7 @@ def get_first_gap_list(game_controller: GameController):
     return first_gap_list
 
 def get_num_of_top_gaps(game_controller: GameController):
-    board_state = game_controller.piece_manager.board.board_state
+    board_state = get_board_state(game_controller)
     
     max_height_list = get_max_height_column_list(game_controller)
     gaps = 0
@@ -112,7 +136,7 @@ def get_num_of_top_gaps(game_controller: GameController):
     return gaps      
 
 def get_num_of_full_gaps(game_controller: GameController):
-    board_state = game_controller.piece_manager.board.board_state
+    board_state = get_board_state(game_controller)
     
     max_height = get_max_height(game_controller)
     gaps = 0
@@ -159,65 +183,14 @@ def get_num_of_full_gaps(game_controller: GameController):
 
     return gaps      
 
-def check_row_filled(game_controller: GameController, row):
-    board_state = game_controller.piece_manager.board.board_state
-    
-    filled_count = 0
-    
-    for i in range(BOARD_COLUMNS):
-        if board_state[row, i] > 0:
-            filled_count += 1
-            
-    if filled_count == BOARD_ROWS - 1:
-        return True
-    else:
-        return False
-    
-def check_all_previous_rows_filled(game_controller: GameController):
-    all_rows_filled = False
-    top_filled_found = False
-    previous_filled = True
-    row = BOARD_HEIGHT - 1
-    
-    while not top_filled_found:
-        if check_row_filled(game_controller, row) and not previous_filled:
-            all_rows_filled = False
-            top_filled_found = True
-            
-        elif check_row_filled(game_controller, row) and previous_filled:
-            row -= 1
-            all_rows_filled = True
-            previous_filled = True
-            
-        elif not check_row_filled(game_controller, row) and previous_filled:
-            row -= 1
-            previous_filled = False
-            all_rows_filled = True
-            top_filled_found = False
-            
-        else:
-            top_filled_found = True
-            all_rows_filled = True
-            
-    return all_rows_filled
-
-def get_minimal_board_state(game_controller: GameController):
-    board_state = game_controller.piece_manager.board.board_state
-    
-    min_board_state = board_state.copy()
-    
-    min_board_state = np.delete(min_board_state, range(0, BOARD_HEIGHT_BUFFER), axis=0)
-    
-    return min_board_state
-
 def is_tetris_ready(game_controller: GameController):
-    max_list = list(get_max_height_column_list(game_controller).copy())
+    max_list = list(get_max_height_column_list(game_controller))
     max_list.pop()
     
     return not any([height < 4 for height in max_list])
 
 def is_well_valid(game_controller: GameController):
-    board_state = game_controller.piece_manager.board.board_state
+    board_state = get_board_state(game_controller)
     
     valid = True
     

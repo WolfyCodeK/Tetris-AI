@@ -28,10 +28,11 @@ class TetrisEnv(gym.Env):
         
         # Reward constants
         self.GAME_OVER_PUNISH = -100
-        self.PIECE_PUNISH = 4
         self.LINE_CLEAR_REWARD = 15
         self.REWARD_MULTIPLYER = 2
+        self.BUMPINESS_REWARD = 10
         
+        # The height the agent is allowed to place pieces above the lowest point of the stack
         self.MAX_BOARD_DIFF = 5
         
         # The first x number of pieces in the queue the agent can observe
@@ -54,6 +55,7 @@ class TetrisEnv(gym.Env):
     def step(self, action, playback: bool = False):
         prev_action = self._game.previous_action
         prev_lines_cleared = self._game.lines_cleared
+        prev_bumpiness = gu.get_bumpiness(self._game)
         was_tetris_ready = gu.is_tetris_ready(self._game)
         
         action_list = list(movements[action])
@@ -124,7 +126,9 @@ class TetrisEnv(gym.Env):
             print("Held Twice!")
 
         if not terminated:
-            reward = self._perfect_stacking_reward(lines_cleared)
+            reward = self._perfect_stacking_reward(lines_cleared, prev_bumpiness)
+            
+        print(f"Bumpiness: {gu.get_bumpiness(self._game)}")
 
         # Get observations 
         observation = self._get_obs()
@@ -158,15 +162,23 @@ class TetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
-    def _perfect_stacking_reward(self, lines_cleared):      
-        relative_piece_height = self._game.piece_manager.placed_piece_max_height - gu.get_min_piece_height_on_board(self._game)
+    def _perfect_stacking_reward(self, lines_cleared, prev_bumpiness):
+        # Reward agent for placing piece low down on the stack   
+        piece_height_reward = bc.BOARD_ROWS - (gu.get_placed_piece_max_height(self._game) - gu.get_min_piece_height_on_board(self._game))
         
-        if lines_cleared == 4:
+        # Reawrd agent for getting a tetris i.e. clearing 4 lines
+        if lines_cleared == bc.TETRIS_LINE_CLEARS:
             lines_cleared_reward = self.REWARD_MULTIPLYER ** lines_cleared * self.LINE_CLEAR_REWARD
         else:
             lines_cleared_reward = 0
-            
-        reward = (bc.BOARD_ROWS - relative_piece_height) + lines_cleared_reward     
+        
+        # Reward agent for reducing or equaling the stack's bumpiness
+        if prev_bumpiness >= gu.get_bumpiness(self._game):
+            bumpiness_reward = self.BUMPINESS_REWARD 
+        else:
+            bumpiness_reward = -self.BUMPINESS_REWARD
+        
+        reward = piece_height_reward + lines_cleared_reward + bumpiness_reward 
         
         return reward
         

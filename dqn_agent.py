@@ -147,7 +147,7 @@ if __name__ == '__main__':
     writer = SummaryWriter()
 
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, render_game=True, show_fps=True, show_score=False, show_queue=False)
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -189,9 +189,18 @@ if __name__ == '__main__':
     steps_done = 0    
         
     if torch.cuda.is_available():
-        num_episodes = 6_000_000
+        num_episodes = 10_000_000
+        
+        print(f"Is CUDA supported by this system? {torch.cuda.is_available()}")
+        print(f"CUDA version: {torch.version.cuda}")
+        
+        # Storing ID of current CUDA device
+        cuda_id = torch.cuda.current_device()
+        print(f"ID of current CUDA device: {torch.cuda.current_device()}")
+            
+        print(f"Name of current CUDA device: {torch.cuda.get_device_name(cuda_id)}")    
     else:
-        num_episodes = 500_000
+        num_episodes = 1_000_000
 
     save_frequency = 5000
 

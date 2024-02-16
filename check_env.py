@@ -16,7 +16,6 @@ if __name__ == '__main__':
         state, info = env.reset()
         
         for t in count():
-            time.sleep(0.5)
             action = env.action_space.sample()
             observation, reward, terminated, truncated, _ = env.step(action.item())
             print("###################################")
@@ -27,5 +26,7 @@ if __name__ == '__main__':
 
             if done:     
                 break
+            
+            time.sleep(1)
 
     print('Complete')
