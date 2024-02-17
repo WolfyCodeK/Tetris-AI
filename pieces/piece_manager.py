@@ -28,11 +28,14 @@ class PieceManager():
         self.num_of_pieces_dropped = 0
         self.actions_per_piece = 0
         
+        self.current_piece = None
+        self.previous_piece = None
+        
         self.next_piece()
         
     def next_piece(self) -> None:
+        self.previous_piece = self.current_piece
         self.current_piece = self.piece_queue.get_next_piece()
-        self.previous_piece = None
         
         self.num_of_pieces_dropped += 1
         self.actions_per_piece = 0

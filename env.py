@@ -120,15 +120,14 @@ class TetrisEnv(gym.Env):
             else:
                 reward = self.GAME_OVER_PUNISH    
         
-        # Punish agent for using the hold action more than once in a row
+        # Terminate for using the hold action more than once in a row
         if held_performed and prev_action == int(Actions.HOLD_PIECE):
             reward = self.GAME_OVER_PUNISH * 10
+            terminated = True
             print("Held Twice!")
 
         if not terminated:
             reward = self._perfect_stacking_reward(lines_cleared, prev_bumpiness)
-            
-        print(f"Bumpiness: {gu.get_bumpiness(self._game)}")
 
         # Get observations 
         observation = self._get_obs()

@@ -72,7 +72,7 @@ def select_action(state):
             
 # Save model function
 def save_model(model, optimizer, episode):
-    folder_path = os.path.join('torch_models', f'model_checkpoints')
+    folder_path = 'torch_models'
     os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
     
     checkpoint = {
@@ -85,11 +85,11 @@ def save_model(model, optimizer, episode):
 
 # Load model function
 def load_model(model, optimizer, episode):
-    folder_path = os.path.join('torch_models', f'model_checkpoints')
+    folder_path = 'torch_models'
     file_path = os.path.join(folder_path, f'model_checkpoint_{episode}.pth')
     
     if os.path.exists(file_path):
-        checkpoint = torch.load(file_path)
+        checkpoint = torch.load(file_path, map_location=torch.device("cuda"))
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         return model, optimizer
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 128
     GAMMA = 0.99
     EPS_START = 0.9
-    EPS_END = 0.1
+    EPS_END = 0.01
     EPS_DECAY = 50000
     TAU = 0.005
     LR = 1e-3
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
     memory = ReplayMemory(10000)
 
-    start_episode = -1
+    start_episode = 135000
     policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
 
     steps_done = 0    

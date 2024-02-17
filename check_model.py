@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 
 import game.agent_actions as aa
 from env import TetrisEnv
@@ -12,10 +11,10 @@ from utils.screen_sizes import ScreenSizes
 
 # Load model function
 def load_model(model, episode):
-    file_path = f'model_checkpoint_{episode}.pth'
+    file_path = f'torch_models/model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
-        checkpoint = torch.load(file_path)
+        checkpoint = torch.load(file_path, map_location=torch.device('cuda'))
         model.load_state_dict(checkpoint['model_state_dict'])
         return model
     else:
@@ -53,6 +52,15 @@ if __name__ == '__main__':
     env = TetrisEnv()
     env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
 
+    print(f"Is CUDA supported by this system? {torch.cuda.is_available()}")
+    print(f"CUDA version: {torch.version.cuda}")
+        
+    # Storing ID of current CUDA device
+    cuda_id = torch.cuda.current_device()
+    print(f"ID of current CUDA device: {torch.cuda.current_device()}")
+        
+    print(f"Name of current CUDA device: {torch.cuda.get_device_name(cuda_id)}") 
+
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,20 +72,24 @@ if __name__ == '__main__':
 
     policy_net = DQN(n_observations, n_actions).to(device)
 
-    start_episode = 260000
+    start_episode = 135000
     policy_net = load_model(policy_net, start_episode)
     policy_net.eval()
 
-    while(1):
+    while True:
         # Initialize the environment and get its state
         state, info = env.reset()
         state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
         
         for t in count():
-            action = select_action(state)
-            print(aa.movements[action.item()])
             
-            observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
+            terminated = True
+            
+            while terminated:
+                action = select_action(state)
+                print(aa.movements[action.item()])
+                observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
+            
             done = terminated or truncated
 
             if terminated:
@@ -90,5 +102,3 @@ if __name__ == '__main__':
 
             if done:     
                 break
-
-    print('Complete')
