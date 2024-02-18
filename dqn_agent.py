@@ -9,6 +9,7 @@ from collections import namedtuple, deque
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 import datetime
+import utils.game_utils as gu
 
 import torch
 import torch.nn as nn
@@ -71,10 +72,7 @@ def select_action(state):
         return torch.tensor([[env.action_space.sample()]], device=device, dtype=torch.long)
             
 # Save model function
-def save_model(model, optimizer, episode):
-    folder_path = 'torch_models'
-    os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
-    
+def save_model(model, optimizer, episode, folder_path):
     checkpoint = {
         'episode': episode,
         'model_state_dict': model.state_dict(),
@@ -85,8 +83,7 @@ def save_model(model, optimizer, episode):
 
 # Load model function
 def load_model(model, optimizer, episode):
-    folder_path = 'torch_models'
-    file_path = os.path.join(folder_path, f'model_checkpoint_{episode}.pth')
+    file_path = f'model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
         checkpoint = torch.load(file_path, map_location=torch.device("cuda"))
@@ -162,10 +159,10 @@ if __name__ == '__main__':
     # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
     # TAU is the update rate of the target network
     # LR is the learning rate of the ``AdamW`` optimizer
-    BATCH_SIZE = 128
+    BATCH_SIZE = 512
     GAMMA = 0.99
     EPS_START = 0.9
-    EPS_END = 0.01
+    EPS_END = 0
     EPS_DECAY = 50000
     TAU = 0.005
     LR = 1e-3
@@ -181,9 +178,9 @@ if __name__ == '__main__':
     target_net.load_state_dict(policy_net.state_dict())
 
     optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-    memory = ReplayMemory(10000)
+    memory = ReplayMemory(50000)
 
-    start_episode = 135000
+    start_episode = 70000
     policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
 
     steps_done = 0    
@@ -201,12 +198,16 @@ if __name__ == '__main__':
         print(f"Name of current CUDA device: {torch.cuda.get_device_name(cuda_id)}")    
     else:
         num_episodes = 1_000_000
+        
+    folder_path = os.path.join('torch_models', datetime.datetime.now().strftime("model_%d.%m.%Y@%H;%M;%S"))
+    os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
 
     save_frequency = 5000
 
     total_rewards_list = []
     episode_durations = []
     fps_list = []
+    max_duration = 0
 
     first_run = True
 
@@ -219,6 +220,12 @@ if __name__ == '__main__':
         total_reward = 0
         
         for t in count():
+            # Explore more when tetris ready
+            if gu.is_tetris_ready(env._game):
+                EPS_END = 0.1
+            else:
+                EPS_END = 0
+            
             action = select_action(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
             total_reward += reward
@@ -248,7 +255,12 @@ if __name__ == '__main__':
             target_net.load_state_dict(target_net_state_dict)
 
             if done:     
-                episode_durations.append(t + 1)
+                duration = t + 1
+                
+                if duration > max_duration:
+                    max_duration = duration
+                
+                episode_durations.append(duration)
                 total_rewards_list.append(total_reward)
                 fps_list.append(env.fps)
                 
@@ -256,6 +268,7 @@ if __name__ == '__main__':
                     writer.add_scalar('Mean Duration', (sum(episode_durations) / len(episode_durations)), i_episode)
                     writer.add_scalar('Mean Reward', (sum(total_rewards_list) / len(total_rewards_list)), i_episode)
                     writer.add_scalar('Tick Speed', (sum(fps_list) / len(fps_list)), i_episode)
+                    writer.add_scalar('Max Duration', max_duration, i_episode)
                     
                     episode_durations = []
                     total_rewards_list = []
@@ -267,7 +280,8 @@ if __name__ == '__main__':
                 
                 # Save the model every 'save_frequency' episodes
                 if i_episode % save_frequency == 0:
-                    save_model(policy_net, optimizer, i_episode)
+                    print(f"EPS END: {EPS_END}")
+                    save_model(policy_net, optimizer, i_episode, folder_path)
                 break
 
     print('Complete')

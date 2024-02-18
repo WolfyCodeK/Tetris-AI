@@ -1,3 +1,4 @@
+import copy
 from itertools import count
 import os
 import numpy as np
@@ -75,20 +76,32 @@ if __name__ == '__main__':
     start_episode = 135000
     policy_net = load_model(policy_net, start_episode)
     policy_net.eval()
+    
+    test_env = TetrisEnv()
+    test_env.render_mode = False
 
     while True:
         # Initialize the environment and get its state
         state, info = env.reset()
+        test_env.reset()
+        
         state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
         
         for t in count():
+            test_env._game.piece_manager.piece_queue = copy.deepcopy(env._game.piece_manager.piece_queue)
+            test_env._game.piece_manager.board = copy.deepcopy(env._game.piece_manager.board)
+            test_env._game.piece_manager.piece_holder = copy.deepcopy(env._game.piece_manager.piece_holder)
             
-            terminated = True
+            test_terminated = True
             
-            while terminated:
+            while test_terminated:
                 action = select_action(state)
+                
                 print(aa.movements[action.item()])
-                observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
+                
+                test_observation, test_reward, test_terminated, test_truncated, _ = test_env.step(action.item())
+            
+            observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
             
             done = terminated or truncated
 

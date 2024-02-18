@@ -77,6 +77,7 @@ class GameController():
         self._reset_scores()
         
         self.lines_cleared = 0
+        self.previous_action = None
         
     def _increment_frames_passed(self):
         """Increase number of frames that have passed by 1.

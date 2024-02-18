@@ -40,6 +40,8 @@ class TetrisEnv(gym.Env):
         
         # All available actions as described in the 'game\agent_actions.py' file
         self.action_space = spaces.Discrete(len(movements))
+        
+        self.tetris_ready = 0
 
         """
         Dictionary containing the tetris board information and any additional information about the game that the agent needs to know. e.g. the held piece, the pieces in the queue
@@ -51,6 +53,9 @@ class TetrisEnv(gym.Env):
         
         self._window = None
         self.fps = 0
+        
+        self.moves_after_tetris = 0
+        self.after_tetris = False
 
     def step(self, action, playback: bool = False):
         prev_action = self._game.previous_action
@@ -83,16 +88,25 @@ class TetrisEnv(gym.Env):
             if terminated:
                 reward = self.GAME_OVER_PUNISH
                 break
+            
+        if gu.is_tetris_ready(self._game) and self._game.piece_manager.current_piece == int(PieceTypeID.I_PIECE):
+            self.tetris_ready = 1    
         
         # Check how many lines were cleared after performing actions
         lines_cleared = self._game.lines_cleared - prev_lines_cleared
         
         if lines_cleared == 4:
             print(f"Tetris!: {action_list}")
+            self.after_tetris = True
+            self.tetris_ready = 1
+            
+        if self.after_tetris:
+            self.moves_after_tetris += 1
+            print(self.moves_after_tetris)
         
         ###############################
         # Strict game over conditions #
-        ###############################
+        ################################
         
         # Terminate if tetris ready and able to tetris but didn't
         if was_tetris_ready and gu.is_tetris_ready(self._game):
@@ -122,12 +136,16 @@ class TetrisEnv(gym.Env):
         
         # Terminate for using the hold action more than once in a row
         if held_performed and prev_action == int(Actions.HOLD_PIECE):
-            reward = self.GAME_OVER_PUNISH * 10
+            reward = self.GAME_OVER_PUNISH
             terminated = True
-            print("Held Twice!")
+            print(f"Held Twice! {self._game.holds_used_in_a_row}")
 
         if not terminated:
             reward = self._perfect_stacking_reward(lines_cleared, prev_bumpiness)
+
+        if terminated:
+            self.after_tetris = False
+            self.moves_after_tetris = 0
 
         # Get observations 
         observation = self._get_obs()
@@ -214,16 +232,11 @@ class TetrisEnv(gym.Env):
         
         if gaps > 0:
             gaps = 1
-        
-        if gu.is_tetris_ready(self._game):
-            tetris_ready = 1
-        else:
-            tetris_ready = 0 
 
         return np.array(
             [
                 gaps,
-                tetris_ready,
+                self.tetris_ready,
                 self._game.holds_used_in_a_row,
                 gu.get_held_piece_id(self._game),
                 gu.get_current_piece_id(self._game)
