@@ -27,6 +27,7 @@ class GameController():
         self.previous_action = None
         
         self.render_game = True
+        self.playback = False
         
         # Scores
         self.score = 0
@@ -244,8 +245,16 @@ class GameController():
                 if event.key == pygame.K_DOWN:
                     print("DISABLED RENDERING")
                     self.render_game = False
+                    
+                if event.key == pygame.K_RIGHT:
+                    print("PLAYBACK DISABLED")
+                    self.playback = False
+                    
+                if event.key == pygame.K_LEFT:
+                    print("PLAYBACK ENABLED")
+                    self.playback = True
             
-        return self.render_game
+        return self.render_game, self.playback
     
     # DEBUGGING FUNCTION FOR MANUAL PLAY - CAN SAFELY BE DELETED
     def take_player_inputs(self, event_list):

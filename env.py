@@ -40,8 +40,6 @@ class TetrisEnv(gym.Env):
         
         # All available actions as described in the 'game\agent_actions.py' file
         self.action_space = spaces.Discrete(len(movements))
-        
-        self.tetris_ready = 0
 
         """
         Dictionary containing the tetris board information and any additional information about the game that the agent needs to know. e.g. the held piece, the pieces in the queue
@@ -57,7 +55,7 @@ class TetrisEnv(gym.Env):
         self.moves_after_tetris = 0
         self.after_tetris = False
 
-    def step(self, action, playback: bool = False):
+    def step(self, action):
         prev_action = self._game.previous_action
         prev_lines_cleared = self._game.lines_cleared
         prev_bumpiness = gu.get_bumpiness(self._game)
@@ -74,23 +72,20 @@ class TetrisEnv(gym.Env):
         
         # Perform all actions in action list
         for i in range(len(action_list)):
+            self._window.render_game, playback = self._game.admin_render_toggle_input(pygame.event.get())
+            
             if playback:
                 time.sleep(0.1)
                 
                 # Update the window if it is being rendered
                 if self._window_exists():
                     self._update_window()
-
-            self._window.render_game = self._game.admin_render_toggle_input(pygame.event.get())
             
             terminated = self._game.run(action_list[i]) 
             
             if terminated:
                 reward = self.GAME_OVER_PUNISH
                 break
-            
-        if gu.is_tetris_ready(self._game) and self._game.piece_manager.current_piece == int(PieceTypeID.I_PIECE):
-            self.tetris_ready = 1    
         
         # Check how many lines were cleared after performing actions
         lines_cleared = self._game.lines_cleared - prev_lines_cleared
@@ -98,7 +93,6 @@ class TetrisEnv(gym.Env):
         if lines_cleared == 4:
             print(f"Tetris!: {action_list}")
             self.after_tetris = True
-            self.tetris_ready = 1
             
         if self.after_tetris:
             self.moves_after_tetris += 1
@@ -110,7 +104,7 @@ class TetrisEnv(gym.Env):
         
         # Terminate if tetris ready and able to tetris but didn't
         if was_tetris_ready and gu.is_tetris_ready(self._game):
-            if (self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE) or gu.get_held_piece_id(self._game) == int(PieceTypeID.I_PIECE)):
+            if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE) or (gu.get_held_piece_id(self._game) == int(PieceTypeID.I_PIECE) and not held_performed):
                 terminated = True    
                 reward = self.GAME_OVER_PUNISH
                 print(f"Failed Tetris: {action_list}")
@@ -135,20 +129,32 @@ class TetrisEnv(gym.Env):
                 reward = self.GAME_OVER_PUNISH    
         
         # Terminate for using the hold action more than once in a row
-        if held_performed and prev_action == int(Actions.HOLD_PIECE):
-            reward = self.GAME_OVER_PUNISH
+        if self._game.holds_used_in_a_row > 1:
+            reward = self.GAME_OVER_PUNISH * 10
             terminated = True
-            print(f"Held Twice! {self._game.holds_used_in_a_row}")
+            print(f"Held More than once in a row!")
 
         if not terminated:
             reward = self._perfect_stacking_reward(lines_cleared, prev_bumpiness)
 
         if terminated:
+            if self.after_tetris:
+                print(self._get_obs())
+            
             self.after_tetris = False
             self.moves_after_tetris = 0
 
         # Get observations 
-        observation = self._get_obs()
+        if gu.is_tetris_ready(self._game):
+            if self._game.piece_manager.current_piece == int(PieceTypeID.I_PIECE):
+                observation = self.single_action_obs(0)
+            elif gu.get_held_piece_id(self._game) == int(PieceTypeID.I_PIECE):
+                observation = self.single_action_obs(1)
+            else:
+                observation = self._get_obs()
+        else:   
+            observation = self._get_obs()
+            
         info = self._get_info()
         
         if not playback:
@@ -220,8 +226,12 @@ class TetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        board = np.array(gu.get_max_height_column_list(self._game))
-        board = board - gu.get_min_gap_height_exluding_well(self._game)
+        max_height_list = gu.get_max_height_column_list(self._game)
+        
+        # Remove well
+        max_height_list.pop()
+
+        board = np.array(max_height_list) - gu.get_min_gap_height_exluding_well(self._game)
         
         board = np.clip(board, a_min = 0, a_max = 20) 
         
@@ -236,10 +246,15 @@ class TetrisEnv(gym.Env):
         return np.array(
             [
                 gaps,
-                self.tetris_ready,
                 self._game.holds_used_in_a_row,
                 gu.get_held_piece_id(self._game),
                 gu.get_current_piece_id(self._game)
                 
             ] + gu.get_truncated_piece_queue(self._game, self.QUEUE_OBS_NUM)
         )
+        
+    def single_action_obs(self, value):
+        board = np.array([value for _ in range(9)])
+        additional = np.array([value for _ in range(9)])
+        
+        return {"board": board, "additional": additional}

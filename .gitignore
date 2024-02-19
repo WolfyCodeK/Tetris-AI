@@ -165,3 +165,6 @@ tempcode.txt
 # ML Folder
 logs/
 models/
+torch_models/
+runs/
+saved_runs/

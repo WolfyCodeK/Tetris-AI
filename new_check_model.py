@@ -197,7 +197,7 @@ if __name__ == '__main__':
         
         for t in count():
             action = select_action(state)
-            observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
+            observation, reward, terminated, truncated, _ = env.step(action.item())
             total_reward += reward
             reward = torch.tensor([reward], device=device)
             done = terminated or truncated

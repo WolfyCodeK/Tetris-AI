@@ -22,10 +22,11 @@ from torch.utils.tensorboard import SummaryWriter
 class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 256)
-        self.layer2 = nn.Linear(256, 256)
-        self.layer3 = nn.Linear(256, 256)
-        self.layer4 = nn.Linear(256, n_actions)
+        self.layer1 = nn.Linear(n_observations, 4096)
+        self.layer2 = nn.Linear(4096, 4096)
+        self.layer3 = nn.Linear(4096, 4096)
+        self.layer4 = nn.Linear(4096, 4096)
+        self.layer5 = nn.Linear(4096, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -33,7 +34,8 @@ class DQN(nn.Module):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         x = F.relu(self.layer3(x))
-        return self.layer4(x)
+        x = F.relu(self.layer4(x))
+        return self.layer5(x)
 
 class ReplayMemory(object):
     def __init__(self, capacity):
@@ -57,7 +59,7 @@ def get_flatterned_obs(state):
     return np.concatenate(numerical_values)
     
 def select_action(state):
-    global steps_done
+    global steps_done    
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * steps_done / EPS_DECAY)
@@ -107,8 +109,7 @@ def optimize_model():
     # (a final state would've been the one after which simulation ended)
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                         batch.next_state)), device=device, dtype=torch.bool)
-    non_final_next_states = torch.cat([s for s in batch.next_state
-                                                if s is not None])
+    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
@@ -159,11 +160,11 @@ if __name__ == '__main__':
     # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
     # TAU is the update rate of the target network
     # LR is the learning rate of the ``AdamW`` optimizer
-    BATCH_SIZE = 512
+    BATCH_SIZE = 64
     GAMMA = 0.99
     EPS_START = 0.9
     EPS_END = 0
-    EPS_DECAY = 50000
+    EPS_DECAY = 25000
     TAU = 0.005
     LR = 1e-3
 
@@ -178,9 +179,9 @@ if __name__ == '__main__':
     target_net.load_state_dict(policy_net.state_dict())
 
     optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
-    memory = ReplayMemory(50000)
+    memory = ReplayMemory(10000)
 
-    start_episode = 70000
+    start_episode = -1
     policy_net, optimizer = load_model(policy_net, optimizer, start_episode)
 
     steps_done = 0    
@@ -250,8 +251,10 @@ if __name__ == '__main__':
             # θ′ ← τ θ + (1 −τ )θ′
             target_net_state_dict = target_net.state_dict()
             policy_net_state_dict = policy_net.state_dict()
+            
             for key in policy_net_state_dict:
                 target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+                
             target_net.load_state_dict(target_net_state_dict)
 
             if done:     

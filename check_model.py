@@ -101,7 +101,7 @@ if __name__ == '__main__':
                 
                 test_observation, test_reward, test_terminated, test_truncated, _ = test_env.step(action.item())
             
-            observation, reward, terminated, truncated, _ = env.step(action.item(), playback=True)
+            observation, reward, terminated, truncated, _ = env.step(action.item())
             
             done = terminated or truncated
 
