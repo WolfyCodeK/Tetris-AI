@@ -60,7 +60,7 @@ def get_max_height_column_list(game_controller: GameController):
     
     return max_height_list
 
-def get_max_height(game_controller: GameController):
+def get_max_piece_height_on_board(game_controller: GameController):
     return max(get_max_height_column_list(game_controller))
 
 def get_min_height_column_list(game_controller: GameController):
@@ -99,7 +99,7 @@ def get_first_gap_list(game_controller: GameController):
         column = board_state[:, i]
         
         # Vertical loop
-        for j in range(BOARD_HEIGHT - 1, BOARD_HEIGHT_BUFFER, -1):
+        for j in range(BOARD_HEIGHT - 1, 0, -1):
             if (column[j] == 0):
                 first_gap_list.append((BOARD_HEIGHT - 1) - j)
                 break
@@ -138,7 +138,7 @@ def get_num_of_top_gaps(game_controller: GameController):
 def get_num_of_full_gaps(game_controller: GameController):
     board_state = get_board_state(game_controller)
     
-    max_height = get_max_height(game_controller)
+    max_height = get_max_piece_height_on_board(game_controller)
     gaps = 0
     
     # Vertical loop
@@ -207,9 +207,6 @@ def is_well_valid(game_controller: GameController):
     
 def get_second_lowest_gap(game_controller: GameController):
     return sorted(get_first_gap_list(game_controller))[1]    
-    
-def get_max_piece_height_on_board(game_controller: GameController):
-    return get_max_height(game_controller)
 
 def get_board_height_difference_with_well(game_controller: GameController):
     return get_max_piece_height_on_board(game_controller) - get_min_gap_height_exluding_well(game_controller)

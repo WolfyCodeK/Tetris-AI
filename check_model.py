@@ -1,45 +1,32 @@
-import copy
-from itertools import count
 import os
 import numpy as np
+from env import TetrisEnv
+import math
+import random
+import matplotlib
+import matplotlib.pyplot as plt
+from collections import namedtuple, deque
+from itertools import count
+from utils.screen_sizes import ScreenSizes
+import datetime
+import utils.game_utils as gu
+
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
-import game.agent_actions as aa
-from env import TetrisEnv
-from utils.screen_sizes import ScreenSizes
-
-# Load model function
-def load_model(model, episode):
-    file_path = f'torch_models/model_checkpoint_{episode}.pth'
-    
-    if os.path.exists(file_path):
-        checkpoint = torch.load(file_path, map_location=torch.device('cuda'))
-        model.load_state_dict(checkpoint['model_state_dict'])
-        return model
-    else:
-        print(f"No checkpoint found for episode {episode}. Training from scratch.")
-        exit() 
-
-def get_flatterned_obs(state):
-    # Extract numerical values from the dictionary
-    numerical_values = [state[key].flatten() for key in state]
-
-    # Concatenate the numerical values into a single array
-    return np.concatenate(numerical_values)
-
-def select_action(state):
-    with torch.no_grad():
-        return policy_net(state).max(1).indices.view(1, 1)
+# Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
 class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 256)
-        self.layer2 = nn.Linear(256, 256)
-        self.layer3 = nn.Linear(256, 256)
-        self.layer4 = nn.Linear(256, n_actions)
+        self.layer1 = nn.Linear(n_observations, 2048)
+        self.layer2 = nn.Linear(2048, 1024)
+        self.layer3 = nn.Linear(1024, 512)
+        self.layer4 = nn.Linear(512, 256)
+        self.layer5 = nn.Linear(256, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -47,20 +34,37 @@ class DQN(nn.Module):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         x = F.relu(self.layer3(x))
-        return self.layer4(x)
-    
-if __name__ == '__main__':
-    env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
+        x = F.relu(self.layer4(x))
+        return self.layer5(x)
 
-    print(f"Is CUDA supported by this system? {torch.cuda.is_available()}")
-    print(f"CUDA version: {torch.version.cuda}")
+def get_flatterned_obs(state):
+    # Extract numerical values from the dictionary
+    numerical_values = [state[key].flatten() for key in state]
+
+    # Concatenate the numerical values into a single array
+    return np.concatenate(numerical_values)
+    
+def select_action(state):
+    with torch.no_grad():
+        return policy_net(state).max(1).indices.view(1, 1)
+
+# Load model function
+def load_model(episode, model) -> DQN:
+    file_path = f'model_checkpoint_{episode}.pth'
+    
+    if os.path.exists(file_path):
+        checkpoint = torch.load(file_path, map_location=torch.device("cuda"))
         
-    # Storing ID of current CUDA device
-    cuda_id = torch.cuda.current_device()
-    print(f"ID of current CUDA device: {torch.cuda.current_device()}")
-        
-    print(f"Name of current CUDA device: {torch.cuda.get_device_name(cuda_id)}") 
+        return model.load_state_dict(checkpoint['model_state_dict'])
+    else:
+        print(f"No checkpoint found for episode {episode}. Training from scratch.")
+        exit(0)
+
+if __name__ == '__main__':
+    writer = SummaryWriter()
+
+    env = TetrisEnv()
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -72,46 +76,26 @@ if __name__ == '__main__':
     n_observations = len(get_flatterned_obs(state))
 
     policy_net = DQN(n_observations, n_actions).to(device)
-
-    start_episode = 135000
-    policy_net = load_model(policy_net, start_episode)
-    policy_net.eval()
     
-    test_env = TetrisEnv()
-    test_env.render_mode = False
+    policy_net = load_model(-1, policy_net)
+    policy_net.eval()
 
     while True:
         # Initialize the environment and get its state
         state, info = env.reset()
-        test_env.reset()
         
         state = torch.tensor(get_flatterned_obs(state), dtype=torch.float32, device=device).unsqueeze(0)
         
-        for t in count():
-            test_env._game.piece_manager.piece_queue = copy.deepcopy(env._game.piece_manager.piece_queue)
-            test_env._game.piece_manager.board = copy.deepcopy(env._game.piece_manager.board)
-            test_env._game.piece_manager.piece_holder = copy.deepcopy(env._game.piece_manager.piece_holder)
-            
-            test_terminated = True
-            
-            while test_terminated:
-                action = select_action(state)
-                
-                print(aa.movements[action.item()])
-                
-                test_observation, test_reward, test_terminated, test_truncated, _ = test_env.step(action.item())
-            
+        for t in count():      
+            action = select_action(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
-            
+
             done = terminated or truncated
 
             if terminated:
-                next_state = None
+                state = None
             else:
-                next_state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
-
-            # Move to the next state
-            state = next_state
+                state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
 
             if done:     
                 break

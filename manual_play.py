@@ -33,8 +33,12 @@ def _get_info():
     pass 
 
 def _get_board_obs() -> np.ndarray:
-    board = np.array(gu.get_max_height_column_list(game))
-    board = board - gu.get_min_gap_height_exluding_well(game)
+    max_height_list = gu.get_max_height_column_list(game)
+    
+    # Remove well
+    max_height_list.pop()
+
+    board = np.array(max_height_list) - gu.get_min_gap_height_exluding_well(game)
     
     board = np.clip(board, a_min = 0, a_max = 20) 
     
