@@ -145,7 +145,7 @@ if __name__ == '__main__':
     BATCH_SIZE = 128
     GAMMA = 0.95
     EPS_START = 0.9 
-    EPS_END = 0.05
+    EPS_END = 0.01
     EPS_DECAY = 250000
     TAU = 0.001
     LR = 5e-4  
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     folder_path = os.path.join('torch_models', datetime.datetime.now().strftime("model_%d.%m.%Y@%H;%M;%S"))
     os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
 
-    save_frequency = 5000
+    save_frequency = 10000
 
     total_rewards_list = []
     episode_durations = []
@@ -257,7 +257,7 @@ if __name__ == '__main__':
                 
                 # Save the model every 'save_frequency' episodes
                 if i_episode % save_frequency == 0:
-                    print(f"EPS END: {EPS_END}")
+                    print(f"Saving Model...")
                     save_model(policy_net, optimizer, i_episode, folder_path)
                 break
 

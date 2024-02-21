@@ -49,22 +49,21 @@ def select_action(state):
         return policy_net(state).max(1).indices.view(1, 1)
 
 # Load model function
-def load_model(episode, model) -> DQN:
-    file_path = f'model_checkpoint_{episode}.pth'
+def load_model(episode, model):
+    file_path = f'latest_model\\21.02.24@22;05;46\\model\\model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
         checkpoint = torch.load(file_path, map_location=torch.device("cuda"))
+        model.load_state_dict(checkpoint['model_state_dict'])
         
-        return model.load_state_dict(checkpoint['model_state_dict'])
+        return model
     else:
         print(f"No checkpoint found for episode {episode}. Training from scratch.")
         exit(0)
 
 if __name__ == '__main__':
-    writer = SummaryWriter()
-
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -77,7 +76,7 @@ if __name__ == '__main__':
 
     policy_net = DQN(n_observations, n_actions).to(device)
     
-    policy_net = load_model(-1, policy_net)
+    policy_net = load_model(410000, policy_net)
     policy_net.eval()
 
     while True:
