@@ -118,24 +118,24 @@ class GameController():
         # Award points
         match new_lines_cleared:
             case 1:
-                self.score += 40
+                self.score += 100
                 self.b2b = 0
             
             case 2:
-                self.score += 100
+                self.score += 300
                 self.b2b = 0
             
             case 3:
                 # T-spin triple
                 if (self.piece_manager.previous_piece.id == PieceTypeID.T_PIECE):
-                    self.score += 2400
+                    self.score += 1600
                     self.b2b += 1
                 else:
-                    self.score += 300
+                    self.score += 500
                     self.b2b = 0
                 
             case 4:
-                self.score += 1200
+                self.score += 800
                 self.b2b += 1
     
     def _reset_scores(self):

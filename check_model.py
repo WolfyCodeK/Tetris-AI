@@ -23,10 +23,10 @@ class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
         self.layer1 = nn.Linear(n_observations, 2048)
-        self.layer2 = nn.Linear(2048, 1024)
-        self.layer3 = nn.Linear(1024, 512)
-        self.layer4 = nn.Linear(512, 256)
-        self.layer5 = nn.Linear(256, n_actions)
+        self.layer2 = nn.Linear(2048, 2048)
+        self.layer3 = nn.Linear(2048, 2048)
+        self.layer4 = nn.Linear(2048, 2048)
+        self.layer5 = nn.Linear(2048, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -50,7 +50,7 @@ def select_action(state):
 
 # Load model function
 def load_model(episode, model):
-    file_path = f'latest_model\\21.02.24@22;05;46\\model\\model_checkpoint_{episode}.pth'
+    file_path = f'latest_model\model\model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
         checkpoint = torch.load(file_path, map_location=torch.device("cuda"))
@@ -63,7 +63,7 @@ def load_model(episode, model):
 
 if __name__ == '__main__':
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True, show_queue=True, playback=True, playback_aps=20)
+    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True, show_queue=True, playback=False, playback_aps=20)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -76,8 +76,11 @@ if __name__ == '__main__':
 
     policy_net = DQN(n_observations, n_actions).to(device)
     
-    policy_net = load_model(410000, policy_net)
+    policy_net = load_model(370000, policy_net)
     policy_net.eval()
+
+    max_score = 0
+    max_b2b = 0
 
     while True:
         # Initialize the environment and get its state
@@ -88,6 +91,19 @@ if __name__ == '__main__':
         for t in count():      
             action = select_action(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
+            
+            if env._game.score > max_score:
+                max_score = env._game.score
+                os.system('cls')
+                print(f"Max Score: {max_score}")
+                print(f"Max B2B: {max_b2b}")
+                
+            if env._game.b2b > max_b2b:
+                max_b2b = env._game.b2b
+                os.system('cls')
+                print(f"Max Score: {max_score}")
+                print(f"Max B2B: {max_b2b}")
+                
 
             done = terminated or truncated
 
@@ -96,5 +112,5 @@ if __name__ == '__main__':
             else:
                 state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
 
-            if done:     
+            if done:
                 break
