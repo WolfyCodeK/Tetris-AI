@@ -63,7 +63,7 @@ def load_model(episode, model):
 
 if __name__ == '__main__':
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
+    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True, show_queue=True, playback=True, playback_aps=20)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

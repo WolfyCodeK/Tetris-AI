@@ -3,13 +3,10 @@ import numpy as np
 from env import TetrisEnv
 import math
 import random
-import matplotlib
-import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 import datetime
-import utils.game_utils as gu
 
 import torch
 import torch.nn as nn
@@ -23,10 +20,10 @@ class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
         self.layer1 = nn.Linear(n_observations, 2048)
-        self.layer2 = nn.Linear(2048, 1024)
-        self.layer3 = nn.Linear(1024, 512)
-        self.layer4 = nn.Linear(512, 256)
-        self.layer5 = nn.Linear(256, n_actions)
+        self.layer2 = nn.Linear(2048, 2048)
+        self.layer3 = nn.Linear(2048, 2048)
+        self.layer4 = nn.Linear(2048, 2048)
+        self.layer5 = nn.Linear(2048, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -145,11 +142,11 @@ if __name__ == '__main__':
     BATCH_SIZE = 128
     GAMMA = 0.95
     EPS_START = 0.9 
-    EPS_END = 0.01
-    EPS_DECAY = 250000
+    EPS_END = 0
+    EPS_DECAY = 500000
     TAU = 0.001
     LR = 5e-4  
-    REPLAY_MEMORY_CAPACITY = 500000 
+    REPLAY_MEMORY_CAPACITY = 2000000 
 
     # Get number of actions from gym action space
     n_actions = env.action_space.n
@@ -257,7 +254,15 @@ if __name__ == '__main__':
                 
                 # Save the model every 'save_frequency' episodes
                 if i_episode % save_frequency == 0:
-                    print(f"Saving Model...")
+                    print("-------------------------------------")
+                    print(f"Saving Model: checkpoint_{i_episode}")
+                    print(f"Replay Memory Length: {memory.__len__()}")
+                    
+                    eps_threshold = EPS_END + (EPS_START - EPS_END) * \
+                    math.exp(-1. * steps_done / EPS_DECAY)
+                    
+                    print(f"Eps Threshold: {eps_threshold}")
+                    print(f"Steps Done: {steps_done}")
                     save_model(policy_net, optimizer, i_episode, folder_path)
                 break
 

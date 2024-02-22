@@ -53,8 +53,8 @@ class TetrisEnv(gym.Env):
         self._window = None
         self.fps = 0
         
-        self.moves_after_tetris = 0
-        self.after_tetris = False
+        self.playback = False
+        self.playback_aps = 10
 
     def step(self, action):
         prev_lines_cleared = self._game.lines_cleared
@@ -71,14 +71,13 @@ class TetrisEnv(gym.Env):
         
         # Perform all actions in action list
         for i in range(len(action_list)):
-            self._window.render_game, playback = self._game.admin_render_toggle_input(pygame.event.get())
+            self._window.render_game, admin_playback = self._game.admin_render_toggle_input(pygame.event.get())
             
             # Update the window at a human viewable speed if it is being rendered
-            if playback:
-                time.sleep(0.1)
-                
-                if self._window_exists():
-                    self._update_window()
+            if self.playback:
+                self._render_window_if_exists(playback=True)
+            elif admin_playback:
+                self._render_window_if_exists(playback=True)
             
             terminated = self._game.run(action_list[i]) 
             
@@ -89,25 +88,9 @@ class TetrisEnv(gym.Env):
         # Check how many lines were cleared after performing actions
         lines_cleared = self._game.lines_cleared - prev_lines_cleared
         
-        # DEBUGGING CODE
-        if lines_cleared == 4:
-            print(f"Tetris!: {action_list}")
-            self.after_tetris = True
-            
-        if self.after_tetris:
-            self.moves_after_tetris += 1
-            print(self.moves_after_tetris)
-        
         ###############################
         # Game termination conditions #
         ###############################
-        
-        # Terminate if tetris ready and able to tetris but didn't
-        # if was_tetris_ready and gu.is_tetris_ready(self._game):
-        #     if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE) or (gu.get_held_piece_id(self._game) == int(PieceTypeID.I_PIECE) and not held_performed):
-        #         terminated = True    
-        #         reward = self.GAME_OVER_PUNISH
-        #         print(f"Failed Tetris: {action_list}")
 
         # Terminate if gap created on board
         if gu.get_num_of_full_gaps(self._game) > 0 or gu.get_num_of_top_gaps(self._game) > 0:
@@ -132,28 +115,20 @@ class TetrisEnv(gym.Env):
         if self._game.holds_used_in_a_row > 1:
             reward = self.GAME_OVER_PUNISH * 10
             terminated = True
-            print(f"Held More than once in a row!")
             
         ################################
         # Get rewards and observations #
         ################################
 
-        if terminated:
-            if self.after_tetris:
-                print(self._get_obs())
-            
-            self.after_tetris = False
-            self.moves_after_tetris = 0
-        else:
+        if not terminated:
             reward = self._perfect_stacking_reward(lines_cleared, prev_bumpiness, held_performed)
 
         observation = self._get_obs()
         info = self._get_info()
         
         # Update window at full speed if it is being rendered
-        if not playback:
-            if self._window_exists():
-                self._update_window()
+        if not (admin_playback or self.playback):
+            self._render_window_if_exists()
         
         return observation, reward, terminated, False, info
         
@@ -167,13 +142,27 @@ class TetrisEnv(gym.Env):
         
         return observation, info
     
-    def render(self, screen_size: ScreenSizes|int = ScreenSizes.MEDIUM, show_fps: bool = False, show_score: bool = False, show_queue: bool = True):
+    def render(self, screen_size: ScreenSizes|int = ScreenSizes.MEDIUM, show_fps: bool = False, show_score: bool = False, show_queue: bool = True, playback = False, playback_aps = 10):
+        """Renders the window and any additional information that needs to be shown.
+
+        Args:
+            screen_size (ScreenSizes | int, optional): The size of the screen. This can be a number. Defaults to ScreenSizes.MEDIUM.
+            show_fps (bool, optional): If the fps counter should be rendered. Defaults to False.
+            show_score (bool, optional): If the score should be rendered. Defaults to False.
+            show_queue (bool, optional): If the piece queue should be rendered. Defaults to True.
+            playback (bool, optional): If the game should be played back at a human viewable speed. Defaults to False.
+            playback_aps (int, optional): The number of actions per second for the playback to show from the agent, where a higher number is a faster playback speed. Defaults to 10.
+        """
         # Initial pygame setup
         pygame.display.init()   
         pygame.font.init()
         
         # Create window Object
         self._window = Window(self._game, screen_size, show_fps, show_score, show_queue)
+        
+        # Set playback options
+        self.playback = playback
+        self.playback_aps = playback_aps
         
     def close(self):
         print("Enviroment closed.")
@@ -215,6 +204,13 @@ class TetrisEnv(gym.Env):
         elif (pygame.display.get_active()):
                 self._window.draw()
                 self.fps = self._game.last_fps_recorded
+                
+    def _render_window_if_exists(self, playback: bool = False):
+        if playback:
+            time.sleep(1 / self.playback_aps)
+                
+        if self._window_exists():
+            self._update_window()
 
     def _get_obs(self):
         return {"board": self._get_board_obs(), "additional": self._get_additional_obs()}
