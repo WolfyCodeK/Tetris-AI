@@ -18,7 +18,7 @@ import utils.game_utils as gu
 from game.agent_actions import movements
 
 
-class TetrisEnv(gym.Env):
+class TrainTetrisEnv(gym.Env):
     def __init__(self) -> None:
         # Init game controller
         self._game = GameController()
@@ -52,9 +52,6 @@ class TetrisEnv(gym.Env):
         
         self._window = None
         self.fps = 0
-        
-        self.playback = False
-        self.playback_aps = 10
 
     def step(self, action):
         prev_lines_cleared = self._game.lines_cleared
@@ -92,29 +89,29 @@ class TetrisEnv(gym.Env):
         # Game termination conditions #
         ###############################
 
-        # # Terminate if gap created on board
-        # if gu.get_num_of_full_gaps(self._game) > 0 or gu.get_num_of_top_gaps(self._game) > 0:
-        #     terminated = True
-        #     reward = self.GAME_OVER_PUNISH
+        # Terminate if gap created on board
+        if gu.get_num_of_full_gaps(self._game) > 0 or gu.get_num_of_top_gaps(self._game) > 0:
+            terminated = True
+            reward = self.GAME_OVER_PUNISH
         
-        # # Terminate if height difference violated of board well incorrectly filled
-        # if gu.get_board_height_difference_with_well(self._game) > self.MAX_BOARD_DIFF:
-        #     terminated = True
-        #     reward = self.GAME_OVER_PUNISH    
+        # Terminate if height difference violated of board well incorrectly filled
+        if gu.get_board_height_difference_with_well(self._game) > self.MAX_BOARD_DIFF:
+            terminated = True
+            reward = self.GAME_OVER_PUNISH    
             
-        # # Termiante if pieces placed in well
-        # if not gu.is_well_valid(self._game):
-        #     terminated = True
+        # Termiante if pieces placed in well
+        if not gu.is_well_valid(self._game):
+            terminated = True
             
-        #     if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
-        #         reward = 0
-        #     else:
-        #         reward = self.GAME_OVER_PUNISH    
+            if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
+                reward = 0
+            else:
+                reward = self.GAME_OVER_PUNISH    
         
-        # # Terminate for using the hold action more than once in a row
-        # if self._game.holds_used_in_a_row > 1:
-        #     reward = self.GAME_OVER_PUNISH * 10
-        #     terminated = True
+        # Terminate for using the hold action more than once in a row
+        if self._game.holds_used_in_a_row > 1:
+            reward = self.GAME_OVER_PUNISH * 10
+            terminated = True
             
         ################################
         # Get rewards and observations #
@@ -219,23 +216,14 @@ class TetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        max_height_list = gu.get_max_height_column_list(self._game)
+        max_height_list = gu.get_max_height_column_list_excluding_well(self._game)
         
-        # Remove well
-        max_height_list.pop()
-
         board = np.array(max_height_list) - gu.get_min_gap_height_exluding_well(self._game)
-        
         board = np.clip(board, a_min = 0, a_max = 20) 
         
         return board
     
     def _get_additional_obs(self) -> np.ndarray: 
-        gaps = gu.get_num_of_full_gaps(self._game) + gu.get_num_of_top_gaps(self._game)
-        
-        if gaps > 0:
-            gaps = 1
-            
         if gu.is_tetris_ready(self._game):
             tetris_ready = 1 
         else:
@@ -244,7 +232,6 @@ class TetrisEnv(gym.Env):
         return np.array(
             [
                 tetris_ready,
-                gaps,
                 self._game.holds_used_in_a_row,
                 gu.get_held_piece_id(self._game),
                 gu.get_current_piece_id(self._game)

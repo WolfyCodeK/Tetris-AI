@@ -251,11 +251,11 @@ class GameController():
                     self.render_game = False
                     
                 if event.key == pygame.K_RIGHT:
-                    print("PLAYBACK DISABLED")
+                    print("SLOW PLAYBACK DISABLED")
                     self.playback = False
                     
                 if event.key == pygame.K_LEFT:
-                    print("PLAYBACK ENABLED")
+                    print("SLOW PLAYBACK ENABLED")
                     self.playback = True
             
         return self.render_game, self.playback

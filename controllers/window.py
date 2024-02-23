@@ -45,9 +45,6 @@ class Window():
         self.scr_width, self.scr_height = win_utils.get_screen_sizes()
         self.window = pygame.display.set_mode((self.scr_width, self.scr_height))
         self.board_surface = pygame.Surface((self.scr_width, self.scr_height), pygame.SRCALPHA)
-
-        # Load images from resources
-        self.background_image = pygame.image.load("res/gradient_background_blue.jpg").convert()
         
     def draw(self):
         """Draw all features to the screen.

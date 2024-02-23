@@ -159,13 +159,11 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Local Machine Notes
-tempcode.txt
-
-# ML Folder
+# Model and Logs folder
 logs/
 models/
 model/
 torch_models/
 runs/
 saved_runs/
+model_data/

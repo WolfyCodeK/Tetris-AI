@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from env import TetrisEnv
+from test_env import TestTetrisEnv
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 
@@ -41,23 +41,29 @@ def select_action(state):
 
 # Load model function
 def load_model(episode, model):
-    file_path = f'latest_model\model\model_checkpoint_{episode}.pth'
+    file_path = f'latest_model/model/model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
-        checkpoint = torch.load(file_path, map_location=torch.device("cuda"))
+        checkpoint = torch.load(file_path, map_location=torch.device(device_type))
         model.load_state_dict(checkpoint['model_state_dict'])
         
         return model
     else:
-        print(f"No checkpoint found for episode {episode}. Training from scratch.")
+        print(f"No checkpoint found for episode {episode}.")
         exit(0)
+        
+def print_scores():
+    os.system('clear')
+    print(f"Max Score: {max_score}")
+    print(f"Max B2B: {max_b2b}")
 
 if __name__ == '__main__':
-    env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True, show_queue=True, playback=True, playback_aps=20)
+    env = TestTetrisEnv()
+    env.render(screen_size=ScreenSizes.LARGE, show_fps=False, show_score=True, show_queue=True, playback=True, playback_aps=20)
 
     # if GPU is to be used
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device_type = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device_type)
 
     # Get number of actions from gym action space
     n_actions = env.action_space.n
@@ -81,27 +87,20 @@ if __name__ == '__main__':
         
         for t in count():      
             action = select_action(state)
-            observation, reward, terminated, truncated, _ = env.step(action.item())
+            observation, terminated, _ = env.step(action.item())
             
             if env._game.score > max_score:
                 max_score = env._game.score
-                os.system('cls')
-                print(f"Max Score: {max_score}")
-                print(f"Max B2B: {max_b2b}")
+                print_scores()
                 
             if env._game.b2b > max_b2b:
                 max_b2b = env._game.b2b
-                os.system('cls')
-                print(f"Max Score: {max_score}")
-                print(f"Max B2B: {max_b2b}")
-                
-
-            done = terminated or truncated
+                print_scores()
 
             if terminated:
                 state = None
             else:
                 state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
 
-            if done:
+            if terminated:
                 break

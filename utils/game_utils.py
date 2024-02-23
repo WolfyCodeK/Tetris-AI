@@ -60,6 +60,13 @@ def get_max_height_column_list(game_controller: GameController):
     
     return max_height_list
 
+def get_max_height_column_list_excluding_well(game_controller: GameController):
+    max_height_column_list = get_max_height_column_list(game_controller)
+    
+    max_height_column_list.pop()
+    
+    return max_height_column_list
+
 def get_max_piece_height_on_board(game_controller: GameController):
     return max(get_max_height_column_list(game_controller))
 

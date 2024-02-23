@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from env import TetrisEnv
+from train_env import TrainTetrisEnv
 import math
 import random
 from collections import namedtuple, deque
@@ -129,7 +129,7 @@ def optimize_model():
 if __name__ == '__main__':
     writer = SummaryWriter()
 
-    env = TetrisEnv()
+    env = TrainTetrisEnv()
     env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
 
     # if GPU is to be used

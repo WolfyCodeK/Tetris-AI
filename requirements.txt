@@ -1,8 +1,4 @@
-pygame==2.1.2
 numpy==1.26.2
-gym==0.21.0
-stable-baselines3==2.2.1
-torch==1.13.1
-wheel==0.38.4
-setuptools==65.5.0
+pygame==2.1.2
 gymnasium==0.29.1
+torch==2.2.0 --index-url https://download.pytorch.org/whl/cu118

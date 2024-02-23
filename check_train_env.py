@@ -1,13 +1,13 @@
 import time
-from env import TetrisEnv
+from train_env import TrainTetrisEnv
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 
 # Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
 if __name__ == '__main__':
-    env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True)
+    env = TrainTetrisEnv()
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=True, show_queue=True, playback=True, playback_aps=5)
         
     num_episodes = 500_000
 
@@ -26,7 +26,5 @@ if __name__ == '__main__':
 
             if done:     
                 break
-            
-            time.sleep(0.1)
 
     print('Complete')
