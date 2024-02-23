@@ -27,6 +27,6 @@ if __name__ == '__main__':
             if done:     
                 break
             
-            time.sleep(1)
+            time.sleep(0.1)
 
     print('Complete')

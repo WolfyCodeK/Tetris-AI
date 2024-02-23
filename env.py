@@ -92,29 +92,29 @@ class TetrisEnv(gym.Env):
         # Game termination conditions #
         ###############################
 
-        # Terminate if gap created on board
-        if gu.get_num_of_full_gaps(self._game) > 0 or gu.get_num_of_top_gaps(self._game) > 0:
-            terminated = True
-            reward = self.GAME_OVER_PUNISH
+        # # Terminate if gap created on board
+        # if gu.get_num_of_full_gaps(self._game) > 0 or gu.get_num_of_top_gaps(self._game) > 0:
+        #     terminated = True
+        #     reward = self.GAME_OVER_PUNISH
         
-        # Terminate if height difference violated of board well incorrectly filled
-        if gu.get_board_height_difference_with_well(self._game) > self.MAX_BOARD_DIFF:
-            terminated = True
-            reward = self.GAME_OVER_PUNISH    
+        # # Terminate if height difference violated of board well incorrectly filled
+        # if gu.get_board_height_difference_with_well(self._game) > self.MAX_BOARD_DIFF:
+        #     terminated = True
+        #     reward = self.GAME_OVER_PUNISH    
             
-        # Termiante if pieces placed in well
-        if not gu.is_well_valid(self._game):
-            terminated = True
+        # # Termiante if pieces placed in well
+        # if not gu.is_well_valid(self._game):
+        #     terminated = True
             
-            if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
-                reward = 0
-            else:
-                reward = self.GAME_OVER_PUNISH    
+        #     if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
+        #         reward = 0
+        #     else:
+        #         reward = self.GAME_OVER_PUNISH    
         
-        # Terminate for using the hold action more than once in a row
-        if self._game.holds_used_in_a_row > 1:
-            reward = self.GAME_OVER_PUNISH * 10
-            terminated = True
+        # # Terminate for using the hold action more than once in a row
+        # if self._game.holds_used_in_a_row > 1:
+        #     reward = self.GAME_OVER_PUNISH * 10
+        #     terminated = True
             
         ################################
         # Get rewards and observations #

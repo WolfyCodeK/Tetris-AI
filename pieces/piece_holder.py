@@ -1,5 +1,4 @@
-from pieces.i_piece import IPiece
-from pieces.o_piece import OPiece
+from pieces.pieces import IPiece, OPiece
 from pieces.piece import Piece
 import utils.board_constants as bc
 import utils.window_utils as win_utils

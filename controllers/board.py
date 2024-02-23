@@ -2,9 +2,7 @@ import numpy as np
 import utils.board_constants as bc
 
 import utils.window_utils as win_utils
-from pieces.i_piece import IPiece
-from pieces.o_piece import OPiece
-from pieces.three_wide_pieces import (JPiece, LPiece, SPiece, TPiece, ZPiece)
+from pieces.pieces import (JPiece, LPiece, SPiece, TPiece, ZPiece, IPiece, OPiece)
 
 class Board():
     # All the available pieces to the piece controller

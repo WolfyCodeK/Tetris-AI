@@ -3,8 +3,7 @@ from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc
 import utils.window_utils as win_utils
 from game.game_settings import GameSettings
-from pieces.i_piece import IPiece
-from pieces.o_piece import OPiece
+from pieces.pieces import IPiece, OPiece
 from pieces.piece import Piece
 
 class PieceQueue():

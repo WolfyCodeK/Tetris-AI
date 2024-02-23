@@ -148,3 +148,4 @@ def draw_rect(x: int, y: int, colour: tuple, surface: Surface) -> None:
     y = y + pixel_to_grid_size(top_buf) - bc.BOARD_HEIGHT_BUFFER
     
     draw.rect(surface, colour, Rect(x * get_grid_size(), y * get_grid_size(), get_grid_size(), get_grid_size()))
+    

@@ -28,6 +28,10 @@ class GameSettings():
     # If the piece queue should be displayed
     show_queue = True
     
+    # Colour Scheme
+    colour_schemes = ["default", "single"]
+    colour_scheme = colour_schemes[1]
+    
     #########################################################
     #------------------- ERROR MESSAGES -------------------#
     #########################################################

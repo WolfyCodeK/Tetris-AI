@@ -1,21 +1,12 @@
 import os
 import numpy as np
 from env import TetrisEnv
-import math
-import random
-import matplotlib
-import matplotlib.pyplot as plt
-from collections import namedtuple, deque
 from itertools import count
 from utils.screen_sizes import ScreenSizes
-import datetime
-import utils.game_utils as gu
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-from torch.utils.tensorboard import SummaryWriter
 
 # Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 
@@ -63,7 +54,7 @@ def load_model(episode, model):
 
 if __name__ == '__main__':
     env = TetrisEnv()
-    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True, show_queue=True, playback=False, playback_aps=20)
+    env.render(screen_size=ScreenSizes.MEDIUM, show_fps=True, show_score=True, show_queue=True, playback=True, playback_aps=20)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

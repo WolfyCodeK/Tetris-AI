@@ -6,7 +6,6 @@ from pieces.piece import Piece
 from game.game_exceptions import PiecePlacementError
 from numpy import ndarray
 
-
 class PieceManager():    
     def __init__(self) -> None:
         # Create game board

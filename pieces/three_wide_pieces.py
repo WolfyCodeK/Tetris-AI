@@ -3,9 +3,7 @@ from pieces.piece_lookup_tables import (
     THREE_WIDE_PIECE_ROTATION_TABLE, 
     THREE_WIDE_PIECE_KICK_TABLE
     )
-
 from .piece import Piece
-from .piece_type_id import PieceTypeID
 
 class ThreeWidePiece(Piece):
     def __init__(self, id: chr, x: int, colour: tuple, kick_priority: dict, shape: np.ndarray) -> None:
@@ -95,92 +93,3 @@ class ThreeWidePiece(Piece):
             relative_rotation_state = self.increment_rotation_state(relative_rotation_state)
         
         return self._kick_from_table(shape, clockwise, relative_rotation_state, kick_index)
-        
-class ZPiece(ThreeWidePiece):
-    ID = PieceTypeID.Z_PIECE
-    START_BOARD_X = 4
-    COLOUR = (255,85,82)
-    DEFAULT_SHAPE = np.array([[0, 0], [1, 0], [0, -1], [-1, -1]])
-    KICK_PRIORITY = {
-        0: [0, 1, 2, 3],
-        1: [2, 0, 1, 3],
-        2: [1, 0, 2, 3],
-        3: [3, 0, 1, 2]
-    }
-    
-    def __init__(self) -> None:
-        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
-
-class LPiece(ThreeWidePiece):
-    ID = PieceTypeID.L_PIECE
-    START_BOARD_X = 4
-    COLOUR = (255,159,122)
-    DEFAULT_SHAPE = np.array([[0, 0], [-1, 0], [1, 0], [1, -1]])
-    KICK_PRIORITY = {
-        0: [1, 0, 2, 3],
-        1: [0, 3, 1, 2],
-        2: [1, 0, 2, 3],
-        3: [3, 0, 1, 2]
-    }
-    
-    def __init__(self) -> None:
-        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
-        
-class SPiece(ThreeWidePiece):
-    ID = PieceTypeID.S_PIECE
-    START_BOARD_X = 4
-    COLOUR = (82,255,97)
-    DEFAULT_SHAPE = np.array([[0, 0], [-1, 0], [0, -1], [1, -1]])
-    KICK_PRIORITY = {
-        0: [0, 1, 2, 3],
-        1: [3, 0, 1, 2],
-        2: [1, 0, 2, 3],
-        3: [2, 0, 1, 3]
-    }
-    
-    def __init__(self) -> None:
-        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
-        
-class JPiece(ThreeWidePiece):
-    ID = PieceTypeID.J_PIECE
-    START_BOARD_X = 4
-    COLOUR = (62,101,255)
-    DEFAULT_SHAPE = np.array([[0, 0], [-1, 0], [1, 0], [-1, -1]])
-    KICK_PRIORITY = {
-        0: [1, 0, 2, 3],
-        1: [0, 2, 1, 3],
-        2: [1, 0, 2, 3],
-        3: [3, 0, 1, 2]
-    }
-    
-    def __init__(self) -> None:
-        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
-        
-class TPiece(ThreeWidePiece):
-    ID = PieceTypeID.T_PIECE
-    START_BOARD_X = 4
-    COLOUR = (255,100,167)
-    DEFAULT_SHAPE = np.array([[0, 0], [-1, 0], [1, 0], [0, -1]])
-    KICK_PRIORITY = {
-        0: [1, 0, 2, 3],
-        1: [3, 0, 1, 2],
-        2: [1, 0, 2, 3],
-        3: [3, 2, 1, 0]
-    }
-    
-    def __init__(self) -> None:
-        super().__init__(self.ID, self.START_BOARD_X, self.COLOUR, self.KICK_PRIORITY, self.DEFAULT_SHAPE.copy())
-    
-    def get_minos_after_kick(self, shape: np.ndarray, kick_index, clockwise, rotation_state: int) -> tuple:
-        relative_rotation_state = rotation_state
-        
-        if not clockwise:
-            relative_rotation_state = self.increment_rotation_state(relative_rotation_state)
-
-        # If illegal kick is being attempted, do nothing
-        if (relative_rotation_state == 1) and (kick_index == 2):
-            return None, 0, 0
-        elif (relative_rotation_state == 3) and (kick_index == 1):
-            return None, 0, 0
-        else:
-            return self._kick_from_table(shape, clockwise, relative_rotation_state, kick_index)

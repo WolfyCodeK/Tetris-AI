@@ -135,7 +135,11 @@ class GameController():
                     self.b2b = 0
                 
             case 4:
-                self.score += 800
+                if self.b2b > 1:
+                    self.score += 1200
+                else:
+                    self.score += 800
+                    
                 self.b2b += 1
     
     def _reset_scores(self):
