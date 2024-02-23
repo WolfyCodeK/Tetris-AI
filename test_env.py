@@ -1,6 +1,6 @@
+import os
 import time
 import numpy as np
-import pygame
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -15,9 +15,13 @@ import utils.game_utils as gu
 
 from game.agent_actions import movements
 
+os.system('clear')
+print("> Loading Enviroment...")
+
+import pygame
 
 class TestTetrisEnv(gym.Env):
-    def __init__(self) -> None:
+    def __init__(self) -> None:    
         # Init game controller
         self._game = GameController()
 
@@ -111,7 +115,7 @@ class TestTetrisEnv(gym.Env):
                 self.fps = self._game.last_fps_recorded
                 
     def _render_window_if_exists(self, playback: bool = False):
-        if playback:
+        if playback and self.playback_aps != 0:
             time.sleep(1 / self.playback_aps)
                 
         if self._window_exists():

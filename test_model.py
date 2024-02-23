@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 from test_env import TestTetrisEnv
 from itertools import count
@@ -53,13 +54,31 @@ def load_model(episode, model):
         exit(0)
         
 def print_scores():
+    line = "-----------------------------"
     os.system('clear')
-    print(f"Max Score: {max_score}")
-    print(f"Max B2B: {max_b2b}")
+    print("> Game Analytics: ")
+    print("")
+    print(line)
+    print("| Max Score | Max B2B | APS |")
+    print(line)
+    print("| {:^10}|".format(max_score), end="")
+    print("{:^9}|".format(max_b2b), end="")
+    print("{:^5}|".format(f"{aps}."))
+    print(line)
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        screen_size = int(sys.argv[1])
+    else:
+        screen_size = ScreenSizes.XXSMALL
+
+    if len(sys.argv) > 2:
+        playback_aps = int(sys.argv[2])
+    else:
+        playback_aps = 10
+    
     env = TestTetrisEnv()
-    env.render(screen_size=ScreenSizes.LARGE, show_fps=False, show_score=True, show_queue=True, playback=True, playback_aps=20)
+    env.render(screen_size=screen_size, show_fps=False, show_score=True, show_queue=True, playback=True, playback_aps=playback_aps)
 
     # if GPU is to be used
     device_type = "cuda" if torch.cuda.is_available() else "cpu"
@@ -78,6 +97,9 @@ if __name__ == '__main__':
 
     max_score = 0
     max_b2b = 0
+    aps = env.playback_aps
+
+    print_scores()
 
     while True:
         # Initialize the environment and get its state

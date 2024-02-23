@@ -264,6 +264,10 @@ if __name__ == '__main__':
                     print(f"Eps Threshold: {eps_threshold}")
                     print(f"Steps Done: {steps_done}")
                     save_model(policy_net, optimizer, i_episode, folder_path)
+                    
+                    # Increase save frequency after most exploration has finished
+                    if i_episode > 350_000:
+                        save_frequency = 1000
                 break
 
     print('Complete')
