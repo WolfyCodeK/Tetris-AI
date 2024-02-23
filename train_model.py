@@ -177,7 +177,7 @@ if __name__ == '__main__':
     else:
         num_episodes = 1_000_000
         
-    folder_path = os.path.join('torch_models', datetime.datetime.now().strftime("model_%d.%m.%Y@%H;%M;%S"))
+    folder_path = os.path.join('model_data/torch_models', datetime.datetime.now().strftime("model_%d.%m.%Y@%H;%M;%S"))
     os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
 
     save_frequency = 10000
