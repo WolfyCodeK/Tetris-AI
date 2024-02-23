@@ -22,7 +22,7 @@ class Window():
         tetris_icon = pygame.image.load("res/tetris-icon.png")
         pygame.display.set_icon(tetris_icon)
         
-        # Set logic controller
+        # Set game controller
         self.game = game
         self.render_game = True
         

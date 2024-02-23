@@ -1,11 +1,12 @@
 import numpy as np
+from pieces.piece_colours import PieceColours
 
 import utils.board_constants as bc
 import utils.window_utils as win_utils
 from abc import ABC, abstractmethod
 
 class Piece(ABC):
-    GHOST_PIECE_COLOUR = (50, 50, 50, 225)
+    GHOST_PIECE_COLOUR = PieceColours.GHOST_PIECE_COLOUR.value
     
     NUM_OF_KICK_OPTIONS = 4
     NUM_OF_ROTATION_STATES = 4
