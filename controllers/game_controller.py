@@ -177,7 +177,7 @@ class GameController():
             case _:
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
             
-        if (action == int(Actions.HOLD_PIECE)):
+        if action == int(Actions.HOLD_PIECE):
             self.holds_used_in_a_row += 1
         else:
             self.holds_used_in_a_row = 0

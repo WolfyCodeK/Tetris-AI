@@ -32,14 +32,19 @@ class Piece(ABC):
     
     @abstractmethod
     def get_shape_after_rotation(self, clockwise: bool) -> tuple:
-        pass
+        return self.shape, self.rotation_state
     
     @abstractmethod
     def set_minos_from_shape(self, clockwise: bool, shape: np.ndarray):
-        pass
+        self.shape = shape
+        self.minos = self.convert_to_absolute_shape(self.shape)
     
     @abstractmethod
     def get_minos_after_kick(self, shape: np.ndarray, kick_index:int, clockwise: bool, rotation_state: int) -> tuple:
+        pass
+
+    @abstractmethod
+    def get_kick_priority(self) -> dict[int, list[int]]:
         pass
     
     def _set_x_pos(self, x: int) -> None:
@@ -88,7 +93,7 @@ class Piece(ABC):
             absolute[i][0] = absolute[i][0] + x_move + self.x_pos
             absolute[i][1] = absolute[i][1] + y_move + self.y_pos
             
-        return absolute.copy()
+        return absolute
         
     def transform(self, x: int, y: int) -> None:
         # Save previous position in case tranformation needs reverting

@@ -3,13 +3,10 @@ import numpy as np
 from train_env import TrainTetrisEnv
 import math
 import random
-import matplotlib
-import matplotlib.pyplot as plt
 from collections import namedtuple, deque
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 import datetime
-import utils.game_utils as gu
 
 import torch
 import torch.nn as nn

@@ -6,7 +6,7 @@ from pieces.piece_lookup_tables import (
 from .piece import Piece
 
 class ThreeWidePiece(Piece):
-    def __init__(self, id: chr, x: int, colour: tuple, kick_priority: dict, shape: np.ndarray) -> None:
+    def __init__(self, id: chr, x: int, colour: tuple, kick_priority: dict[int, list[int]], shape: np.ndarray) -> None:
         super().__init__(id, x, colour, shape)
         self.kick_priority = kick_priority
     
@@ -55,7 +55,7 @@ class ThreeWidePiece(Piece):
         
         rotation_state = self.cycle_rotation_state(self.rotation_state, clockwise)
         
-        return new_shape.copy(), rotation_state
+        return new_shape, rotation_state
     
     def set_minos_from_shape(self, clockwise: bool, shape: np.ndarray):
         self.shape = shape
@@ -84,7 +84,7 @@ class ThreeWidePiece(Piece):
         new_x_pos = invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[rotation_state][kick_index][0]
         new_y_pos = invert_transformation * THREE_WIDE_PIECE_KICK_TABLE[rotation_state][kick_index][1]
             
-        return self.convert_to_absolute_shape(shape.copy(), new_x_pos, new_y_pos), new_x_pos, new_y_pos
+        return self.convert_to_absolute_shape(shape, new_x_pos, new_y_pos), new_x_pos, new_y_pos
         
     def get_minos_after_kick(self, shape: np.ndarray, kick_index: int, clockwise: bool, rotation_state: int) -> tuple:
         relative_rotation_state = rotation_state
