@@ -1,5 +1,6 @@
+import numpy as np
 from pieces.piece_type_id import PieceTypeID
-from utils.board_constants import *
+import utils.board_constants as bc 
 from controllers.game_controller import GameController
 
 def get_placed_piece_max_height(game_controller: GameController):
@@ -43,15 +44,15 @@ def get_max_height_column_list(game_controller: GameController):
     max_height_list = []
     
     # Horizontal loop
-    for i in range(BOARD_COLUMNS):
+    for i in range(bc.BOARD_COLUMNS):
         column = board_state[:, i]
         
         peak_found = False
         
         # Vertical loop
-        for j in BOARD_HEIGHT_RANGE_INCR:
+        for j in bc.BOARD_HEIGHT_RANGE_INCR:
             if (column[j] > 0):
-                max_height_list.append(BOARD_HEIGHT - j)
+                max_height_list.append(bc.BOARD_HEIGHT - j)
                 peak_found = True
                 break
             
@@ -60,7 +61,7 @@ def get_max_height_column_list(game_controller: GameController):
     
     return max_height_list
 
-def get_max_height_column_list_excluding_well(game_controller: GameController):
+def get_max_height_column_list_excluding_well(game_controller: GameController) -> list:
     max_height_column_list = get_max_height_column_list(game_controller)
     
     max_height_column_list.pop()
@@ -76,15 +77,15 @@ def get_min_height_column_list(game_controller: GameController):
     min_height_list = []
     
     # Horizontal loop
-    for i in range(BOARD_COLUMNS):
+    for i in range(bc.BOARD_COLUMNS):
         column = board_state[:, i]
         
         min_found = False
         
         # Vertical loop
-        for j in BOARD_HEIGHT_RANGE_INCR:
+        for j in bc.BOARD_HEIGHT_RANGE_INCR:
             if (column[j] > 0):
-                min_height_list.append(BOARD_HEIGHT - j)
+                min_height_list.append(bc.BOARD_HEIGHT - j)
                 min_found = True
                 break
             
@@ -102,14 +103,21 @@ def get_first_gap_list(game_controller: GameController):
     first_gap_list = []
     
     # Horizontal loop
-    for i in range(BOARD_COLUMNS):
+    for i in range(bc.BOARD_COLUMNS):
         column = board_state[:, i]
         
         # Vertical loop
-        for j in range(BOARD_HEIGHT - 1, 0, -1):
+        for j in range(bc.BOARD_HEIGHT - 1, 0, -1):
             if (column[j] == 0):
-                first_gap_list.append((BOARD_HEIGHT - 1) - j)
+                first_gap_list.append((bc.BOARD_HEIGHT - 1) - j)
                 break
+    
+    return first_gap_list
+
+def get_first_gap_list_excluding_well(game_controller: GameController):
+    first_gap_list = get_first_gap_list(game_controller)
+    
+    first_gap_list.pop()
     
     return first_gap_list
 
@@ -120,7 +128,7 @@ def get_num_of_top_gaps(game_controller: GameController):
     gaps = 0
     
     # Horizontal loop
-    for i in range(BOARD_COLUMNS):
+    for i in range(bc.BOARD_COLUMNS):
         column = board_state[:, i]
         left_wall = False
         right_wall = False
@@ -130,13 +138,13 @@ def get_num_of_top_gaps(game_controller: GameController):
         else:
             left_wall = True
             
-        if i < BOARD_COLUMNS - 1:   
+        if i < bc.BOARD_COLUMNS - 1:   
             right = board_state[:, i + 1]
         else:
             right_wall = True
 
         # Vertical loop
-        for j in range(BOARD_HEIGHT - max_height_list[i], BOARD_HEIGHT):
+        for j in range(bc.BOARD_HEIGHT - max_height_list[i], bc.BOARD_HEIGHT):
             if (column[j] == 0) and (column[j - 1] > 0) and ((not((left_wall == True) or (left[j] > 0))) or (not((right_wall == True) or (right[j] > 0)))):
                 gaps += 1
                 
@@ -149,7 +157,7 @@ def get_num_of_full_gaps(game_controller: GameController):
     gaps = 0
     
     # Vertical loop
-    for i in range(BOARD_HEIGHT - max_height, BOARD_HEIGHT):
+    for i in range(bc.BOARD_HEIGHT - max_height, bc.BOARD_HEIGHT):
         middle_row = board_state[i, :]
         
         if (i > 0):
@@ -158,9 +166,9 @@ def get_num_of_full_gaps(game_controller: GameController):
             top_row = None
         
         # Horizontal loop
-        for j in range(BOARD_COLUMNS):
+        for j in range(bc.BOARD_COLUMNS):
             if (middle_row[j] == 0) and (top_row[j] > 0) and ((j == 0) or (middle_row[j - 1] > 0)):
-                if (j == BOARD_COLUMNS - 1) or (middle_row[j + 1] > 0):
+                if (j == bc.BOARD_COLUMNS - 1) or (middle_row[j + 1] > 0):
                     added_gaps = 1
                 else:
                     check_finished = False
@@ -170,7 +178,7 @@ def get_num_of_full_gaps(game_controller: GameController):
                     while not check_finished:
                         j += 1
                         
-                        if (j < BOARD_COLUMNS):
+                        if (j < bc.BOARD_COLUMNS):
                             next_pos_right = middle_row[j] == 0
                             next_pos_top = top_row[j] > 0
                             
@@ -191,9 +199,7 @@ def get_num_of_full_gaps(game_controller: GameController):
     return gaps      
 
 def is_tetris_ready(game_controller: GameController):
-    max_list = list(get_max_height_column_list(game_controller))
-    max_list.pop()
-    
+    max_list = get_max_height_column_list_excluding_well(game_controller)
     return not any([height < 4 for height in max_list])
 
 def is_well_valid(game_controller: GameController):
@@ -202,8 +208,8 @@ def is_well_valid(game_controller: GameController):
     valid = True
     
     # Vertical loop
-    for i in BOARD_HEIGHT_RANGE_INCR:
-        last_column_id = board_state[i, BOARD_COLUMNS - 1]
+    for i in bc.BOARD_HEIGHT_RANGE_INCR:
+        last_column_id = board_state[i, bc.BOARD_COLUMNS - 1]
         
         if last_column_id != PieceTypeID.I_PIECE and last_column_id != PieceTypeID.EMPTY:
             valid = False
@@ -211,12 +217,9 @@ def is_well_valid(game_controller: GameController):
             valid = False
         
     return valid
-    
-def get_second_lowest_gap(game_controller: GameController):
-    return sorted(get_first_gap_list(game_controller))[1]    
 
-def get_board_height_difference_with_well(game_controller: GameController):
-    return get_max_piece_height_on_board(game_controller) - get_min_gap_height_exluding_well(game_controller)
+def get_board_height_difference_excluding_well(game_controller: GameController):
+    return get_max_piece_height_on_board(game_controller) - get_min_gap_height_excluding_well(game_controller)
 
 def get_truncated_piece_queue(game_controller: GameController, first_n_pieces):
     return game_controller.piece_manager.piece_queue.get_truncated_piece_queue(first_n_pieces)
@@ -230,10 +233,15 @@ def get_piece_value_bounds(game_controller: GameController):
 def get_held_piece_id(game_controller: GameController) -> int:
     return game_controller.piece_manager.piece_holder.held_piece.id if game_controller.piece_manager.piece_holder.held_piece is not None else 0
 
-def get_min_gap_height_exluding_well(game_controller: GameController) -> int:
-    gap_list = get_first_gap_list(game_controller).copy()
-    
-    # Remove well value
-    gap_list.pop()
+def get_min_gap_height_excluding_well(game_controller: GameController) -> int:
+    gap_list = get_first_gap_list_excluding_well(game_controller)
     
     return sorted(gap_list)[0]
+
+def get_relative_board_max_heights_excluding_well(game_controller: GameController) -> np.ndarray:
+    max_height_list = get_max_height_column_list_excluding_well(game_controller)
+    
+    board = np.array(max_height_list) - sorted(max_height_list)[0]
+    board = np.clip(board, a_min = 0, a_max = bc.BOARD_ROWS) 
+    
+    return board

@@ -23,7 +23,7 @@ class GameController():
         self.last_fps_recorded = 0
         
         self.lines_cleared = 0
-        self.holds_used_in_a_row = 0
+        self.holds_performed_in_a_row = 0
         self.previous_action = None
         
         self.render_game = True
@@ -178,9 +178,9 @@ class GameController():
                 raise ValueError(f"ERROR: perform_action(action) - action '{action}' is invalid")
             
         if action == int(Actions.HOLD_PIECE):
-            self.holds_used_in_a_row += 1
+            self.holds_performed_in_a_row += 1
         else:
-            self.holds_used_in_a_row = 0
+            self.holds_performed_in_a_row = 0
         
         self.previous_action = action
         self.piece_manager.actions_per_piece += 1

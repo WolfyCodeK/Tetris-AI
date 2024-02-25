@@ -13,6 +13,8 @@ if __name__ == '__main__':
         # Initialize the environment and get its state
         state, info = env.reset()
         
+        cycle_times = []
+        
         for t in count():
             action = env.action_space.sample()
             
@@ -22,12 +24,13 @@ if __name__ == '__main__':
             
             end_time = time.time()
             
-            print(f"Cycle time: {(end_time - start_time) * 1000}ms")
-            # print("###################################")
-            # print(f"Reward:  {reward}")
-            # print(f"Observation:\n  {observation}")
+            cycle_times.append((end_time - start_time) * 1000)
+            print("###################################")
+            print(f"Reward:  {reward}")
+            print(f"Observation:\n  {observation}")
             done = terminated or truncated
             state = observation
 
-            if done:     
+            if done:    
+                print(f"Average cycle time: {(sum(cycle_times) / len(cycle_times))}ms") 
                 break

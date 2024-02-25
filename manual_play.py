@@ -2,6 +2,7 @@ import pygame
 from controllers.game_controller import GameController
 from controllers.window import Window
 from utils.screen_sizes import ScreenSizes
+import utils.game_utils as gu
 
 if __name__ == '__main__':    
     game = GameController()
@@ -37,6 +38,8 @@ if __name__ == '__main__':
                     done = True
                     
         window.draw()
+        
+        print(f"{gu.get_relative_board_max_heights_excluding_well(game)} - {int(gu.is_tetris_ready(game))}")
         
         if done:
             game.reset_game()

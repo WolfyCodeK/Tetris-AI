@@ -60,6 +60,10 @@ class TestTetrisEnv(gym.Env):
             
             terminated = self._game.run(action_list[i]) 
 
+        # Terminate for using the hold action more than once in a row
+        if self._game.holds_performed_in_a_row > 1:
+            terminated = True
+
         observation = self._get_obs()
         info = self._get_info()
         
@@ -128,29 +132,13 @@ class TestTetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        max_height_list = gu.get_max_height_column_list_excluding_well(self._game)
-        
-        board = np.array(max_height_list) - gu.get_min_gap_height_exluding_well(self._game)
-        board = np.clip(board, a_min = 0, a_max = 20) 
-        
-        return board
+        return gu.get_relative_board_max_heights_excluding_well(self._game)
     
     def _get_additional_obs(self) -> np.ndarray: 
-        gaps = gu.get_num_of_full_gaps(self._game) + gu.get_num_of_top_gaps(self._game)
-        
-        if gaps > 0:
-            gaps = 1
-            
-        if gu.is_tetris_ready(self._game):
-            tetris_ready = 1 
-        else:
-            tetris_ready = 0
-
         return np.array(
             [
-                tetris_ready,
-                gaps,
-                self._game.holds_used_in_a_row,
+                int(gu.is_tetris_ready(self._game)),
+                self._game.holds_performed_in_a_row,
                 gu.get_held_piece_id(self._game),
                 gu.get_current_piece_id(self._game)
                 

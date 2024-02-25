@@ -95,7 +95,7 @@ class TrainTetrisEnv(gym.Env):
             reward = self.GAME_OVER_PUNISH
         
         # Terminate if height difference violated of board well incorrectly filled
-        if gu.get_board_height_difference_with_well(self._game) > self.MAX_BOARD_DIFF:
+        if gu.get_board_height_difference_excluding_well(self._game) > self.MAX_BOARD_DIFF:
             terminated = True
             reward = self.GAME_OVER_PUNISH    
             
@@ -109,7 +109,7 @@ class TrainTetrisEnv(gym.Env):
                 reward = self.GAME_OVER_PUNISH    
         
         # Terminate for using the hold action more than once in a row
-        if self._game.holds_used_in_a_row > 1:
+        if self._game.holds_performed_in_a_row > 1:
             reward = self.GAME_OVER_PUNISH * 10
             terminated = True
             
@@ -198,6 +198,7 @@ class TrainTetrisEnv(gym.Env):
             # Delete window object
             self._window = None
             print("Stopped rendering window.")
+            
         elif (pygame.display.get_active()):
                 self._window.draw()
                 self.fps = self._game.last_fps_recorded
@@ -216,23 +217,12 @@ class TrainTetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        max_height_list = gu.get_max_height_column_list_excluding_well(self._game)
-        
-        board = np.array(max_height_list) - gu.get_min_gap_height_exluding_well(self._game)
-        board = np.clip(board, a_min = 0, a_max = 20) 
-        
-        return board
+        return gu.get_relative_board_max_heights_excluding_well(self._game)
     
     def _get_additional_obs(self) -> np.ndarray: 
-        if gu.is_tetris_ready(self._game):
-            tetris_ready = 1 
-        else:
-            tetris_ready = 0
-
-        return np.array(
-            [
-                tetris_ready,
-                self._game.holds_used_in_a_row,
+        return np.array([
+                int(gu.is_tetris_ready(self._game)),
+                self._game.holds_performed_in_a_row,
                 gu.get_held_piece_id(self._game),
                 gu.get_current_piece_id(self._game)
                 

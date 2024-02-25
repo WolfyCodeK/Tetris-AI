@@ -143,10 +143,10 @@ if __name__ == '__main__':
     GAMMA = 0.95
     EPS_START = 0.9 
     EPS_END = 0
-    EPS_DECAY = 500000
+    EPS_DECAY = 350_000
     TAU = 0.001
     LR = 5e-4  
-    REPLAY_MEMORY_CAPACITY = 2000000 
+    REPLAY_MEMORY_CAPACITY = 4_000_000 
 
     # Get number of actions from gym action space
     n_actions = env.action_space.n
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     folder_path = os.path.join('model_data/torch_models', datetime.datetime.now().strftime("model_%d.%m.%Y@%H;%M;%S"))
     os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
 
-    save_frequency = 10000
+    save_frequency = 10_000
 
     total_rewards_list = []
     episode_durations = []
@@ -266,8 +266,8 @@ if __name__ == '__main__':
                     save_model(policy_net, optimizer, i_episode, folder_path)
                     
                     # Increase save frequency after most exploration has finished
-                    if i_episode > 350_000:
-                        save_frequency = 1000
+                    if i_episode > 265_000:
+                        save_frequency = 2500
                 break
 
     print('Complete')

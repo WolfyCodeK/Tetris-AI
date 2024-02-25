@@ -42,7 +42,7 @@ def select_action(state):
 
 # Load model function
 def load_model(episode, model):
-    file_path = f'latest_model/model/model_checkpoint_{episode}.pth'
+    file_path = f'model_data/current_test_models/model_checkpoint_{episode}.pth'
     
     if os.path.exists(file_path):
         checkpoint = torch.load(file_path, map_location=torch.device(device_type))
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 2:
         playback_aps = int(sys.argv[2])
     else:
-        playback_aps = 10
+        playback_aps = 15
     
     env = TestTetrisEnv()
     env.render(screen_size=screen_size, show_fps=False, show_score=True, show_queue=True, playback=True, playback_aps=playback_aps)
@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     policy_net = DQN(n_observations, n_actions).to(device)
     
-    policy_net = load_model(370000, policy_net)
+    policy_net = load_model(280000, policy_net)
     policy_net.eval()
 
     max_score = 0
@@ -109,6 +109,7 @@ if __name__ == '__main__':
         
         for t in count():      
             action = select_action(state)
+
             observation, terminated, _ = env.step(action.item())
             
             if env._game.score > max_score:
