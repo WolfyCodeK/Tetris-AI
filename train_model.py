@@ -19,11 +19,11 @@ from torch.utils.tensorboard import SummaryWriter
 class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 2048)
-        self.layer2 = nn.Linear(2048, 2048)
-        self.layer3 = nn.Linear(2048, 2048)
-        self.layer4 = nn.Linear(2048, 2048)
-        self.layer5 = nn.Linear(2048, n_actions)
+        self.layer1 = nn.Linear(n_observations, 4096)
+        self.layer2 = nn.Linear(4096, 4096)
+        self.layer3 = nn.Linear(4096, 4096)
+        self.layer4 = nn.Linear(4096, 4096)
+        self.layer5 = nn.Linear(4096, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -266,8 +266,8 @@ if __name__ == '__main__':
                     save_model(policy_net, optimizer, i_episode, folder_path)
                     
                     # Increase save frequency after most exploration has finished
-                    if i_episode > 265_000:
-                        save_frequency = 2500
+                    if i_episode > 250_000:
+                        save_frequency = 1000
                 break
 
     print('Complete')

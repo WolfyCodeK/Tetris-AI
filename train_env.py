@@ -90,19 +90,20 @@ class TrainTetrisEnv(gym.Env):
         ###############################
 
         # Terminate if gap created on board
-        if gu.get_num_of_full_gaps(self._game) > 0 or gu.get_num_of_top_gaps(self._game) > 0:
+        if gu.does_board_have_gaps(self._game):
             terminated = True
             reward = self.GAME_OVER_PUNISH
         
         # Terminate if height difference violated of board well incorrectly filled
-        if gu.get_board_height_difference_excluding_well(self._game) > self.MAX_BOARD_DIFF:
+        if gu.has_exceeded_max_board_height_difference(self._game, self.MAX_BOARD_DIFF):
             terminated = True
             reward = self.GAME_OVER_PUNISH    
             
         # Termiante if pieces placed in well
-        if not gu.is_well_valid(self._game):
+        if gu.is_well_invalid(self._game):
             terminated = True
             
+            # Make exception for I piece being placed in well
             if self._game.piece_manager.previous_piece == int(PieceTypeID.I_PIECE):
                 reward = 0
             else:

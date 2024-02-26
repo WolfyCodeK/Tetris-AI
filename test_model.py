@@ -54,15 +54,17 @@ def load_model(episode, model):
         exit(0)
         
 def print_scores():
-    line = "-----------------------------"
+    title = "| Max Score | Max B2B | Max Pieces Placed | APS |"
+    line = "-" * len(title)
     os.system('clear')
     print("> Game Analytics: ")
     print("")
     print(line)
-    print("| Max Score | Max B2B | APS |")
+    print("| Max Score | Max B2B | Max Pieces Placed | APS |")
     print(line)
     print("| {:^10}|".format(max_score), end="")
     print("{:^9}|".format(max_b2b), end="")
+    print("{:^19}|".format(max_pieces_placed), end="")
     print("{:^5}|".format(f"{aps}."))
     print(line)
 
@@ -97,6 +99,7 @@ if __name__ == '__main__':
 
     max_score = 0
     max_b2b = 0
+    max_pieces_placed = 0
     aps = env.playback_aps
 
     print_scores()
@@ -112,13 +115,17 @@ if __name__ == '__main__':
 
             observation, terminated, _ = env.step(action.item())
             
-            if env._game.score > max_score:
-                max_score = env._game.score
-                print_scores()
+            # if env._game.score > max_score:
+            #     max_score = env._game.score
+            #     print_scores()
                 
-            if env._game.b2b > max_b2b:
-                max_b2b = env._game.b2b
-                print_scores()
+            # if env._game.b2b > max_b2b:
+            #     max_b2b = env._game.b2b
+            #     print_scores()
+                
+            # if env._game.piece_manager.num_of_pieces_dropped > max_pieces_placed:
+            #     max_pieces_placed = env._game.piece_manager.num_of_pieces_dropped
+            #     print_scores()
 
             if terminated:
                 state = None

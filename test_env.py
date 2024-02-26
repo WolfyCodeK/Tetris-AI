@@ -31,6 +31,9 @@ class TestTetrisEnv(gym.Env):
         # The first x number of pieces in the queue the agent can observe
         self.QUEUE_OBS_NUM = 5
         
+        # The height the agent is allowed to place pieces above the lowest point of the stack
+        self.MAX_BOARD_DIFF = 5
+        
         # All available actions as described in the 'game\agent_actions.py' file
         self.action_space = spaces.Discrete(len(movements))
 
@@ -132,7 +135,7 @@ class TestTetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        return gu.get_relative_board_max_heights_excluding_well(self._game)
+        return gu.get_relative_board_max_heights_excluding_well(self._game, self.MAX_BOARD_DIFF)
     
     def _get_additional_obs(self) -> np.ndarray: 
         return np.array(

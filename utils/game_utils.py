@@ -198,28 +198,35 @@ def get_num_of_full_gaps(game_controller: GameController):
 
     return gaps      
 
+def does_board_have_gaps(game_controller: GameController):
+    return (get_num_of_full_gaps(game_controller) + get_num_of_top_gaps(game_controller)) > 0
+
 def is_tetris_ready(game_controller: GameController):
     max_list = get_max_height_column_list_excluding_well(game_controller)
+        
     return not any([height < 4 for height in max_list])
 
-def is_well_valid(game_controller: GameController):
+def is_well_invalid(game_controller: GameController):
     board_state = get_board_state(game_controller)
     
-    valid = True
+    invalid = False
     
     # Vertical loop
     for i in bc.BOARD_HEIGHT_RANGE_INCR:
         last_column_id = board_state[i, bc.BOARD_COLUMNS - 1]
         
         if last_column_id != PieceTypeID.I_PIECE and last_column_id != PieceTypeID.EMPTY:
-            valid = False
+            invalid = True
         elif last_column_id == PieceTypeID.I_PIECE and not is_tetris_ready(game_controller): 
-            valid = False
+            invalid = True
         
-    return valid
+    return invalid
 
 def get_board_height_difference_excluding_well(game_controller: GameController):
     return get_max_piece_height_on_board(game_controller) - get_min_gap_height_excluding_well(game_controller)
+
+def has_exceeded_max_board_height_difference(game_controller: GameController, max_height):
+    return (get_max_piece_height_on_board(game_controller) - get_min_gap_height_excluding_well(game_controller)) > max_height
 
 def get_truncated_piece_queue(game_controller: GameController, first_n_pieces):
     return game_controller.piece_manager.piece_queue.get_truncated_piece_queue(first_n_pieces)
@@ -238,10 +245,10 @@ def get_min_gap_height_excluding_well(game_controller: GameController) -> int:
     
     return sorted(gap_list)[0]
 
-def get_relative_board_max_heights_excluding_well(game_controller: GameController) -> np.ndarray:
+def get_relative_board_max_heights_excluding_well(game_controller: GameController, max_height: int) -> np.ndarray:
     max_height_list = get_max_height_column_list_excluding_well(game_controller)
     
     board = np.array(max_height_list) - sorted(max_height_list)[0]
-    board = np.clip(board, a_min = 0, a_max = bc.BOARD_ROWS) 
+    board = np.clip(board, a_min = 0, a_max = max_height) 
     
     return board
