@@ -2,7 +2,7 @@
 
 ## Demo
 
-![Tetris Demo](./TetrisDemo2.gif)
+![Tetris Demo](./TetrisDemo.gif)
 
 ## Setup
 
