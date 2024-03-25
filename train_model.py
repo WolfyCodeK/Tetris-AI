@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 from train_env import TrainTetrisEnv
 import math
@@ -19,11 +20,11 @@ from torch.utils.tensorboard import SummaryWriter
 class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 4096)
-        self.layer2 = nn.Linear(4096, 4096)
-        self.layer3 = nn.Linear(4096, 4096)
-        self.layer4 = nn.Linear(4096, 4096)
-        self.layer5 = nn.Linear(4096, n_actions)
+        self.layer1 = nn.Linear(n_observations, 2048)
+        self.layer2 = nn.Linear(2048, 2048)
+        self.layer3 = nn.Linear(2048, 2048)
+        self.layer4 = nn.Linear(2048, 2048)
+        self.layer5 = nn.Linear(2048, n_actions)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -55,11 +56,16 @@ def get_flatterned_obs(state):
     # Concatenate the numerical values into a single array
     return np.concatenate(numerical_values)
     
+def get_eps_threshold():
+    return EPS_END + (EPS_START - EPS_END) * \
+        math.exp(-1. * steps_done / EPS_DECAY)
+    
 def select_action(state):
     global steps_done    
+    
     sample = random.random()
-    eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-        math.exp(-1. * steps_done / EPS_DECAY)
+    eps_threshold = get_eps_threshold()
+    
     steps_done += 1
     if sample > eps_threshold:
         with torch.no_grad():
@@ -130,7 +136,7 @@ if __name__ == '__main__':
     writer = SummaryWriter()
 
     env = TrainTetrisEnv()
-    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
+    # env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -139,14 +145,14 @@ if __name__ == '__main__':
                             ('state', 'action', 'next_state', 'reward'))    
         
     # Hyperparameters
-    BATCH_SIZE = 128
+    BATCH_SIZE = 256
     GAMMA = 0.95
     EPS_START = 0.9 
     EPS_END = 0
-    EPS_DECAY = 350_000
+    EPS_DECAY = 500000
     TAU = 0.001
     LR = 5e-4  
-    REPLAY_MEMORY_CAPACITY = 4_000_000 
+    REPLAY_MEMORY_CAPACITY = 5_000_000 
 
     # Get number of actions from gym action space
     n_actions = env.action_space.n
@@ -181,13 +187,17 @@ if __name__ == '__main__':
     os.makedirs(folder_path, exist_ok=True)  # Create the folder if it doesn't exist
 
     save_frequency = 10_000
+    log_frequency = 100
 
     total_rewards_list = []
     episode_durations = []
-    fps_list = []
+    cycles_per_second_list = []
     max_duration = 0
 
     first_run = True
+    
+    time_passed = 0
+    cycles = 0
 
     for i_episode in range(num_episodes):
         # Initialize the environment and get its state
@@ -198,6 +208,8 @@ if __name__ == '__main__':
         total_reward = 0
         
         for t in count():      
+            start_time = time.time()
+            
             action = select_action(state)
             observation, reward, terminated, truncated, _ = env.step(action.item())
             total_reward += reward
@@ -227,7 +239,17 @@ if __name__ == '__main__':
                 target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
                 
             target_net.load_state_dict(target_net_state_dict)
-
+            
+            end_time = time.time()
+            
+            time_passed += end_time - start_time
+            cycles += 1
+            
+            if time_passed >= 1:
+                cycles_per_second_list.append(cycles)
+                time_passed = 0
+                cycles = 0
+            
             if done:     
                 duration = t + 1
                 
@@ -236,17 +258,19 @@ if __name__ == '__main__':
                 
                 episode_durations.append(duration)
                 total_rewards_list.append(total_reward)
-                fps_list.append(env.fps)
+                cycles_per_second_list.append(env.fps)
                 
-                if i_episode % 250 == 0 and (not first_run):
+                if i_episode % log_frequency == 0 and (not first_run):
                     writer.add_scalar('Mean Duration', (sum(episode_durations) / len(episode_durations)), i_episode)
                     writer.add_scalar('Mean Reward', (sum(total_rewards_list) / len(total_rewards_list)), i_episode)
-                    writer.add_scalar('Tick Speed', (sum(fps_list) / len(fps_list)), i_episode)
-                    writer.add_scalar('Max Duration', max_duration, i_episode)
+                    writer.add_scalar('Iterations per Second', (sum(cycles_per_second_list) / len(cycles_per_second_list)), i_episode)
+                    writer.add_scalar('Max Duration', max_duration, i_episode)                    
+                    writer.add_scalar('Eps Threshold', get_eps_threshold(), i_episode)
                     
-                    episode_durations = []
-                    total_rewards_list = []
-                    fps_list = []
+                    episode_durations.clear()
+                    total_rewards_list.clear()
+                    cycles_per_second_list.clear()
+                    
                     first_run = True
                     
                 if first_run:
@@ -256,17 +280,12 @@ if __name__ == '__main__':
                 if i_episode % save_frequency == 0:
                     print("-------------------------------------")
                     print(f"Saving Model: checkpoint_{i_episode}")
-                    print(f"Replay Memory Length: {memory.__len__()}")
-                    
-                    eps_threshold = EPS_END + (EPS_START - EPS_END) * \
-                    math.exp(-1. * steps_done / EPS_DECAY)
-                    
-                    print(f"Eps Threshold: {eps_threshold}")
+                    print(f"Replay Memory Length: {memory.__len__()}")             
                     print(f"Steps Done: {steps_done}")
                     save_model(policy_net, optimizer, i_episode, folder_path)
                     
                     # Increase save frequency after most exploration has finished
-                    if i_episode > 250_000:
+                    if i_episode > 350_000:
                         save_frequency = 1000
                 break
 

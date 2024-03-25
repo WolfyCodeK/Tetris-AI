@@ -2,6 +2,8 @@ from game.game_settings import GameSettings
 from pygame import Rect, Surface, draw
 import utils.board_constants as bc
     
+COLOUR = 255    
+    
 def get_grid_size():
     return GameSettings.screen_size * 2      
     
@@ -11,11 +13,14 @@ def get_board_buffers():
     Returns:
         tuple(int, int, int, int): right buffer, left buffer, top buffer, bottom buffer
     """
+    HORIZONTAL_BUFFER_SIZE = 7
+    VERTICAL_BUFFER_SIZE = 7
+    
     # Board drawing helper value
-    BOARD_RIGHT_BUFFER = 7 * get_grid_size()
-    BOARD_LEFT_BUFFER = 7 * get_grid_size()
-    BOARD_TOP_BUFFER = 4 * get_grid_size()
-    BOARD_BOTTOM_BUFFER = 4 * get_grid_size()
+    BOARD_RIGHT_BUFFER = HORIZONTAL_BUFFER_SIZE * get_grid_size()
+    BOARD_LEFT_BUFFER = HORIZONTAL_BUFFER_SIZE * get_grid_size()
+    BOARD_TOP_BUFFER = VERTICAL_BUFFER_SIZE * get_grid_size()
+    BOARD_BOTTOM_BUFFER = VERTICAL_BUFFER_SIZE * get_grid_size()
     
     return BOARD_RIGHT_BUFFER, BOARD_LEFT_BUFFER, BOARD_TOP_BUFFER, BOARD_BOTTOM_BUFFER
 
@@ -84,13 +89,13 @@ def _draw_outer_grid(surface: Surface) -> None:
     top_left, top_right, bottom_left, bottom_right = get_board_corner_coordiantes()
     
     # BOTTOM
-    draw.line(surface, (255, 255, 255, bc.OUTER_GRID_ALPHA), bottom_left, bottom_right, width=bc.GRID_OUTLINE_WIDTH)
+    draw.line(surface, (COLOUR, COLOUR, COLOUR, bc.OUTER_GRID_ALPHA), bottom_left, bottom_right, width=bc.GRID_OUTLINE_WIDTH)
     
     # LEFT
-    draw.line(surface, (255, 255, 255, bc.OUTER_GRID_ALPHA), top_left, bottom_left, width=bc.GRID_OUTLINE_WIDTH)
+    draw.line(surface, (COLOUR, COLOUR, COLOUR, bc.OUTER_GRID_ALPHA), top_left, bottom_left, width=bc.GRID_OUTLINE_WIDTH)
     
     # RIGHT
-    draw.line(surface, (255, 255, 255, bc.OUTER_GRID_ALPHA), top_right, bottom_right, width=bc.GRID_OUTLINE_WIDTH)
+    draw.line(surface, (COLOUR, COLOUR, COLOUR, bc.OUTER_GRID_ALPHA), top_right, bottom_right, width=bc.GRID_OUTLINE_WIDTH)
 
 def _draw_inner_grid(surface: Surface) -> None:
     """Draw the thin inner lines of the boards grid.
@@ -105,7 +110,7 @@ def _draw_inner_grid(surface: Surface) -> None:
     for x in range(1 * get_grid_size(), width, get_grid_size()):
         draw.line(
             surface, 
-            (255, 255, 255, bc.INNER_GRID_ALPHA), 
+            (COLOUR, COLOUR, COLOUR, bc.INNER_GRID_ALPHA), 
             (x + left_buf, top_buf + 2), 
             (x + left_buf, height + top_buf - 1)
         )
@@ -114,7 +119,7 @@ def _draw_inner_grid(surface: Surface) -> None:
     for y in range(1 * get_grid_size(), height, get_grid_size()):
         draw.line(
             surface, 
-            (255, 255, 255, bc.INNER_GRID_ALPHA), 
+            (COLOUR, COLOUR, COLOUR, bc.INNER_GRID_ALPHA), 
             (left_buf, y + top_buf), 
             (width + left_buf - 1, y + top_buf)
         )

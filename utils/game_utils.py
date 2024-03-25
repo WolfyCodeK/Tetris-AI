@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from pieces.piece_type_id import PieceTypeID
 import utils.board_constants as bc 
@@ -203,7 +204,14 @@ def does_board_have_gaps(game_controller: GameController):
 
 def is_tetris_ready(game_controller: GameController):
     max_list = get_max_height_column_list_excluding_well(game_controller)
-        
+    
+    board = get_board_state(game_controller)
+    
+    if len(np.argwhere(board[:, bc.BOARD_COLUMNS - 1])) != 0:
+        if bc.BOARD_HEIGHT - min(np.argwhere(board[:, bc.BOARD_COLUMNS - 1])) <= (get_max_piece_height_on_board(game_controller) - 4):
+            return not any([height < 4 for height in max_list])
+        else:
+            return False
     return not any([height < 4 for height in max_list])
 
 def is_well_invalid(game_controller: GameController):
@@ -241,14 +249,24 @@ def get_held_piece_id(game_controller: GameController) -> int:
     return game_controller.piece_manager.piece_holder.held_piece.id if game_controller.piece_manager.piece_holder.held_piece is not None else 0
 
 def get_min_gap_height_excluding_well(game_controller: GameController) -> int:
-    gap_list = get_first_gap_list_excluding_well(game_controller)
-    
-    return sorted(gap_list)[0]
+    return min(get_first_gap_list_excluding_well(game_controller))
+
+def get_max_gap_height_excluding_well(game_controller: GameController) -> int:
+    return max(get_first_gap_list_excluding_well(game_controller))
 
 def get_relative_board_max_heights_excluding_well(game_controller: GameController, max_height: int) -> np.ndarray:
     max_height_list = get_max_height_column_list_excluding_well(game_controller)
     
-    board = np.array(max_height_list) - sorted(max_height_list)[0]
-    board = np.clip(board, a_min = 0, a_max = max_height) 
+    relative_max_heights = np.array(max_height_list) - min(max_height_list)
     
-    return board
+    max_height_value = max(relative_max_heights)
+    
+    if max_height_value > max_height:
+        top_down_rel_max_heights = []
+        
+        for height in relative_max_heights:
+            top_down_rel_max_heights.append(max_height - (max_height_value - height))
+            
+        relative_max_heights = np.clip(top_down_rel_max_heights, a_min = 0, a_max = max_height) 
+    
+    return relative_max_heights

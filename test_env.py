@@ -66,6 +66,9 @@ class TestTetrisEnv(gym.Env):
         # Terminate for using the hold action more than once in a row
         if self._game.holds_performed_in_a_row > 1:
             terminated = True
+            
+        # if gu.does_board_have_gaps(self._game):
+        #     terminated = True
 
         observation = self._get_obs()
         info = self._get_info()

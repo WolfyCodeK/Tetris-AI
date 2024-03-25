@@ -52,6 +52,9 @@ class TrainTetrisEnv(gym.Env):
         
         self._window = None
         self.fps = 0
+        
+        self.playback = False
+        self.admin_playback = False
 
     def step(self, action):
         prev_lines_cleared = self._game.lines_cleared
@@ -68,12 +71,13 @@ class TrainTetrisEnv(gym.Env):
         
         # Perform all actions in action list
         for i in range(len(action_list)):
-            self._window.render_game, admin_playback = self._game.admin_render_toggle_input(pygame.event.get())
+            if self._window_exists():
+                self._window.render_game, self.admin_playback = self._game.admin_render_toggle_input(pygame.event.get())
             
             # Update the window at a human viewable speed if it is being rendered
             if self.playback:
                 self._render_window_if_exists(playback=True)
-            elif admin_playback:
+            elif self.admin_playback:
                 self._render_window_if_exists(playback=True)
             
             terminated = self._game.run(action_list[i]) 
@@ -88,6 +92,11 @@ class TrainTetrisEnv(gym.Env):
         ###############################
         # Game termination conditions #
         ###############################
+        
+        # Terminate if a none tetris line clear occured
+        if lines_cleared > 0 and lines_cleared < 4:
+            terminated = True
+            reward = self.GAME_OVER_PUNISH
 
         # Terminate if gap created on board
         if gu.does_board_have_gaps(self._game):
@@ -125,7 +134,7 @@ class TrainTetrisEnv(gym.Env):
         info = self._get_info()
         
         # Update window at full speed if it is being rendered
-        if not (admin_playback or self.playback):
+        if not (self.admin_playback or self.playback):
             self._render_window_if_exists()
         
         return observation, reward, terminated, False, info
@@ -218,7 +227,7 @@ class TrainTetrisEnv(gym.Env):
         pass 
     
     def _get_board_obs(self) -> np.ndarray:
-        return gu.get_relative_board_max_heights_excluding_well(self._game)
+        return gu.get_relative_board_max_heights_excluding_well(self._game, self.MAX_BOARD_DIFF)
     
     def _get_additional_obs(self) -> np.ndarray: 
         return np.array([

@@ -65,19 +65,24 @@ def print_scores():
     print("| {:^10}|".format(max_score), end="")
     print("{:^9}|".format(max_b2b), end="")
     print("{:^19}|".format(max_pieces_placed), end="")
-    print("{:^5}|".format(f"{aps}."))
+    
+    if aps == 0:
+        print("{:^5}|".format("MAX"))
+    else:
+        print("{:^5}|".format(f"{aps}."))
+        
     print(line)
 
 if __name__ == '__main__':
+    screen_size = ScreenSizes.LARGE
+    playback_aps = 75
+    
     if len(sys.argv) > 1:
-        screen_size = int(sys.argv[1])
-    else:
-        screen_size = ScreenSizes.XXSMALL
+        if sys.argv[1] != "":
+            screen_size = int(sys.argv[1])
 
-    if len(sys.argv) > 2:
-        playback_aps = int(sys.argv[2])
-    else:
-        playback_aps = 15
+        if sys.argv[2] != "":
+            playback_aps = int(sys.argv[2])
     
     env = TestTetrisEnv()
     env.render(screen_size=screen_size, show_fps=False, show_score=True, show_queue=True, playback=True, playback_aps=playback_aps)
@@ -94,7 +99,7 @@ if __name__ == '__main__':
 
     policy_net = DQN(n_observations, n_actions).to(device)
     
-    policy_net = load_model(280000, policy_net)
+    policy_net = load_model(398000, policy_net)
     policy_net.eval()
 
     max_score = 0
@@ -102,7 +107,7 @@ if __name__ == '__main__':
     max_pieces_placed = 0
     aps = env.playback_aps
 
-    print_scores()
+    # print_scores()
 
     while True:
         # Initialize the environment and get its state
