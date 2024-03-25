@@ -1,5 +1,7 @@
 # Dissertation-Tetris-AI
 
+![Tetris Demo](./TetrisDemo.gif)
+
 ## Setup
 
 1. Create and activate virtual env
