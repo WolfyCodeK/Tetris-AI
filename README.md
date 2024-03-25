@@ -35,7 +35,7 @@ Optionally view agent learning progress with bash command:
 
 Install tensorboard
 ```bash
-    pip install tensorboard==2.15.1
+    pip install tensorboard
 ```
 
 Then view reward and duration values as graphs
