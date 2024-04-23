@@ -117,7 +117,7 @@ class TestTetrisEnv(gym.Env):
             
             # Delete window object
             self._window = None
-            print("Stopped rendering window.")
+            print("Stopped rendering window.\nProgram is still, Ctrl + C to exit.")
         elif (pygame.display.get_active()):
                 self._window.draw()
                 self.fps = self._game.last_fps_recorded
