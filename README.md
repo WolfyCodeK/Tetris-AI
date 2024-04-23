@@ -8,13 +8,13 @@
 
 1. Create and activate virtual env with python 3.10.5 (others versions may work but are untested)
 ```bash
-    python3 -m venv env
-    source env/bin/activate
+    py -m venv env
+    source env/scripts/activate
 ```
 
 2. Install pip packages in requirements.txt
 ```bash
-    pip install -r requirements. txt
+    pip install -r requirements.txt
 ```
 
 ## Watching model play
@@ -26,14 +26,15 @@ Run test_model.py
 or alternatively, specify the size of the window and play speed:
 ```bash
     py test_model.py --size --speed
-        e.g. py test_model.py 15 10
+        e.g. 
+            py test_model.py 13 10
 ```
 
 ## Training a new model
 
 Run train_model.py
 ```bash
-    python3 train_model.py
+    py train_model.py
 ```
 
 Optionally view agent learning progress with bash command:
@@ -50,5 +51,5 @@ tensorboard --logdir=runs
 ```
 or 
 ```bash
-python tensorboard.main --logdir=runs
+py tensorboard.main --logdir=runs
 ```
