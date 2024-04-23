@@ -2,7 +2,7 @@
 
 ## Demo
 
-<img src="res/TetrisDemo.gif" width="400">
+<img src="res/tetris_demo.gif" width="400">
 
 ## Setup
 
@@ -92,5 +92,3 @@ line clear on your machine - the human record is approximately 14 seconds!
 
 Also check how many pieces it takes to do so - 100 pieces is the most 
 effiecient way to peform 40 line clears!
-
-

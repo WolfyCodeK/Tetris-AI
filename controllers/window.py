@@ -18,8 +18,8 @@ class Window():
         GameSettings.set_screen_size(screen_size)
         
         # Set Icon and title
-        pygame.display.set_caption("Tetris - Pygame")
-        tetris_icon = pygame.image.load("res/tetris-icon.png")
+        pygame.display.set_caption("Tetris Environment")
+        tetris_icon = pygame.image.load("res/tetris_icon.png")
         pygame.display.set_icon(tetris_icon)
         
         # Set game controller
