@@ -30,7 +30,13 @@
 
 ## Watching model play
 
-Run test_model.py 
+1. Fetch the most recent model file 'final_model.pth' from the following link:
+
+https://drive.google.com/file/d/129jKWNON0r8tAsmIHw0N6Hr805-Q89Gc/view?usp=sharing
+
+2. Move this model file into the project's top directory.
+
+3. Run test_model.py 
 ```
     py test_model.py
 ```
