@@ -1,7 +1,7 @@
 import os
 import time
 import numpy as np
-from train_env import TrainTetrisEnv
+from environments.train_env import TrainTetrisEnv
 import math
 import random
 from collections import namedtuple, deque

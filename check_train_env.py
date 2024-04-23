@@ -1,9 +1,11 @@
 import time
-from train_env import TrainTetrisEnv
+from environments.train_env import TrainTetrisEnv
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 
 # Code adapted from -> https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+
+# This file is used for testing the training enviroment with random actions
 
 if __name__ == '__main__':
     env = TrainTetrisEnv()

@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-from test_env import TestTetrisEnv
+from environments.test_env import TestTetrisEnv
 from itertools import count
 from utils.screen_sizes import ScreenSizes
 
