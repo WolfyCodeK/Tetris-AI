@@ -34,7 +34,7 @@
 
 https://drive.google.com/file/d/129jKWNON0r8tAsmIHw0N6Hr805-Q89Gc/view?usp=sharing
 
-2. Move this model file into the project's top directory.
+2. Move this model file into the project's root directory.
 
 3. Run test_model.py 
 ```
