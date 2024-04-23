@@ -169,3 +169,4 @@ saved_runs/
 model_data/
 plots
 dqn_network
+final_model.pth

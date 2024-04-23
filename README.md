@@ -6,7 +6,7 @@
 
 ## Setup
 
-1. Create and activate virtual env with python 3.10.12 (others versions may work but are untested)
+1. Create and activate virtual env with python 3.10.5 (others versions may work but are untested)
 ```bash
     python3 -m venv env
     source env/bin/activate
