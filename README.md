@@ -60,3 +60,16 @@ Then view reward and duration values as graphs
 ```
     tensorboard --logdir=runs
 ```
+
+# Playing manually
+
+Run manual_play.py
+
+Controls:
+
+- Left and right arrow keys for horizontal movement
+- 'Z' and 'X' keys for anti-clockwise and clockwise rotation respectively
+- Spacebar for hard drop
+- Down arrow key for soft drop
+- Shift to hold a piece
+- 'R' key to restart the game

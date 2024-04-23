@@ -39,8 +39,6 @@ if __name__ == '__main__':
                     
         window.draw()
         
-        print(f"{gu.get_relative_board_max_heights_excluding_well(game)} - {int(gu.is_tetris_ready(game))}")
-        
         if done:
             game.reset_game()
             reward = 0       
