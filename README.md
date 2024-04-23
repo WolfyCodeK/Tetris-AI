@@ -6,7 +6,10 @@
 
 ## Setup
 
-1. Within the project's root directory, create a virtual env with python (tested working with version 3.10.5 but should work with other recent python versions)
+#### NOTE: The following has been tested with python version 3.10.5 but should work with other recent python versions.
+
+1. Within the project's root directory, create a virtual env with python 
+
 ```
     py -m venv env
 ```
@@ -28,9 +31,11 @@
     pip install -r requirements.txt
 ```
 
-## Watching model play
+## Watching the AI play
 
-1. Fetch the most recent model file, which must have the name 'tetris_model.pth',
+#### _NOTE: Steps 1 and 2 are only necessary if the repository was downloaded directly from github. If the repository was downloaded from an alternative source, the model file 'tetris_model.pth' will have already been packaged with the source code. However, if the model file cannot be found within the root directory then please follow step 1 and onwards._ 
+
+1. Fetch the most recent model file, which will be named 'tetris_model.pth' (the model must be named exactly this),
 from the following link:
 
 https://drive.google.com/file/d/129jKWNON0r8tAsmIHw0N6Hr805-Q89Gc/view?usp=sharing
@@ -48,7 +53,9 @@ or alternatively, specify the size of the window and play speed:
             py test_model.py 13 10
 ```
 
-## Training a new model (WARNING: The currently configured training process takes multiple days to converge and should only be run on a mid to high end graphics card)
+## Training a new model 
+
+#### _WARNING: The training process can take multiple days to converge and should only be run on a medium to high end graphics card!_
 
 1. Adjust the hyper parameters before starting training. These can be found inside
 the train_model.py file:
