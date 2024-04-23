@@ -42,7 +42,7 @@ def select_action(state):
 
 # Load model function
 def load_model(episode, model):
-    file_path = 'final_model.pth'
+    file_path = 'tetris_model.pth'
     
     if os.path.exists(file_path):
         checkpoint = torch.load(file_path, map_location=torch.device(device_type))
