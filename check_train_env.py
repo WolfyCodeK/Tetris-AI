@@ -9,7 +9,7 @@ from utils.screen_sizes import ScreenSizes
 
 if __name__ == '__main__':
     env = TrainTetrisEnv()
-    env.render(screen_size=ScreenSizes.SMALL, show_fps=True, show_score=True, show_queue=True, playback=False, playback_aps=5)
+    env.render(screen_size=ScreenSizes.SMALL, show_fps=True, show_score=True, show_queue=True, playback=True, playback_aps=5)
 
     while True:
         # Initialize the environment and get its state
