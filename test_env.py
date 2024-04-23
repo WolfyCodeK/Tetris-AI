@@ -15,8 +15,8 @@ import utils.game_utils as gu
 
 from game.agent_actions import movements
 
-os.system('clear')
-print("> Loading Enviroment...")
+# os.system('clear')
+# print("> Loading Enviroment...")
 
 import pygame
 
