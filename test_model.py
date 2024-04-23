@@ -50,7 +50,7 @@ def load_model(episode, model):
         
         return model
     else:
-        print(f"No checkpoint found for episode {episode}.")
+        print(f"Requested model not found!")
         exit(0)
         
 def print_scores():
