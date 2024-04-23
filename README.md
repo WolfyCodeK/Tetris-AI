@@ -6,21 +6,22 @@
 
 ## Setup
 
-1. Create virtual env with python (tested working with version 3.10.5 but should work other recent python versions)
+1. Create virtual env with python (tested working with version 3.10.5 but should work with other recent python versions)
 ```
     py -m venv env
 ```
 
 2. Activate virtual env
-Command prompt
-```
-    venv/Scripts/activate
-```
+   
+    For command prompt use:
+    ```
+        venv/Scripts/activate
+    ```
 
-Posix 
-```
-source env/scripts/activate
-```
+    For posix systems use:
+    ```
+        source env/scripts/activate
+    ```
 
 3. Install pip packages in requirements.txt
 ```
@@ -40,7 +41,7 @@ or alternatively, specify the size of the window and play speed:
             py test_model.py 13 10
 ```
 
-## Training a new model
+## Training a new model (WARNING: The currently configured training process takes multiple days to converge and should only be run on a mid to high end graphics card)
 
 Run train_model.py
 ```
