@@ -131,18 +131,6 @@ if __name__ == '__main__':
                 print(str(env._game.piece_manager.num_of_pieces_dropped) + " pieces placed")
                 print(str(round((time.time() - start_time) * 1000) / 1000) + " seconds")
                 exit()
-            
-            # if env._game.score > max_score:
-            #     max_score = env._game.score
-            #     print_scores()
-                
-            # if env._game.b2b > max_b2b:
-            #     max_b2b = env._game.b2b
-            #     print_scores()
-                
-            # if env._game.piece_manager.num_of_pieces_dropped > max_pieces_placed:
-            #     max_pieces_placed = env._game.piece_manager.num_of_pieces_dropped
-            #     print_scores()
 
             if terminated:
                 state = None

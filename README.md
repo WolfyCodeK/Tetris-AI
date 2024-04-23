@@ -73,3 +73,13 @@ Controls:
 - Down arrow key for soft drop
 - Shift to hold a piece
 - 'R' key to restart the game
+
+# 40 line clears
+
+Run 40_line_clear.py to see how quickly the model can peform the classic 40
+line clear on your machine - the human record is approximately 14 seconds!
+
+Also check how many pieces it takes to do so - 100 pieces is the most 
+effiecient way to peform 40 line clears!
+
+

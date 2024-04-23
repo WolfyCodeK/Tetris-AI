@@ -109,8 +109,6 @@ if __name__ == '__main__':
     if env.window_exists():
         aps = env.playback_aps
 
-    # print_scores()
-
     while True:
         # Initialize the environment and get its state
         state, info = env.reset()
@@ -121,18 +119,6 @@ if __name__ == '__main__':
             action = select_action(state)
 
             observation, terminated, _ = env.step(action.item())
-            
-            # if env._game.score > max_score:
-            #     max_score = env._game.score
-            #     print_scores()
-                
-            # if env._game.b2b > max_b2b:
-            #     max_b2b = env._game.b2b
-            #     print_scores()
-                
-            # if env._game.piece_manager.num_of_pieces_dropped > max_pieces_placed:
-            #     max_pieces_placed = env._game.piece_manager.num_of_pieces_dropped
-            #     print_scores()
 
             if terminated:
                 state = None
