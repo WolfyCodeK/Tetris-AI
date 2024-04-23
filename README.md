@@ -21,7 +21,12 @@
 
 Run test_model.py 
 ```bash
-    python3 test_model.py
+    py test_model.py
+```
+or alternatively, specify the size of the window and play speed:
+```bash
+    py test_model.py --size --speed
+        e.g. py test_model.py 15 10
 ```
 
 ## Training a new model
