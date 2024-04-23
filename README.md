@@ -49,17 +49,17 @@ or alternatively, specify the size of the window and play speed:
 
 ## Training a new model (WARNING: The currently configured training process takes multiple days to converge and should only be run on a mid to high end graphics card)
 
-Adjust the hyper parameters before starting training. These can be found inside
+1. Adjust the hyper parameters before starting training. These can be found inside
 the train_model.py file:
 
 <img src="res/hyper_parameters.png" width="300">
 
-Run train_model.py
+2. Run train_model.py
 ```
     py train_model.py
 ```
 
-Optionally view agent learning progress with bash command:
+3. Optionally view agent learning progress with bash command:
 
 Install tensorboard
 ```
