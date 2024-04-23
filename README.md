@@ -6,7 +6,7 @@
 
 ## Setup
 
-1. Create virtual env with python (tested working with version 3.10.5 but should work with other recent python versions)
+1. Within the project's root directory, create a virtual env with python (tested working with version 3.10.5 but should work with other recent python versions)
 ```
     py -m venv env
 ```
