@@ -33,10 +33,10 @@ class TrainTetrisEnv(gym.Env):
         self.BUMPINESS_REWARD = 10
         self.HOLD_PUNISH = -5
         
-        # The height the agent is allowed to place pieces above the lowest point of the stack
+        # The max height the agent is allowed to place pieces above the lowest point of the stack
         self.MAX_BOARD_DIFF = 5
         
-        # The first x number of pieces in the queue the agent can observe
+        # The number of pieces in the queue to the agent can observe
         self.QUEUE_OBS_NUM = 5
         
         # All available actions as described in the 'game\agent_actions.py' file
@@ -128,7 +128,7 @@ class TrainTetrisEnv(gym.Env):
         ################################
 
         if not terminated:
-            reward = self._perfect_stacking_reward(lines_cleared, prev_bumpiness, held_performed)
+            reward = self._stacking_reward(lines_cleared, prev_bumpiness, held_performed)
 
         observation = self._get_obs()
         info = self._get_info()
@@ -174,7 +174,7 @@ class TrainTetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
-    def _perfect_stacking_reward(self, lines_cleared, prev_bumpiness, held_performed):
+    def _stacking_reward(self, lines_cleared, prev_bumpiness, held_performed):
         # Reward agent for placing piece low down on the stack   
         piece_height_reward = bc.BOARD_ROWS - (gu.get_placed_piece_max_height(self._game) - gu.get_min_piece_height_on_board(self._game))
         

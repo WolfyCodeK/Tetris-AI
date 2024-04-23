@@ -136,7 +136,7 @@ if __name__ == '__main__':
     writer = SummaryWriter()
 
     env = TrainTetrisEnv()
-    # env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
+    env.render(screen_size=ScreenSizes.XXSMALL, show_fps=True, show_score=False, show_queue=False)
 
     # if GPU is to be used
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -145,11 +145,11 @@ if __name__ == '__main__':
                             ('state', 'action', 'next_state', 'reward'))    
         
     # Hyperparameters
-    BATCH_SIZE = 256
+    BATCH_SIZE = 64
     GAMMA = 0.95
     EPS_START = 0.9 
     EPS_END = 0
-    EPS_DECAY = 500000
+    EPS_DECAY = 500_000
     TAU = 0.001
     LR = 5e-4  
     REPLAY_MEMORY_CAPACITY = 5_000_000 

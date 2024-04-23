@@ -4,6 +4,7 @@ import numpy as np
 from test_env import TestTetrisEnv
 from itertools import count
 from utils.screen_sizes import ScreenSizes
+import time
 
 import torch
 import torch.nn as nn
@@ -74,8 +75,8 @@ def print_scores():
     print(line)
 
 if __name__ == '__main__':
-    screen_size = ScreenSizes.MEDIUM
-    playback_aps = 10
+    screen_size = ScreenSizes.XXSMALL
+    playback_aps = 0
     
     if len(sys.argv) > 1:
         if sys.argv[1] != "":
@@ -110,8 +111,12 @@ if __name__ == '__main__':
         aps = env.playback_aps
 
     # print_scores()
+    os.system('clear')
+    print("40 Line Clear:")
 
     while True:
+        start_time = time.time()
+        
         # Initialize the environment and get its state
         state, info = env.reset()
         
@@ -121,6 +126,11 @@ if __name__ == '__main__':
             action = select_action(state)
 
             observation, terminated, _ = env.step(action.item())
+            
+            if env._game.lines_cleared >= 40:
+                print(str(env._game.piece_manager.num_of_pieces_dropped) + " pieces placed")
+                print(str(round((time.time() - start_time) * 1000) / 1000) + " seconds")
+                exit()
             
             # if env._game.score > max_score:
             #     max_score = env._game.score
@@ -140,5 +150,4 @@ if __name__ == '__main__':
                 state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
 
             if terminated:
-                print(env._game.lines_cleared)
                 break

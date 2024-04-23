@@ -167,3 +167,5 @@ torch_models/
 runs/
 saved_runs/
 model_data/
+plots
+dqn_network

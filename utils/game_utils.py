@@ -13,7 +13,7 @@ def get_board_state(game_controller: GameController):
 def get_bumpiness(game_controller: GameController):
     max_height_list = get_max_height_column_list(game_controller)
     
-    # len(max_height_list) - 2 because we dont count well at index 9
+    # len(max_height_list) - 2, because we dont count well at index 9
     end_index = len(max_height_list) - 2
     
     total_bumpiness = 0

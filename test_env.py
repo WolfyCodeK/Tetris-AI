@@ -47,6 +47,7 @@ class TestTetrisEnv(gym.Env):
         
         self._window = None
         self.fps = 0
+        self.playback = False
         
     def step(self, action):
         action_list = list(movements[action])
@@ -66,9 +67,6 @@ class TestTetrisEnv(gym.Env):
         # Terminate for using the hold action more than once in a row
         if self._game.holds_performed_in_a_row > 1:
             terminated = True
-            
-        # if gu.does_board_have_gaps(self._game):
-        #     terminated = True
 
         observation = self._get_obs()
         info = self._get_info()
@@ -110,7 +108,7 @@ class TestTetrisEnv(gym.Env):
     def close(self):
         print("Enviroment closed.")
         
-    def _window_exists(self):
+    def window_exists(self):
         return self._window is not None
         
     def _update_window(self):
@@ -128,7 +126,7 @@ class TestTetrisEnv(gym.Env):
         if playback and self.playback_aps != 0:
             time.sleep(1 / self.playback_aps)
                 
-        if self._window_exists():
+        if self.window_exists():
             self._update_window()
 
     def _get_obs(self):
