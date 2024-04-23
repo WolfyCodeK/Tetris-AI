@@ -41,7 +41,7 @@ def select_action(state):
         return policy_net(state).max(1).indices.view(1, 1)
 
 # Load model function
-def load_model(episode, model):
+def load_model(model):
     file_path = 'tetris_model.pth'
     
     if os.path.exists(file_path):
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     policy_net = DQN(n_observations, n_actions).to(device)
     
-    policy_net = load_model(398000, policy_net)
+    policy_net = load_model(policy_net)
     policy_net.eval()
 
     max_score = 0
