@@ -32,6 +32,7 @@ class GameController():
         # Scores
         self.score = 0
         self.b2b = 0
+        self.max_b2b = 0
         
         # The speed at which the tetramino pieces fall
         self.drop_speed = GameSettings.drop_speed
@@ -80,6 +81,12 @@ class GameController():
         self.lines_cleared = 0
         self.previous_action = None
         
+    def reset_b2b(self):
+        if self.max_b2b < self.b2b:
+            self.max_b2b = self.b2b
+            
+        self.b2b = 0
+        
     def _increment_frames_passed(self):
         """Increase number of frames that have passed by 1.
         """
@@ -119,11 +126,11 @@ class GameController():
         match new_lines_cleared:
             case 1:
                 self.score += 100
-                self.b2b = 0
+                self.reset_b2b()
             
             case 2:
                 self.score += 300
-                self.b2b = 0
+                self.reset_b2b()
             
             case 3:
                 # T-spin triple
@@ -132,7 +139,7 @@ class GameController():
                     self.b2b += 1
                 else:
                     self.score += 500
-                    self.b2b = 0
+                    self.reset_b2b()
                 
             case 4:
                 if self.b2b > 1:
@@ -145,6 +152,7 @@ class GameController():
     def _reset_scores(self):
         self.score = 0
         self.b2b = 0
+        self.max_b2b = 0
         
     def _reset_piece_timers(self):
         self.piece_deactivate_timer = self.piece_deactivate_delay

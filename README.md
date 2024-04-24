@@ -49,9 +49,21 @@ https://drive.google.com/file/d/129jKWNON0r8tAsmIHw0N6Hr805-Q89Gc/view?usp=shari
 or alternatively, specify the size of the window and play speed:
 ```
     py test_model.py --size --speed
-        e.g. 
-            py test_model.py 13 10
 ```
+
+e.g.   
+
+```  
+    py test_model.py 8 10
+```
+
+If the speed is set to 0, the agent will play as fast as possible. 
+
+e.g.   
+```  
+    py test_model.py 12 0
+```
+
 
 ## Training a new model 
 

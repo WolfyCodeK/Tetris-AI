@@ -1,3 +1,4 @@
+import csv
 import os
 import sys
 import numpy as np
@@ -108,6 +109,11 @@ if __name__ == '__main__':
     
     if env.window_exists():
         aps = env.playback_aps
+        
+    # Create csv file to save data to
+    with open('results.csv', 'w', newline='') as outcsv:
+        writer = csv.writer(outcsv)
+        writer.writerow(['pieces dropped', 'total score', 'max b2b'])
 
     while True:
         # Initialize the environment and get its state
@@ -126,5 +132,9 @@ if __name__ == '__main__':
                 state = torch.tensor(get_flatterned_obs(observation), dtype=torch.float32, device=device).unsqueeze(0)
 
             if terminated:
-                print(env._game.lines_cleared)
+                with open('results.csv','a') as fd:
+                    row = [env._game.piece_manager.num_of_pieces_dropped, env._game.score, env._game.max_b2b]
+                    
+                    fd.write(','.join(str(x) for x in row))
+                    fd.write('\n')
                 break
