@@ -13,7 +13,7 @@ from pieces.piece_type_id import PieceTypeID
 
 from utils.screen_sizes import ScreenSizes
 import utils.board_constants as bc
-import utils.game_utils as gu
+import utils.game_analysis as gu
 
 from game.agent_actions import movements
 

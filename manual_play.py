@@ -2,7 +2,7 @@ import pygame
 from controllers.game_controller import GameController
 from controllers.window import Window
 from utils.screen_sizes import ScreenSizes
-import utils.game_utils as gu
+import utils.game_analysis as gu
 
 if __name__ == '__main__':    
     game = GameController()
