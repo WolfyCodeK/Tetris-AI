@@ -11,6 +11,9 @@ class GameSettings():
     
     # Random seed for piece queue
     seed = None
+    
+    # Delay Auto Shift (DAS - measured in game clock cycles) 
+    delay_auto_shift = 200
 
     #########################################################
     #------------------- VISUAL SETTINGS -------------------#

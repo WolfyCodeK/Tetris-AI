@@ -41,6 +41,9 @@ class GameController():
         # Restrict how often player can input keys (temp solution)
         self.move_delay = 0
         self.rotate_delay = 0
+        self.key_count = 0
+        self.user_action = None
+        self.das = GameSettings.delay_auto_shift
         
         # How long the tetramino can move around before without dropping before being deativated
         self.piece_deactivate_delay = self.drop_speed
@@ -268,38 +271,37 @@ class GameController():
             
         return self.render_game, self.playback
     
+    def _reset_user_actions(self):
+        self.user_action = None
+        self.key_count = 0
+    
     # DEBUGGING FUNCTION FOR MANUAL PLAY - CAN SAFELY BE DELETED
     def take_player_inputs(self, event_list):
-        # Take player input
-        key = pygame.key.get_pressed()
-        self.move_delay -= 1 
-        self.rotate_delay -= 1
-        
-        if (key[pygame.K_RIGHT] == True) and (self.move_delay < 0):
-            self.piece_manager.shift_piece_horizontally(1)
-            self.move_delay = 75 * 32 / win_utils.get_grid_size()
-            
-        if key[pygame.K_LEFT] == True and (self.move_delay < 0):
-            self.piece_manager.shift_piece_horizontally(-1)
-            self.move_delay = 75 * 32 / win_utils.get_grid_size()
-            
-        if key[pygame.K_x] == True and (self.rotate_delay < 0):
-            self.piece_manager.rotate_piece(clockwise=True)
-            self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
-            
-        if key[pygame.K_z] == True and (self.rotate_delay < 0):
-            self.piece_manager.rotate_piece(clockwise=False)
-            self.rotate_delay = 120 * 32 / win_utils.get_grid_size()
-        
-        # DEBUG EVENTS
-        if key[pygame.K_a] == True:
-            self._set_drop_speed(20)
-        
-        if key[pygame.K_s] == True:
-            self._set_drop_speed(GameSettings.drop_speed)
-        
-        for event in event_list:          
+        for event in event_list:  
+            # Keypress Down Events
             if event.type == pygame.KEYDOWN:
+                # DEBUG EVENTS
+                if event.key == pygame.K_a:
+                    self._set_drop_speed(20)
+                
+                if event.key == pygame.K_s:
+                    self._set_drop_speed(GameSettings.drop_speed)
+                    
+                # Main Controls   
+                if event.key == pygame.K_RIGHT:
+                    self.piece_manager.shift_piece_horizontally(1)
+                    self.user_action = Actions.MOVE_RIGHT
+                    
+                if event.key == pygame.K_LEFT:
+                    self.piece_manager.shift_piece_horizontally(-1)
+                    self.user_action = Actions.MOVE_LEFT
+                
+                if event.key == pygame.K_x:
+                    self.piece_manager.rotate_piece(clockwise=True)
+                    
+                if event.key == pygame.K_z:
+                    self.piece_manager.rotate_piece(clockwise=False)
+                    
                 if event.key == pygame.K_SPACE:
                     self.piece_manager.hard_drop_piece()
                     self._new_piece_and_timer()
@@ -308,7 +310,30 @@ class GameController():
                     self.piece_manager.hard_drop_piece()
                     
                 if event.key == pygame.K_r:
+                    self.key_count = 0
+                    self.user_action = None
                     self.reset_game()
                     
                 if event.key == pygame.K_LSHIFT:
                     self.piece_manager.hold_piece()
+                
+            # Keypress Up (released) Events
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_RIGHT:
+                    self.key_count = 0
+                    self.user_action = None
+                
+                if event.key == pygame.K_LEFT:
+                    self.key_count = 0
+                    self.user_action = None
+                
+        if self.user_action != None:
+            self.key_count += 1
+        
+        # Move pieces completely to one side of board
+        if self.key_count >= self.das:
+            if self.user_action == Actions.MOVE_RIGHT:
+                self.piece_manager.shift_piece_horizontally(1)
+                
+            if self.user_action == Actions.MOVE_LEFT:
+                self.piece_manager.shift_piece_horizontally(-1)
