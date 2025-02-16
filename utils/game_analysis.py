@@ -1,3 +1,4 @@
+from collections import deque
 import time
 import numpy as np
 from pieces.piece_type_id import PieceTypeID
@@ -62,7 +63,7 @@ def get_max_height_column_list(game_controller: GameController):
     
     return max_height_list
 
-def get_max_height_column_list_excluding_well(game_controller: GameController) -> list:
+def get_column_heights(game_controller: GameController) -> list:
     max_height_column_list = get_max_height_column_list(game_controller)
     
     max_height_column_list.pop()
@@ -203,7 +204,7 @@ def does_board_have_gaps(game_controller: GameController):
     return (get_num_of_full_gaps(game_controller) + get_num_of_top_gaps(game_controller)) > 0
 
 def is_tetris_ready(game_controller: GameController):
-    max_list = get_max_height_column_list_excluding_well(game_controller)
+    max_list = get_column_heights(game_controller)
     
     board = get_board_state(game_controller)
     
@@ -255,7 +256,7 @@ def get_max_gap_height_excluding_well(game_controller: GameController) -> int:
     return max(get_first_gap_list_excluding_well(game_controller))
 
 def get_relative_board_max_heights_excluding_well(game_controller: GameController, max_height: int) -> np.ndarray:
-    max_height_list = get_max_height_column_list_excluding_well(game_controller)
+    max_height_list = get_column_heights(game_controller)
     
     relative_max_heights = np.array(max_height_list) - min(max_height_list)
     
@@ -268,5 +269,27 @@ def get_relative_board_max_heights_excluding_well(game_controller: GameControlle
             top_down_rel_max_heights.append(max_height - (max_height_value - height))
             
         relative_max_heights = np.clip(top_down_rel_max_heights, a_min = 0, a_max = max_height) 
-    
     return relative_max_heights
+
+def get_relative_column_heights(game_controller: GameController, target_max_height: int) -> np.ndarray:
+    current_column_heights = get_column_heights(game_controller)
+    
+    # Subtract the lowest column height from all columns
+    current_relative_column_heights = current_column_heights - min(current_column_heights)
+    
+    current_relative_max_column_height = max(current_relative_column_heights)
+    
+    # Reduce all columns height to match the target height
+    if current_relative_max_column_height > target_max_height:
+        target_column_heights = deque()
+        
+        for height in current_relative_column_heights:
+            # Calculate column height relative to the target max height
+            target_column_heights.append(target_max_height - (current_relative_max_column_height - height))
+            
+        # Convert to numpy array and change any negative heights to zero
+        target_column_heights = np.clip(target_column_heights, a_min = 0, a_max = target_max_height) 
+    
+    return target_column_heights
+
+

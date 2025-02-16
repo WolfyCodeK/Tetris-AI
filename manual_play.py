@@ -14,10 +14,6 @@ if __name__ == '__main__':
     window = Window(game, ScreenSizes.MEDIUM)
     
     pygame.display.set_caption("Tetris - Pygame")
-
-    # Set window icon
-    tetris_icon = pygame.image.load("res/tetris-icon.png")
-    pygame.display.set_icon(tetris_icon)
     
     running = True
 

@@ -170,4 +170,4 @@ model_data/
 plots
 dqn_network
 tetris_model.pth
-results.csv
+*.csv

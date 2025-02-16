@@ -5,6 +5,7 @@ import numpy as np
 from environments.test_env import TestTetrisEnv
 from itertools import count
 from utils.screen_sizes import ScreenSizes
+import utils.game_analysis as gu
 
 import torch
 import torch.nn as nn
@@ -86,6 +87,7 @@ if __name__ == '__main__':
             playback_aps = int(sys.argv[2])
     
     env = TestTetrisEnv()
+    
     env.render(screen_size=screen_size, show_fps=False, show_score=True, show_queue=True, playback=True, playback_aps=playback_aps)
 
     # if GPU is to be used
@@ -106,6 +108,8 @@ if __name__ == '__main__':
     max_score = 0
     max_b2b = 0
     max_pieces_placed = 0
+    mistakes = 0
+    last_gaps = 0
     
     if env.window_exists():
         aps = env.playback_aps
@@ -113,7 +117,7 @@ if __name__ == '__main__':
     # Create csv file to save data to
     with open('results.csv', 'w', newline='') as outcsv:
         writer = csv.writer(outcsv)
-        writer.writerow(['pieces dropped', 'total score', 'max b2b'])
+        writer.writerow(['pieces dropped', 'total score', 'max b2b', 'line clears', 'mistakes (%)'])
 
     while True:
         # Initialize the environment and get its state
@@ -125,6 +129,12 @@ if __name__ == '__main__':
             action = select_action(state)
 
             observation, terminated, _ = env.step(action.item())
+            
+            new_gaps = gu.get_num_of_top_gaps(env._game) + gu.get_num_of_full_gaps(env._game)
+            
+            if new_gaps > last_gaps:
+                last_gaps = new_gaps
+                mistakes += 1
 
             if terminated:
                 state = None
@@ -133,8 +143,13 @@ if __name__ == '__main__':
 
             if terminated:
                 with open('results.csv','a') as fd:
-                    row = [env._game.piece_manager.num_of_pieces_dropped, env._game.score, env._game.max_b2b]
+                    row = [env._game.piece_manager.num_of_pieces_dropped, env._game.score, env._game.max_b2b, env._game.lines_cleared, round((mistakes / env._game.piece_manager.num_of_pieces_dropped * 100), 2)]
                     
-                    fd.write(','.join(str(x) for x in row))
-                    fd.write('\n')
+                    mistakes = 0
+                    last_gaps = 0
+                    new_gaps = 0
+                    
+                    if env._game.piece_manager.num_of_pieces_dropped > 3:
+                        fd.write(','.join(str(x) for x in row))
+                        fd.write('\n')
                 break
