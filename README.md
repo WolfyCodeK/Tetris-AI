@@ -1,4 +1,4 @@
-# Dissertation-Tetris-AI
+# Tetris-AI
 
 ## Demo
 
